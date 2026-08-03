@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { stripBom } from '../util/strip-bom.js';
 import type { Oracle, OracleKind } from './types.js';
+import type { VeridiaConfig } from '../config/config.js';
 
 export interface FsLike {
   existsSync(p: string): boolean;
@@ -38,39 +39,25 @@ interface ProbeSpec {
   dirExts?: string[];
 }
 
-const TEST_CONFIG_FILES = [
-  'vitest.config.ts',
-  'vitest.config.js',
-  'vitest.config.mts',
-  'vitest.config.mjs',
-  'jest.config.ts',
-  'jest.config.js',
-  'jest.config.mjs',
-  'playwright.config.ts',
-  '.mocharc.json',
-  'karma.conf.js',
-];
-
-const LINT_CONFIG_FILES = [
-  'eslint.config.js',
-  'eslint.config.ts',
-  'eslint.config.mjs',
-  '.eslintrc',
-  '.eslintrc.json',
-  '.eslintrc.js',
-];
-
-const PROBES: ProbeSpec[] = [
-  { kind: 'test-runner', files: TEST_CONFIG_FILES, scripts: ['test'] },
+const DEFAULT_PROBES: ProbeSpec[] = [
+  { kind: 'test-runner', files: ['vitest.config.ts', 'vitest.config.js', 'vitest.config.mts', 'vitest.config.mjs', 'jest.config.ts', 'jest.config.js', 'jest.config.mjs', 'playwright.config.ts', '.mocharc.json', 'karma.conf.js'], scripts: ['test'] },
   { kind: 'type-check', files: ['tsconfig.json'], scripts: ['typecheck', 'type-check'] },
-  { kind: 'lint', files: LINT_CONFIG_FILES, scripts: ['lint'] },
-  {
-    kind: 'ci',
-    files: ['.gitlab-ci.yml', '.circleci/config.yml', 'azure-pipelines.yml'],
-    dirs: ['.github/workflows'],
-    dirExts: ['.yml', '.yaml'],
-  },
+  { kind: 'lint', files: ['eslint.config.js', 'eslint.config.ts', 'eslint.config.mjs', '.eslintrc', '.eslintrc.json', '.eslintrc.js'], scripts: ['lint'] },
+  { kind: 'ci', files: ['.gitlab-ci.yml', '.circleci/config.yml', 'azure-pipelines.yml'], dirs: ['.github/workflows'], dirExts: ['.yml', '.yaml'] },
 ];
+
+function buildProbesFromConfig(config: VeridiaConfig): ProbeSpec[] {
+  const probes: ProbeSpec[] = [];
+  for (const [kind, cfg] of Object.entries(config.probes)) {
+    probes.push({
+      kind: kind as OracleKind,
+      files: cfg.files ?? [],
+      scripts: (cfg as { scripts?: string[] }).scripts,
+      dirs: (cfg as { dirs?: string[] }).dirs,
+    });
+  }
+  return probes;
+}
 
 function hasScript(fsLike: FsLike, target: string, script: string): boolean {
   const raw = fsLike.readFileSync(path.join(target, 'package.json'));
@@ -99,9 +86,10 @@ function detect(fsLike: FsLike, target: string, spec: ProbeSpec): boolean {
   return false;
 }
 
-export function probeOracles(target: string, fsLike: FsLike): Oracle[] {
+export function probeOracles(target: string, fsLike: FsLike, config?: VeridiaConfig): Oracle[] {
+  const probes = config ? buildProbesFromConfig(config) : DEFAULT_PROBES;
   const oracles: Oracle[] = [];
-  for (const spec of PROBES) {
+  for (const spec of probes) {
     if (detect(fsLike, target, spec)) oracles.push({ kind: spec.kind });
   }
   return oracles;

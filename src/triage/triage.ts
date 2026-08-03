@@ -42,12 +42,16 @@ function calculateDrift(verdict: Verdict, target: string): string {
   return '0';
 }
 
-export function triage(task: string, target: string = process.cwd()): TriageResult {
+export interface TriageOptions {
+  auto?: boolean;
+}
+
+export function triage(task: string, target: string = process.cwd(), options?: TriageOptions): TriageResult {
   const config = loadConfig(target);
   const classification = classify(task, config);
-  const assessment = assess(target);
+  const assessment = assess(target, undefined, undefined, config);
   const plan = buildPlan(classification.type, assessment.level);
-  const askResult = ask(classification.type, assessment.level);
+  const askResult = ask(classification.type, assessment.level, options?.auto);
   const kinds = assessment.oracles.map((o) => o.kind);
 
   const execPlan = buildExecutionPlan(task, classification.type, assessment.level, plan, undefined, target);

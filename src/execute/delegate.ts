@@ -1,38 +1,12 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { splitCommand } from '../util/split-command.js';
 import type { ExecutionPlan, DelegationMode, ExecuteResult } from './types.js';
 import { detectHostAgent } from './detect.js';
 
-function splitCommand(command: string): string[] {
-  const parts: string[] = [];
-  let current = '';
-  let inQuote: string | null = null;
-  for (const ch of command) {
-    if (inQuote) {
-      if (ch === inQuote) {
-        inQuote = null;
-      } else {
-        current += ch;
-      }
-    } else if (ch === '"' || ch === "'") {
-      inQuote = ch;
-    } else if (ch === ' ') {
-      if (current) {
-        parts.push(current);
-        current = '';
-      }
-    } else {
-      current += ch;
-    }
-  }
-  if (current) parts.push(current);
-  return parts;
-}
-
 export function delegateStdout(plan: ExecutionPlan): ExecuteResult {
   const json = JSON.stringify(plan, null, 2);
-  process.stdout.write(json + '\n');
   return { exitCode: 0, stdout: json, stderr: '' };
 }
 

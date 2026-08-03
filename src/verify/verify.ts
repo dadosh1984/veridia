@@ -6,6 +6,7 @@ import { baseWeight, isTestsWeak } from './weight.js';
 
 export interface VerifyDeps {
   run?: RunFn;
+  dryRun?: boolean;
 }
 
 export function deriveVerdict(level: VerifiabilityLevel, checks: Check[]): Verdict {
@@ -31,7 +32,16 @@ export function verify(
   const run = deps.run ?? runCommand;
   const resolved = resolveCommands(kinds, target);
   const checks: Check[] = resolved.map(({ kind, command }) => {
-    const { exitCode } = run(target, command);
+    if (deps.dryRun) {
+      return { kind, command, weight: baseWeight(kind), weak: false, passed: true };
+    }
+    let exitCode: number;
+    try {
+      const result = run(target, command);
+      exitCode = result.exitCode;
+    } catch {
+      exitCode = 1;
+    }
     const weak = kind === 'test-runner' && isTestsWeak(target);
     return { kind, command, weight: baseWeight(kind), weak, passed: exitCode === 0 };
   });
