@@ -2,6 +2,7 @@ import type { TaskType } from '../classify/types.js';
 import type { VerifiabilityLevel, OracleKind } from '../assess/types.js';
 import type { RunPlan } from '../route/types.js';
 import { detectHostAgent } from './detect.js';
+import { resolveCommands } from '../verify/resolve.js';
 import type { ExecutionPlan, ExecutionStep, VerificationGate } from './types.js';
 
 const STEP_ACTION_MAP: Record<string, string> = {
@@ -16,7 +17,7 @@ const STEP_ACTION_MAP: Record<string, string> = {
 };
 
 const CHECK_GATE_MAP: Record<string, { id: string; command: string; kind: OracleKind }> = {
-  'run-tests': { id: 'run-tests', command: 'vitest run', kind: 'test-runner' },
+  'run-tests': { id: 'run-tests', command: '', kind: 'test-runner' },
   'type-check': { id: 'type-check', command: 'tsc --noEmit', kind: 'type-check' },
   'human-review': { id: 'human-review', command: '', kind: 'lint' },
 };
@@ -30,6 +31,14 @@ export function buildExecutionPlan(
   target?: string,
 ): ExecutionPlan {
   const host = detectHostAgent(target);
+  const resolvedTarget = target ?? process.cwd();
+
+  const resolvedKinds: OracleKind[] = [];
+  for (const checkId of runPlan.checks) {
+    const gate = CHECK_GATE_MAP[checkId];
+    if (gate && gate.kind !== 'lint') resolvedKinds.push(gate.kind);
+  }
+  const resolved = resolveCommands(resolvedKinds, resolvedTarget);
 
   const steps: ExecutionStep[] = runPlan.steps.map((stepId) => {
     const step: ExecutionStep = {
@@ -47,11 +56,14 @@ export function buildExecutionPlan(
 
   const gates: VerificationGate[] = runPlan.checks.map((checkId) => {
     const gate = CHECK_GATE_MAP[checkId];
-    if (gate) return { ...gate };
-    return { id: checkId, command: checkId, kind: 'lint' as OracleKind };
+    if (!gate) return { id: checkId, command: checkId, kind: 'lint' as OracleKind };
+    if (gate.command) return { ...gate };
+    const resolvedCmd = resolved.find((r) => r.kind === gate.kind);
+    return { id: gate.id, command: resolvedCmd?.command ?? 'vitest run', kind: gate.kind };
   });
 
   return {
+    protocol: 'veridia/execution-plan/v1',
     task,
     type,
     level,

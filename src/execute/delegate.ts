@@ -48,11 +48,12 @@ export function delegateShell(plan: ExecutionPlan, target?: string): ExecuteResu
 
 export function delegate(plan: ExecutionPlan, target?: string): ExecuteResult {
   const host = detectHostAgent(target);
-  const mode: DelegationMode = host.delegationModes.includes('stdout')
-    ? 'stdout'
-    : host.delegationModes.includes('file')
-      ? 'file'
-      : 'shell';
+  const modes = host.delegationModes;
+  const mode: DelegationMode = modes.includes('file')
+    ? 'file'
+    : modes.includes('shell')
+      ? 'shell'
+      : 'stdout';
 
   switch (mode) {
     case 'stdout':

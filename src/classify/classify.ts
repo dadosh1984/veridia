@@ -9,23 +9,23 @@ interface Rule {
 const RULES: Rule[] = [
   {
     type: 'bugfix',
-    patterns: [/fix/, /bug/, /crash/, /null pointer/, /error/, /broken/, /patch/],
+    patterns: [/\bfix\b/, /\bbug\b/, /\bcrash\b/, /\bnull pointer\b/, /\berror\b/, /\bbroken\b/, /\bpatch\b/],
   },
   {
     type: 'feature',
-    patterns: [/add/, /implement/, /support/, /new/, /feature/, /introduce/, /enable/],
+    patterns: [/\badd\b/, /\bimplement\b/, /\bsupport\b/, /\bnew\b/, /\bfeature\b/, /\bintroduce\b/, /\benable\b/],
   },
   {
     type: 'doc',
-    patterns: [/doc/, /document/, /readme/, /comment/, /write.*guide/],
+    patterns: [/\bdoc\b/, /\bdocument\b/, /\breadme\b/, /\bcomment\b/, /\bwrite.*guide\b/],
   },
   {
     type: 'refactor',
-    patterns: [/refactor/, /restructure/, /clean ?up/, /simplify/, /extract/, /rename/],
+    patterns: [/\brefactor\b/, /\brestructure\b/, /\bclean ?up\b/, /\bsimplify\b/, /\bextract\b/, /\brename\b/],
   },
   {
     type: 'explore',
-    patterns: [/evaluate/, /explore/, /research/, /compare/, /investigate/, /options?/],
+    patterns: [/\bevaluate\b/, /\bexplore\b/, /\bresearch\b/, /\bcompare\b/, /\binvestigate\b/, /\boptions?\b/],
   },
 ];
 

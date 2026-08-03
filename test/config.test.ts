@@ -24,8 +24,6 @@ describe('loadConfig', () => {
     const config = loadConfig(target);
     expect(config.classify.patterns.bugfix).toBeDefined();
     expect(config.probes['test-runner']).toBeDefined();
-    expect(config.models.cheapest).toBeDefined();
-    expect(config.workflows.bugfix).toBeDefined();
   });
 
   it('merges user config with defaults', () => {
@@ -54,16 +52,13 @@ describe('DEFAULT_CONFIG', () => {
   it('has all required sections', () => {
     expect(DEFAULT_CONFIG.classify.patterns).toBeDefined();
     expect(DEFAULT_CONFIG.probes).toBeDefined();
-    expect(DEFAULT_CONFIG.models).toBeDefined();
-    expect(DEFAULT_CONFIG.workflows).toBeDefined();
   });
 
-  it('has all 6 task types in workflows', () => {
-    expect(DEFAULT_CONFIG.workflows.bugfix).toBeDefined();
-    expect(DEFAULT_CONFIG.workflows.feature).toBeDefined();
-    expect(DEFAULT_CONFIG.workflows.refactor).toBeDefined();
-    expect(DEFAULT_CONFIG.workflows.doc).toBeDefined();
-    expect(DEFAULT_CONFIG.workflows.explore).toBeDefined();
-    expect(DEFAULT_CONFIG.workflows.open).toBeDefined();
+  it('has classify patterns for bugfix, feature, doc, refactor, explore', () => {
+    expect(DEFAULT_CONFIG.classify.patterns.bugfix).toBeDefined();
+    expect(DEFAULT_CONFIG.classify.patterns.feature).toBeDefined();
+    expect(DEFAULT_CONFIG.classify.patterns.refactor).toBeDefined();
+    expect(DEFAULT_CONFIG.classify.patterns.doc).toBeDefined();
+    expect(DEFAULT_CONFIG.classify.patterns.explore).toBeDefined();
   });
 });

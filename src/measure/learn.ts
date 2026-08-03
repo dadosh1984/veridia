@@ -2,6 +2,7 @@ import type { MeasureEntry } from './types.js';
 import { readHistory, type HistoryDeps } from './history.js';
 
 export interface LearnResult {
+  protocol: 'veridia/learn-result/v1';
   totalRuns: number;
   classificationAccuracy: Record<string, number>;
   successRateByLevel: Record<string, number>;
@@ -13,6 +14,7 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
   const entries = readHistory(deps);
   if (entries.length === 0) {
     return {
+      protocol: 'veridia/learn-result/v1',
       totalRuns: 0,
       classificationAccuracy: {},
       successRateByLevel: {},
@@ -70,6 +72,7 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
   }
 
   return {
+    protocol: 'veridia/learn-result/v1',
     totalRuns: entries.length,
     classificationAccuracy,
     successRateByLevel,

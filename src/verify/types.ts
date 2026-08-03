@@ -11,6 +11,7 @@ export interface Check {
 }
 
 export interface VerifyResult {
+  protocol: 'veridia/verification-report/v1';
   checks: Check[];
   verdict: Verdict;
 }

@@ -18,6 +18,7 @@ export interface VerificationGate {
 }
 
 export interface ExecutionPlan {
+  protocol: 'veridia/execution-plan/v1';
   task: string;
   type: TaskType;
   level: VerifiabilityLevel;

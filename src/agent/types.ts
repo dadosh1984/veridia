@@ -12,10 +12,3 @@ export interface AgentInfo {
   canRunShell: boolean;
   canCallModels: boolean;
 }
-
-export interface AgentInstruction {
-  instruction: string;
-  context: Record<string, unknown>;
-  expectedOutput: string;
-  agent: AgentInfo | null;
-}

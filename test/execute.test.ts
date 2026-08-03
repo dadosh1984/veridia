@@ -11,6 +11,7 @@ import { delegateStdout, delegateFile, delegateShell, delegate } from '../src/ex
 describe('ExecutionPlan', () => {
   it('has required fields', () => {
     const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
       task: 'add dark mode',
       type: 'feature',
       level: 2,
@@ -28,8 +29,21 @@ describe('ExecutionPlan', () => {
     expect(plan.metadata.host).toBe('opencode');
   });
 
+  it('includes protocol field', () => {
+    const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
+      task: 'test',
+      type: 'bugfix',
+      level: 3,
+      plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
+      metadata: { host: 'claude', generatedAt: '2026-01-01T00:00:00.000Z' },
+    };
+    expect(plan.protocol).toBe('veridia/execution-plan/v1');
+  });
+
   it('is serializable to JSON', () => {
     const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
       task: 'test',
       type: 'bugfix',
       level: 3,
@@ -40,6 +54,7 @@ describe('ExecutionPlan', () => {
     const parsed = JSON.parse(json) as ExecutionPlan;
     expect(parsed.task).toBe('test');
     expect(parsed.type).toBe('bugfix');
+    expect(parsed.protocol).toBe('veridia/execution-plan/v1');
   });
 });
 
@@ -147,6 +162,7 @@ describe('buildExecutionPlan', () => {
 describe('delegateStdout', () => {
   it('prints plan JSON to stdout', () => {
     const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
       task: 'test', type: 'bugfix', level: 3,
       plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
       metadata: { host: 'test', generatedAt: '' },
@@ -163,6 +179,7 @@ describe('delegateFile', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'veridia-delegate-'));
     try {
       const plan: ExecutionPlan = {
+        protocol: 'veridia/execution-plan/v1',
         task: 'test', type: 'bugfix', level: 3,
         plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
         metadata: { host: 'test', generatedAt: '' },
@@ -182,6 +199,7 @@ describe('delegateFile', () => {
 describe('delegateShell', () => {
   it('returns success when no gates to run', () => {
     const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
       task: 'test', type: 'bugfix', level: 3,
       plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
       metadata: { host: 'test', generatedAt: '' },
@@ -199,17 +217,22 @@ describe('delegate', () => {
     process.env = { ...OLD_ENV };
   });
 
-  it('selects stdout mode for opencode host', () => {
+  it('selects file mode for opencode host (file > stdout)', () => {
     process.env.OPENCODE = '1';
-    const plan: ExecutionPlan = {
-      task: 'test', type: 'bugfix', level: 3,
-      plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
-      metadata: { host: 'opencode', generatedAt: '' },
-    };
-    const result = delegate(plan);
-    expect(result.exitCode).toBe(0);
-    const parsed = JSON.parse(result.stdout) as ExecutionPlan;
-    expect(parsed.task).toBe('test');
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'veridia-delegate-file-'));
+    try {
+      const plan: ExecutionPlan = {
+        protocol: 'veridia/execution-plan/v1',
+        task: 'test', type: 'bugfix', level: 3,
+        plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
+        metadata: { host: 'opencode', generatedAt: '' },
+      };
+      const result = delegate(plan, tmpDir);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('Plan written to');
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 
   it('selects shell mode in a clean temp dir', () => {
@@ -221,6 +244,7 @@ describe('delegate', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'veridia-delegate-shell-'));
     try {
       const plan: ExecutionPlan = {
+        protocol: 'veridia/execution-plan/v1',
         task: 'test', type: 'bugfix', level: 3,
         plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
         metadata: { host: 'shell', generatedAt: '' },

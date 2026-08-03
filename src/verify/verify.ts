@@ -45,5 +45,5 @@ export function verify(
     const weak = kind === 'test-runner' && isTestsWeak(target);
     return { kind, command, weight: baseWeight(kind), weak, passed: exitCode === 0 };
   });
-  return { checks, verdict: deriveVerdict(level, checks) };
+  return { protocol: 'veridia/verification-report/v1', checks, verdict: deriveVerdict(level, checks) };
 }

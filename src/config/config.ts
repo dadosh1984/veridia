@@ -11,8 +11,6 @@ export interface VeridiaConfig {
     lint: { files: string[]; scripts: string[] };
     ci: { files: string[]; dirs: string[] };
   };
-  models: Record<string, { provider: string; model: string }>;
-  workflows: Record<string, string[]>;
 }
 
 export const DEFAULT_CONFIG: VeridiaConfig = {
@@ -43,19 +41,6 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
       dirs: ['.github/workflows'],
     },
   },
-  models: {
-    cheapest: { provider: 'openai', model: 'gpt-4o-mini' },
-    mid: { provider: 'anthropic', model: 'claude-3-5-sonnet' },
-    any: { provider: 'openai', model: 'gpt-4o' },
-  },
-  workflows: {
-    bugfix: ['ask', 'write-failing-test', 'implement', 'verify'],
-    refactor: ['ask', 'write-failing-test', 'implement', 'verify'],
-    feature: ['ask', 'write-failing-test', 'implement', 'verify'],
-    doc: ['ask', 'document', 'review'],
-    explore: ['ask', 'research', 'present-options'],
-    open: ['ask', 'research', 'present-options'],
-  },
 };
 
 export function loadConfig(target: string): VeridiaConfig {
@@ -79,12 +64,6 @@ function mergeConfig(base: VeridiaConfig, user: Partial<VeridiaConfig>): Veridia
   }
   if (user.probes) {
     result.probes = { ...base.probes, ...user.probes };
-  }
-  if (user.models) {
-    result.models = { ...base.models, ...user.models };
-  }
-  if (user.workflows) {
-    result.workflows = { ...base.workflows, ...user.workflows };
   }
   return result;
 }

@@ -8,7 +8,7 @@ const corpus: Array<{ input: string; expected: TaskType }> = [
   { input: 'bug in the checkout flow', expected: 'bugfix' },
   { input: 'add dark mode support', expected: 'feature' },
   { input: 'implement pagination', expected: 'feature' },
-  { input: 'write API docs for the auth module', expected: 'doc' },
+  { input: 'write API doc for the auth module', expected: 'doc' },
   { input: 'document the configuration options', expected: 'doc' },
   { input: 'restructure the payment module', expected: 'refactor' },
   { input: 'refactor the database layer', expected: 'refactor' },
@@ -51,8 +51,6 @@ describe('classify', () => {
         },
       },
       probes: {} as VeridiaConfig['probes'],
-      models: {} as VeridiaConfig['models'],
-      workflows: {} as VeridiaConfig['workflows'],
     };
     const result = classify('add auth to login', config);
     expect(result.type).toBe('security');

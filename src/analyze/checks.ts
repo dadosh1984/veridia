@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import type { Finding, Severity } from './types.js';
 
 export type Checker = (filePath: string, content: string) => Finding[];
