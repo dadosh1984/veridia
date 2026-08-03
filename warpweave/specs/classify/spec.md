@@ -8,7 +8,7 @@ Lets veridia sort any task string into a deterministic task type with a confiden
 
 ### Requirement: Classify command
 
-The system SHALL provide a `classify` subcommand that accepts a task string and prints a classification result.
+The system SHALL provide a `classify` subcommand that accepts a task string and prints a classification result. The classifier SHALL accept an optional `config` parameter. When provided, pattern definitions from the config SHALL be used instead of the built-in defaults.
 
 #### Scenario: Classify a bug fix
 - **WHEN** the user runs `veridia classify "fix the null pointer in login"` 
@@ -29,6 +29,16 @@ The system SHALL provide a `classify` subcommand that accepts a task string and 
 - **WHEN** the user runs `veridia classify` with no task string
 - **THEN** the CLI exits with a non-zero status
 - **AND** the CLI writes an error message to stderr
+
+#### Scenario: Classify with user-configured patterns
+- **WHEN** the user creates `.veridia/config.json` with custom classify patterns
+- **AND** runs `veridia classify "custom task"`
+- **THEN** the classifier SHALL use the user's patterns instead of built-in defaults
+
+#### Scenario: Classify without config uses defaults
+- **WHEN** no `.veridia/config.json` exists
+- **AND** the user runs `veridia classify "fix bug"`
+- **THEN** the classifier SHALL use the built-in default patterns (unchanged behavior)
 
 ### Requirement: Task type taxonomy
 
@@ -62,18 +72,6 @@ The system SHALL return a deterministic classification with a numeric confidence
 - **WHEN** the user runs `veridia classify "fix the null pointer in login"` twice
 - **THEN** the second run produces the same type and confidence as the first
 - **AND** the CLI exits with status 0
-
-### Requirement: classify with --agent flag
-
-When the `--agent` flag is provided, the `classify` command SHALL output structured JSON instructions for the specified AI agent to classify the task, instead of running the regex-based classifier.
-
-#### Scenario: classify with --agent
-- **WHEN** the user runs `veridia classify --agent claude "refactor the authentication module"`
-- **THEN** the command outputs JSON with `task`, `instruction`, `agent`, and `expectedOutput` fields
-
-#### Scenario: classify without --agent
-- **WHEN** the user runs `veridia classify "refactor the module"`
-- **THEN** the command runs the existing regex-based classifier (unchanged behavior)
 
 ### Requirement: Exit status contract
 

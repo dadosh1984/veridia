@@ -4,8 +4,10 @@ import { buildPlan } from '../route/route.js';
 import { ask } from '../ask/ask.js';
 import { verify } from '../verify/verify.js';
 import { measureRecord } from '../measure/measure.js';
+import { readHistory } from '../measure/history.js';
 import { buildExecutionPlan } from '../execute/plan.js';
 import { delegate } from '../execute/delegate.js';
+import { loadConfig } from '../config/config.js';
 import type { TaskType } from '../classify/types.js';
 import type { VerifiabilityLevel } from '../assess/types.js';
 import type { Verdict } from '../verify/types.js';
@@ -29,8 +31,20 @@ export interface TriageResult {
   executionResult?: ExecuteResult;
 }
 
+function calculateDrift(verdict: Verdict, target: string): string {
+  const entries = readHistory({ root: target });
+  if (entries.length === 0) return '0';
+  const recent = entries.slice(-10);
+  const passCount = recent.filter((e) => e.verdict === 'PASS').length;
+  const successRate = passCount / recent.length;
+  if (verdict === 'FAIL' && successRate > 0.8) return '1';
+  if (verdict === 'FAIL' && successRate > 0.5) return '0.5';
+  return '0';
+}
+
 export function triage(task: string, target: string = process.cwd()): TriageResult {
-  const classification = classify(task);
+  const config = loadConfig(target);
+  const classification = classify(task, config);
   const assessment = assess(target);
   const plan = buildPlan(classification.type, assessment.level);
   const askResult = ask(classification.type, assessment.level);
@@ -40,6 +54,7 @@ export function triage(task: string, target: string = process.cwd()): TriageResu
   const execResult = delegate(execPlan, target);
 
   const verifyResult = verify(target, assessment.level, kinds);
+  const drift = calculateDrift(verifyResult.verdict, target);
 
   measureRecord({
     task,
@@ -47,7 +62,7 @@ export function triage(task: string, target: string = process.cwd()): TriageResu
     level: assessment.level,
     verdict: verifyResult.verdict,
     checks: verifyResult.checks.map((c) => ({ kind: c.kind, passed: c.passed })),
-    drift: '',
+    drift,
   }, { root: target });
 
   return {

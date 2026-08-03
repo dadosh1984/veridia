@@ -1,4 +1,5 @@
 import type { Classification, TaskType } from './types.js';
+import type { VeridiaConfig } from '../config/config.js';
 
 interface Rule {
   type: TaskType;
@@ -28,12 +29,24 @@ const RULES: Rule[] = [
   },
 ];
 
-export function classify(task: string): Classification {
+function buildRulesFromConfig(config: VeridiaConfig): Rule[] {
+  const rules: Rule[] = [];
+  for (const [type, patternStrings] of Object.entries(config.classify.patterns)) {
+    rules.push({
+      type: type as TaskType,
+      patterns: patternStrings.map((p) => new RegExp(p, 'i')),
+    });
+  }
+  return rules;
+}
+
+export function classify(task: string, config?: VeridiaConfig): Classification {
   const lower = task.toLowerCase();
+  const rules = config ? buildRulesFromConfig(config) : RULES;
 
   let best: Classification | null = null;
 
-  for (const rule of RULES) {
+  for (const rule of rules) {
     let hits = 0;
     for (const pattern of rule.patterns) {
       if (pattern.test(lower)) hits++;

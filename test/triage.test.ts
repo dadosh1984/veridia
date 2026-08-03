@@ -77,4 +77,25 @@ describe('triage', () => {
     expect(result.executionResult).toBeDefined();
     expect(result.executionResult!.exitCode).toBe(0);
   });
+
+  it('drift is 0 on first run (no history)', () => {
+    const target = makeTmpDir();
+    writeFile(target, 'package.json', '{}');
+    const result = triage('add feature', target);
+    const historyFile = path.join(target, '.veridia', 'history.jsonl');
+    const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
+    const entry = JSON.parse(lines[0]);
+    expect(entry.drift).toBe('0');
+  });
+
+  it('drift is non-empty string', () => {
+    const target = makeTmpDir();
+    writeFile(target, 'package.json', '{}');
+    const result = triage('add feature', target);
+    const historyFile = path.join(target, '.veridia', 'history.jsonl');
+    const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
+    const entry = JSON.parse(lines[0]);
+    expect(typeof entry.drift).toBe('string');
+    expect(entry.drift.length).toBeGreaterThanOrEqual(1);
+  });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { classify } from '../src/classify/classify.js';
 import type { TaskType } from '../src/classify/types.js';
+import type { VeridiaConfig } from '../src/config/config.js';
 
 const corpus: Array<{ input: string; expected: TaskType }> = [
   { input: 'fix the null pointer in login', expected: 'bugfix' },
@@ -40,5 +41,26 @@ describe('classify', () => {
     const explicit = classify('fix the null pointer in login');
     const fallback = classify('help me with something');
     expect(explicit.confidence).toBeGreaterThan(fallback.confidence);
+  });
+
+  it('uses config patterns when provided', () => {
+    const config: VeridiaConfig = {
+      classify: {
+        patterns: {
+          security: ['\\bauth\\b', '\\bpermission\\b', '\\blogin\\b'],
+        },
+      },
+      probes: {} as VeridiaConfig['probes'],
+      models: {} as VeridiaConfig['models'],
+      workflows: {} as VeridiaConfig['workflows'],
+    };
+    const result = classify('add auth to login', config);
+    expect(result.type).toBe('security');
+    expect(result.confidence).toBeGreaterThan(0);
+  });
+
+  it('falls back to defaults when no config provided', () => {
+    const result = classify('fix the null pointer');
+    expect(result.type).toBe('bugfix');
   });
 });
