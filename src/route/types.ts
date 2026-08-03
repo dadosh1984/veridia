@@ -1,4 +1,4 @@
-export type OrchestrationDepth = 'full-tdd' | 'tdd-where-possible' | 'minimal' | 'just-do-it';
+export type OrchestrationDepth = 'full-tdd' | 'tdd-where-possible' | 'minimal' | 'just-do-it' | 'ai-ready';
 
 export type ModelTier = 'cheapest' | 'mid' | 'any';
 

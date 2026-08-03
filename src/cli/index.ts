@@ -12,6 +12,9 @@ import { verify } from '../verify/verify.js';
 import type { Verdict } from '../verify/types.js';
 import { measureRecord, measureHistory } from '../measure/measure.js';
 import { triage } from '../triage/triage.js';
+import { buildReviewInstructions } from '../review/review.js';
+import { getAllAgents, getAgent, formatInvocation } from '../agent/agents.js';
+import { buildAgentInstruction, formatAgentInstructionJson } from '../util/agent-instruction.js';
 import { VERSION } from './version.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
@@ -32,6 +35,9 @@ Usage:
   veridia measure --record <json> [--task <task> --type <type> --level <level> --verdict <verdict>]
                             Record a run outcome
   veridia measure --history  Print history summary
+  veridia review [--target <path>]
+                            Output code review instructions for an AI agent
+  veridia agents --list     List all supported AI agents
 
 Options:
   -h, --help     Show this help message and exit
@@ -74,10 +80,26 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
   process.stdout.write(`${VERSION}\n`);
   process.exitCode = 0;
 } else if (arg === 'classify') {
-  const task = args.slice(1).join(' ').trim();
+  let agentId = '';
+  let taskStart = 1;
+  if (args[1] === '--agent' && args[2]) {
+    agentId = args[2];
+    taskStart = 3;
+  }
+  const task = args.slice(taskStart).join(' ').trim();
   if (task === '') {
     process.stderr.write('veridia: classify requires a task string\n');
     process.exitCode = 1;
+  } else if (agentId) {
+    const agent = getAgent(agentId);
+    const ai = buildAgentInstruction(
+      'Classify the following task description into one of: bugfix, refactor, feature, doc, explore, open. Return the type and a confidence score.',
+      { task },
+      'JSON with type and confidence fields',
+      agent ?? null,
+    );
+    process.stdout.write(formatAgentInstructionJson(ai) + '\n');
+    process.exitCode = 0;
   } else {
     const result = classify(task);
     process.stdout.write(`${result.type}\t${result.confidence}\n`);
@@ -101,19 +123,30 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     }
   }
 } else if (arg === 'route') {
-  const flags = parseFlags(args.slice(1), ['--type', '--level']);
+  const flags = parseFlags(args.slice(1), ['--type', '--level', '--agent']);
   if (flags._error) {
     process.stderr.write(`veridia: route ${flags._error}\n`);
     process.exitCode = 1;
   } else {
     const type = flags['--type'] ?? '';
     const level = flags['--level'] ?? '';
+    const agentId = flags['--agent'] ?? '';
     const typeErr = validateType(type);
     if (typeErr) { process.stderr.write(`veridia: route: ${typeErr}\n`); process.exitCode = 1; }
     else {
       const levelErr = validateLevel(level);
       if (levelErr) { process.stderr.write(`veridia: route: ${levelErr}\n`); process.exitCode = 1; }
-      else {
+      else if (agentId) {
+        const agent = getAgent(agentId);
+        const ai = buildAgentInstruction(
+          `Execute the following run plan for a ${type} task at verifiability level ${level}. Follow the plan steps and run the checks.`,
+          { type, level, plan: buildPlan(type as TaskType, Number(level) as VerifiabilityLevel) },
+          'Execution result with step outcomes and check results',
+          agent ?? null,
+        );
+        process.stdout.write(formatAgentInstructionJson(ai) + '\n');
+        process.exitCode = 0;
+      } else {
         const plan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
         process.stdout.write(`${plan.depth}\t${plan.tier}\t${plan.trust}\tsteps=${plan.steps.join(',')}\tchecks=${plan.checks.join(',')}\n`);
         process.exitCode = 0;
@@ -121,19 +154,30 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     }
   }
 } else if (arg === 'ask') {
-  const flags = parseFlags(args.slice(1), ['--type', '--level']);
+  const flags = parseFlags(args.slice(1), ['--type', '--level', '--agent']);
   if (flags._error) {
     process.stderr.write(`veridia: ask ${flags._error}\n`);
     process.exitCode = 1;
   } else {
     const type = flags['--type'] ?? '';
     const level = flags['--level'] ?? '';
+    const agentId = flags['--agent'] ?? '';
     const typeErr = validateType(type);
     if (typeErr) { process.stderr.write(`veridia: ask: ${typeErr}\n`); process.exitCode = 1; }
     else {
       const levelErr = validateLevel(level);
       if (levelErr) { process.stderr.write(`veridia: ask: ${levelErr}\n`); process.exitCode = 1; }
-      else {
+      else if (agentId) {
+        const agent = getAgent(agentId);
+        const ai = buildAgentInstruction(
+          `Generate 2-3 clarifying questions for a ${type} task at verifiability level ${level}. Questions should help understand scope, acceptance criteria, and constraints.`,
+          { type, level },
+          'Array of questions with id, prompt, and options fields',
+          agent ?? null,
+        );
+        process.stdout.write(formatAgentInstructionJson(ai) + '\n');
+        process.exitCode = 0;
+      } else {
         const result = ask(type as TaskType, Number(level) as VerifiabilityLevel);
         if (result.questions.length === 0) {
           process.stdout.write('no clarifying questions needed\n');
@@ -259,6 +303,34 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       process.stderr.write('veridia: measure requires --record or --history\n');
       process.exitCode = 1;
     }
+  }
+} else if (arg === 'review') {
+  const flags = parseFlags(args.slice(1), ['--target']);
+  if (flags._error) {
+    process.stderr.write(`veridia: review ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const target = flags['--target'] ? path.resolve(flags['--target']) : process.cwd();
+    if (!fs.existsSync(target)) {
+      process.stderr.write(`veridia: review: target path does not exist: ${target}\n`);
+      process.exitCode = 1;
+    } else {
+      const instructions = buildReviewInstructions(target);
+      process.stdout.write(JSON.stringify(instructions, null, 2) + '\n');
+      process.exitCode = 0;
+    }
+  }
+} else if (arg === 'agents') {
+  if (args[1] === '--list') {
+    const agents = getAllAgents();
+    process.stdout.write('id\tname\tconfigDir\tinvocation\n');
+    for (const a of agents) {
+      process.stdout.write(`${a.id}\t${a.name}\t${a.configDir}\t${formatInvocation(a, 'command')}\n`);
+    }
+    process.exitCode = 0;
+  } else {
+    process.stderr.write('veridia: agents requires --list\n');
+    process.exitCode = 1;
   }
 } else if (arg.startsWith('--')) {
   process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
