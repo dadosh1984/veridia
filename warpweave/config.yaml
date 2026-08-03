@@ -1,0 +1,4 @@
+schema: spec-driven
+tessl_registry:
+  enabled: true
+  auto_detect: true
