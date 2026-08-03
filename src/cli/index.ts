@@ -41,6 +41,32 @@ Options:
 const args = process.argv.slice(2);
 const arg = args[0];
 
+const VALID_TYPES = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'] as const;
+const VALID_LEVELS = ['0', '1', '2', '3'] as const;
+
+function parseFlags(flags: string[], expected: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (let i = 0; i < flags.length; i++) {
+    const f = flags[i];
+    if (expected.includes(f)) {
+      result[f] = flags[++i];
+      if (result[f] === undefined) return result;
+    } else {
+      result._error = `unknown argument: ${f}`;
+      return result;
+    }
+  }
+  return result;
+}
+
+function validateType(v: string): string | undefined {
+  return VALID_TYPES.includes(v as typeof VALID_TYPES[number]) ? undefined : `invalid task type: ${v}`;
+}
+
+function validateLevel(v: string): string | undefined {
+  return VALID_LEVELS.includes(v as typeof VALID_LEVELS[number]) ? undefined : `invalid verifiability level: ${v}`;
+}
+
 if (arg === undefined || arg === '--help' || arg === '-h') {
   process.stdout.write(USAGE);
   process.exitCode = 0;
@@ -58,218 +84,101 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     process.exitCode = 0;
   }
 } else if (arg === 'assess') {
-  let target = process.cwd();
-  let taskHint: string | undefined;
-  let invalid = false;
-  for (let i = 1; i < args.length; i++) {
-    if (args[i] === '--target') {
-      target = args[++i];
-      if (target === undefined) {
-        process.stderr.write('veridia: assess --target requires a path\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else if (args[i] === '--type') {
-      taskHint = args[++i];
-      if (taskHint === undefined) {
-        process.stderr.write('veridia: assess --type requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else {
-      process.stderr.write(`veridia: unknown argument for assess: ${args[i]}\n`);
-      process.exitCode = 1;
-      invalid = true;
-      break;
-    }
-  }
-  if (!invalid) {
-    const resolved = path.resolve(target);
-    if (!fs.existsSync(resolved)) {
-      process.stderr.write(`veridia: assess: target path does not exist: ${target}\n`);
+  const flags = parseFlags(args.slice(1), ['--target', '--type']);
+  if (flags._error) {
+    process.stderr.write(`veridia: assess ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const target = flags['--target'] ? path.resolve(flags['--target']) : process.cwd();
+    if (!fs.existsSync(target)) {
+      process.stderr.write(`veridia: assess: target path does not exist: ${flags['--target']}\n`);
       process.exitCode = 1;
     } else {
-      const result = assess(resolved, undefined, taskHint);
+      const result = assess(target, undefined, flags['--type']);
       const oracles = result.oracles.map((o) => o.kind).join(',');
       process.stdout.write(`${result.level}\t${oracles}\n`);
       process.exitCode = 0;
     }
   }
 } else if (arg === 'route') {
-  let type = '';
-  let level = '';
-  let invalid = false;
-  for (let i = 1; i < args.length; i++) {
-    if (args[i] === '--type') {
-      type = args[++i];
-      if (type === undefined) {
-        process.stderr.write('veridia: route --type requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
+  const flags = parseFlags(args.slice(1), ['--type', '--level']);
+  if (flags._error) {
+    process.stderr.write(`veridia: route ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const type = flags['--type'] ?? '';
+    const level = flags['--level'] ?? '';
+    const typeErr = validateType(type);
+    if (typeErr) { process.stderr.write(`veridia: route: ${typeErr}\n`); process.exitCode = 1; }
+    else {
+      const levelErr = validateLevel(level);
+      if (levelErr) { process.stderr.write(`veridia: route: ${levelErr}\n`); process.exitCode = 1; }
+      else {
+        const plan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
+        process.stdout.write(`${plan.depth}\t${plan.tier}\t${plan.trust}\tsteps=${plan.steps.join(',')}\tchecks=${plan.checks.join(',')}\n`);
+        process.exitCode = 0;
       }
-    } else if (args[i] === '--level') {
-      level = args[++i];
-      if (level === undefined) {
-        process.stderr.write('veridia: route --level requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else {
-      process.stderr.write(`veridia: unknown argument for route: ${args[i]}\n`);
-      process.exitCode = 1;
-      invalid = true;
-      break;
     }
-  }
-  const validTypes = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'];
-  const validLevels = ['0', '1', '2', '3'];
-  if (!invalid) {
-    if (!validTypes.includes(type)) {
-      process.stderr.write(`veridia: route: invalid task type: ${type}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    } else if (!validLevels.includes(level)) {
-      process.stderr.write(`veridia: route: invalid verifiability level: ${level}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    }
-  }
-  if (!invalid) {
-    const plan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
-    process.stdout.write(
-      `${plan.depth}\t${plan.tier}\t${plan.trust}\tsteps=${plan.steps.join(',')}\tchecks=${plan.checks.join(',')}\n`,
-    );
-    process.exitCode = 0;
   }
 } else if (arg === 'ask') {
-  let type = '';
-  let level = '';
-  let invalid = false;
-  for (let i = 1; i < args.length; i++) {
-    if (args[i] === '--type') {
-      type = args[++i];
-      if (type === undefined) {
-        process.stderr.write('veridia: ask --type requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else if (args[i] === '--level') {
-      level = args[++i];
-      if (level === undefined) {
-        process.stderr.write('veridia: ask --level requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else {
-      process.stderr.write(`veridia: unknown argument for ask: ${args[i]}\n`);
-      process.exitCode = 1;
-      invalid = true;
-      break;
-    }
-  }
-  const validTypes = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'];
-  const validLevels = ['0', '1', '2', '3'];
-  if (!invalid) {
-    if (!validTypes.includes(type)) {
-      process.stderr.write(`veridia: ask: invalid task type: ${type}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    } else if (!validLevels.includes(level)) {
-      process.stderr.write(`veridia: ask: invalid verifiability level: ${level}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    }
-  }
-  if (!invalid) {
-    const result = ask(type as TaskType, Number(level) as VerifiabilityLevel);
-    if (result.questions.length === 0) {
-      process.stdout.write('no clarifying questions needed\n');
-    } else {
-      for (const q of result.questions) {
-        process.stdout.write(`${q.id}\t${q.prompt}\t${q.options.join('|')}\n`);
+  const flags = parseFlags(args.slice(1), ['--type', '--level']);
+  if (flags._error) {
+    process.stderr.write(`veridia: ask ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const type = flags['--type'] ?? '';
+    const level = flags['--level'] ?? '';
+    const typeErr = validateType(type);
+    if (typeErr) { process.stderr.write(`veridia: ask: ${typeErr}\n`); process.exitCode = 1; }
+    else {
+      const levelErr = validateLevel(level);
+      if (levelErr) { process.stderr.write(`veridia: ask: ${levelErr}\n`); process.exitCode = 1; }
+      else {
+        const result = ask(type as TaskType, Number(level) as VerifiabilityLevel);
+        if (result.questions.length === 0) {
+          process.stdout.write('no clarifying questions needed\n');
+        } else {
+          for (const q of result.questions) {
+            process.stdout.write(`${q.id}\t${q.prompt}\t${q.options.join('|')}\n`);
+          }
+        }
+        process.exitCode = 0;
       }
     }
-    process.exitCode = 0;
   }
 } else if (arg === 'verify') {
-  let target = '';
-  let type = '';
-  let level = '';
-  let resolved = '';
-  let invalid = false;
-  for (let i = 1; i < args.length; i++) {
-    if (args[i] === '--target') {
-      target = args[++i];
-      if (target === undefined) {
-        process.stderr.write('veridia: verify --target requires a path\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
+  const flags = parseFlags(args.slice(1), ['--target', '--type', '--level']);
+  if (flags._error) {
+    process.stderr.write(`veridia: verify ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const target = flags['--target'] ?? '';
+    const type = flags['--type'] ?? '';
+    const level = flags['--level'] ?? '';
+    if (target === '') { process.stderr.write('veridia: verify: missing --target\n'); process.exitCode = 1; }
+    else {
+      const typeErr = validateType(type);
+      if (typeErr) { process.stderr.write(`veridia: verify: ${typeErr}\n`); process.exitCode = 1; }
+      else {
+        const levelErr = validateLevel(level);
+        if (levelErr) { process.stderr.write(`veridia: verify: ${levelErr}\n`); process.exitCode = 1; }
+        else {
+          const resolved = path.resolve(target);
+          if (!fs.existsSync(resolved)) {
+            process.stderr.write(`veridia: verify: target path does not exist: ${target}\n`);
+            process.exitCode = 1;
+          } else {
+            const kinds = probeOracles(resolved, realFs).map((o) => o.kind);
+            const result = verify(resolved, Number(level) as VerifiabilityLevel, kinds);
+            for (const check of result.checks) {
+              process.stdout.write(`${check.kind}\t${check.passed ? 'PASS' : 'FAIL'}\t${check.weak ? 'weak' : 'strong'}\t${check.command}\n`);
+            }
+            process.stdout.write(`verdict\t${result.verdict}\n`);
+            process.exitCode = 0;
+          }
+        }
       }
-    } else if (args[i] === '--type') {
-      type = args[++i];
-      if (type === undefined) {
-        process.stderr.write('veridia: verify --type requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else if (args[i] === '--level') {
-      level = args[++i];
-      if (level === undefined) {
-        process.stderr.write('veridia: verify --level requires a value\n');
-        process.exitCode = 1;
-        invalid = true;
-        break;
-      }
-    } else {
-      process.stderr.write(`veridia: unknown argument for verify: ${args[i]}\n`);
-      process.exitCode = 1;
-      invalid = true;
-      break;
     }
-  }
-  const validTypes = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'];
-  const validLevels = ['0', '1', '2', '3'];
-  if (!invalid) {
-    if (target === '') {
-      process.stderr.write('veridia: verify: missing --target\n');
-      process.exitCode = 1;
-      invalid = true;
-    } else if (!validTypes.includes(type)) {
-      process.stderr.write(`veridia: verify: invalid task type: ${type}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    } else if (!validLevels.includes(level)) {
-      process.stderr.write(`veridia: verify: invalid verifiability level: ${level}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    }
-  }
-  if (!invalid) {
-    resolved = path.resolve(target);
-    if (!fs.existsSync(resolved)) {
-      process.stderr.write(`veridia: verify: target path does not exist: ${target}\n`);
-      process.exitCode = 1;
-      invalid = true;
-    }
-  }
-  if (!invalid) {
-    const kinds = probeOracles(resolved, realFs).map((o) => o.kind);
-    const result = verify(resolved, Number(level) as VerifiabilityLevel, kinds);
-    for (const check of result.checks) {
-      process.stdout.write(
-        `${check.kind}\t${check.passed ? 'PASS' : 'FAIL'}\t${check.weak ? 'weak' : 'strong'}\t${check.command}\n`,
-      );
-    }
-    process.stdout.write(`verdict\t${result.verdict}\n`);
-    process.exitCode = 0;
   }
 } else if (arg === 'measure') {
   let record: string | undefined;

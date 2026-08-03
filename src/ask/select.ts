@@ -14,11 +14,7 @@ export function selectQuestions(type: TaskType, level: VerifiabilityLevel): Clar
     if (!hasId(questions, q.id)) questions.push(q);
   }
 
-  if (questions.length < 2) {
-    if (!hasId(questions, EXPECTED_OUTCOME_QUESTION.id)) questions.push(EXPECTED_OUTCOME_QUESTION);
-  }
-
-  if (level === 0) {
+  if (questions.length < 2 || level === 0) {
     if (!hasId(questions, EXPECTED_OUTCOME_QUESTION.id)) questions.push(EXPECTED_OUTCOME_QUESTION);
   }
 

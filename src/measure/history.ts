@@ -30,7 +30,17 @@ export function readHistory(deps: HistoryDeps = {}): MeasureEntry[] {
   if (!existsSync(file)) return [];
   const content = readFileSync(file, 'utf8').trim();
   if (content === '') return [];
-  return content.split('\n').map((line) => JSON.parse(line) as MeasureEntry);
+  const entries: MeasureEntry[] = [];
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed === '') continue;
+    try {
+      entries.push(JSON.parse(trimmed) as MeasureEntry);
+    } catch {
+      continue;
+    }
+  }
+  return entries;
 }
 
 export function buildSummary(entries: MeasureEntry[]): HistorySummary {
