@@ -182,4 +182,50 @@ describe('veridia CLI', () => {
     const result = runCli('--help');
     expect(result.stdout).toContain('ask');
   });
+
+  it('verifies a target with a failing test script and prints a verdict with exit 0', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{"scripts":{"test":"node -e \\"process.exit(1)\\""}}');
+    const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('test-runner');
+    expect(result.stdout).toContain('verdict');
+  });
+
+  it('verifies a target with no oracles and reports a HUMAN verdict', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'README.md', '');
+    const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('verdict');
+    expect(result.stdout).toContain('HUMAN');
+  });
+
+  it('rejects verify with a missing type flag', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCli('verify', '--target', dir, '--level', '2');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('type');
+  });
+
+  it('rejects verify with a missing target path', () => {
+    const dir = path.join(os.tmpdir(), 'veridia-verify-missing-' + Date.now());
+    const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain(dir);
+  });
+
+  it('rejects verify with an invalid level value', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '9');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('9');
+  });
+
+  it('documents the verify subcommand in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('verify');
+  });
 });

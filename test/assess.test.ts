@@ -72,6 +72,24 @@ describe('probeOracles', () => {
     expect(found).toContainEqual<Oracle>({ kind: 'test-runner' });
   });
 
+  it('detects a test runner from a package.json test script with a leading BOM', () => {
+    const target = makeTmpDir();
+    const found = probeOracles(
+      target,
+      fakeFs(target, { 'package.json': '\uFEFF{"scripts":{"test":"vitest run"}}' }),
+    );
+    expect(found).toContainEqual<Oracle>({ kind: 'test-runner' });
+  });
+
+  it('detects a type-check from a BOM-prefixed package.json typecheck script', () => {
+    const target = makeTmpDir();
+    const found = probeOracles(
+      target,
+      fakeFs(target, { 'package.json': '\uFEFF{"scripts":{"typecheck":"tsc"}}' }),
+    );
+    expect(found).toContainEqual<Oracle>({ kind: 'type-check' });
+  });
+
   it('detects a type-check oracle from tsconfig.json', () => {
     const target = makeTmpDir();
     const found = probeOracles(target, fakeFs(target, { 'tsconfig.json': '{}' }));

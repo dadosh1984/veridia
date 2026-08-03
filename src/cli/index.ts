@@ -7,6 +7,8 @@ import type { VerifiabilityLevel } from '../assess/types.js';
 import { classify } from '../classify/classify.js';
 import type { TaskType } from '../classify/types.js';
 import { buildPlan } from '../route/route.js';
+import { probeOracles, realFs } from '../assess/probe.js';
+import { verify } from '../verify/verify.js';
 import { VERSION } from './version.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
@@ -21,6 +23,8 @@ Usage:
                             Route (type, level) to a run plan
   veridia ask --type <type> --level <level>
                             Ask clarifying questions (levels 0/1)
+  veridia verify --target <path> --type <type> --level <level>
+                            Run a target's checks and print a verdict
 
 Options:
   -h, --help     Show this help message and exit
@@ -184,6 +188,80 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
         process.stdout.write(`${q.id}\t${q.prompt}\t${q.options.join('|')}\n`);
       }
     }
+    process.exitCode = 0;
+  }
+} else if (arg === 'verify') {
+  let target = '';
+  let type = '';
+  let level = '';
+  let resolved = '';
+  let invalid = false;
+  for (let i = 1; i < args.length; i++) {
+    if (args[i] === '--target') {
+      target = args[++i];
+      if (target === undefined) {
+        process.stderr.write('veridia: verify --target requires a path\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else if (args[i] === '--type') {
+      type = args[++i];
+      if (type === undefined) {
+        process.stderr.write('veridia: verify --type requires a value\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else if (args[i] === '--level') {
+      level = args[++i];
+      if (level === undefined) {
+        process.stderr.write('veridia: verify --level requires a value\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else {
+      process.stderr.write(`veridia: unknown argument for verify: ${args[i]}\n`);
+      process.exitCode = 1;
+      invalid = true;
+      break;
+    }
+  }
+  const validTypes = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'];
+  const validLevels = ['0', '1', '2', '3'];
+  if (!invalid) {
+    if (target === '') {
+      process.stderr.write('veridia: verify: missing --target\n');
+      process.exitCode = 1;
+      invalid = true;
+    } else if (!validTypes.includes(type)) {
+      process.stderr.write(`veridia: verify: invalid task type: ${type}\n`);
+      process.exitCode = 1;
+      invalid = true;
+    } else if (!validLevels.includes(level)) {
+      process.stderr.write(`veridia: verify: invalid verifiability level: ${level}\n`);
+      process.exitCode = 1;
+      invalid = true;
+    }
+  }
+  if (!invalid) {
+    resolved = path.resolve(target);
+    if (!fs.existsSync(resolved)) {
+      process.stderr.write(`veridia: verify: target path does not exist: ${target}\n`);
+      process.exitCode = 1;
+      invalid = true;
+    }
+  }
+  if (!invalid) {
+    const kinds = probeOracles(resolved, realFs).map((o) => o.kind);
+    const result = verify(resolved, Number(level) as VerifiabilityLevel, kinds);
+    for (const check of result.checks) {
+      process.stdout.write(
+        `${check.kind}\t${check.passed ? 'PASS' : 'FAIL'}\t${check.weak ? 'weak' : 'strong'}\t${check.command}\n`,
+      );
+    }
+    process.stdout.write(`verdict\t${result.verdict}\n`);
     process.exitCode = 0;
   }
 } else {

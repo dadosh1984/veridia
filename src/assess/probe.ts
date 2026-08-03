@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { stripBom } from '../util/strip-bom.js';
 import type { Oracle, OracleKind } from './types.js';
 
 export interface FsLike {
@@ -74,7 +75,7 @@ const PROBES: ProbeSpec[] = [
 function hasScript(fsLike: FsLike, target: string, script: string): boolean {
   const raw = fsLike.readFileSync(path.join(target, 'package.json'));
   try {
-    const pkg = JSON.parse(raw);
+    const pkg = JSON.parse(stripBom(raw));
     const scripts = (pkg.scripts ?? {}) as Record<string, unknown>;
     return script in scripts;
   } catch {
