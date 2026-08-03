@@ -14,10 +14,11 @@ import { measureRecord, measureHistory } from '../measure/measure.js';
 import { triage } from '../triage/triage.js';
 import { buildReviewInstructions } from '../review/review.js';
 import { getAllAgents, getAgent, formatInvocation } from '../agent/agents.js';
-import { buildAgentInstruction, formatAgentInstructionJson } from '../util/agent-instruction.js';
 import { loadConfig, DEFAULT_CONFIG } from '../config/config.js';
 import { generateCommands } from '../generate/generate.js';
 import { VERSION } from './version.js';
+import { buildExecutionPlan } from '../execute/plan.js';
+import { delegate } from '../execute/delegate.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
 
@@ -32,6 +33,10 @@ Usage:
                             Route (type, level) to a run plan
   veridia ask --type <type> --level <level>
                             Ask clarifying questions (levels 0/1)
+  veridia plan --type <type> --level <level> [--files <files>] [--target <path>]
+                            Generate an execution plan for the host agent
+  veridia execute --type <type> --level <level> [--files <files>] [--target <path>]
+                            Execute a plan via the host agent
   veridia verify --target <path> --type <type> --level <level>
                             Run a target's checks and print a verdict
   veridia measure --record <json> [--task <task> --type <type> --level <level> --verdict <verdict>]
@@ -89,25 +94,10 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
 } else if (arg === 'version' || arg === '-v' || arg === '--version') {
   jsonOut({ version: VERSION });
 } else if (arg === 'classify') {
-  let agentId = '';
-  let taskStart = 1;
-  if (args[1] === '--agent' && args[2]) {
-    agentId = args[2];
-    taskStart = 3;
-  }
-  const task = args.slice(taskStart).join(' ').trim();
+  const task = args.slice(1).join(' ').trim();
   if (task === '') {
     process.stderr.write('veridia: classify requires a task string\n');
     process.exitCode = 1;
-  } else if (agentId) {
-    const agent = getAgent(agentId);
-    const ai = buildAgentInstruction(
-      'Classify the following task description into one of: bugfix, refactor, feature, doc, explore, open. Return the type and a confidence score.',
-      { task },
-      'JSON with type and confidence fields',
-      agent ?? null,
-    );
-    jsonOut(ai);
   } else {
     const result = classify(task);
     jsonOut({ type: result.type, confidence: result.confidence });
@@ -128,60 +118,87 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     }
   }
 } else if (arg === 'route') {
-  const flags = parseFlags(args.slice(1), ['--type', '--level', '--agent']);
+  const flags = parseFlags(args.slice(1), ['--type', '--level']);
   if (flags._error) {
     process.stderr.write(`veridia: route ${flags._error}\n`);
     process.exitCode = 1;
   } else {
     const type = flags['--type'] ?? '';
     const level = flags['--level'] ?? '';
-    const agentId = flags['--agent'] ?? '';
     const typeErr = validateType(type);
     if (typeErr) { process.stderr.write(`veridia: route: ${typeErr}\n`); process.exitCode = 1; }
     else {
       const levelErr = validateLevel(level);
       if (levelErr) { process.stderr.write(`veridia: route: ${levelErr}\n`); process.exitCode = 1; }
-      else if (agentId) {
-        const agent = getAgent(agentId);
-        const ai = buildAgentInstruction(
-          `Execute the following run plan for a ${type} task at verifiability level ${level}. Follow the plan steps and run the checks.`,
-          { type, level, plan: buildPlan(type as TaskType, Number(level) as VerifiabilityLevel) },
-          'Execution result with step outcomes and check results',
-          agent ?? null,
-        );
-        jsonOut(ai);
-      } else {
+      else {
         const plan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
         jsonOut({ depth: plan.depth, tier: plan.tier, trust: plan.trust, steps: plan.steps, checks: plan.checks });
       }
     }
   }
 } else if (arg === 'ask') {
-  const flags = parseFlags(args.slice(1), ['--type', '--level', '--agent']);
+  const flags = parseFlags(args.slice(1), ['--type', '--level']);
   if (flags._error) {
     process.stderr.write(`veridia: ask ${flags._error}\n`);
     process.exitCode = 1;
   } else {
     const type = flags['--type'] ?? '';
     const level = flags['--level'] ?? '';
-    const agentId = flags['--agent'] ?? '';
     const typeErr = validateType(type);
     if (typeErr) { process.stderr.write(`veridia: ask: ${typeErr}\n`); process.exitCode = 1; }
     else {
       const levelErr = validateLevel(level);
       if (levelErr) { process.stderr.write(`veridia: ask: ${levelErr}\n`); process.exitCode = 1; }
-      else if (agentId) {
-        const agent = getAgent(agentId);
-        const ai = buildAgentInstruction(
-          `Generate 2-3 clarifying questions for a ${type} task at verifiability level ${level}. Questions should help understand scope, acceptance criteria, and constraints.`,
-          { type, level },
-          'Array of questions with id, prompt, and options fields',
-          agent ?? null,
-        );
-        jsonOut(ai);
-      } else {
+      else {
         const result = ask(type as TaskType, Number(level) as VerifiabilityLevel);
         jsonOut({ questions: result.questions });
+      }
+    }
+  }
+} else if (arg === 'plan') {
+  const flags = parseFlags(args.slice(1), ['--type', '--level', '--files', '--target']);
+  if (flags._error) {
+    process.stderr.write(`veridia: plan ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const type = flags['--type'] ?? '';
+    const level = flags['--level'] ?? '';
+    const filesStr = flags['--files'] ?? '';
+    const target = flags['--target'] ? path.resolve(flags['--target']) : process.cwd();
+    const typeErr = validateType(type);
+    if (typeErr) { process.stderr.write(`veridia: plan: ${typeErr}\n`); process.exitCode = 1; }
+    else {
+      const levelErr = validateLevel(level);
+      if (levelErr) { process.stderr.write(`veridia: plan: ${levelErr}\n`); process.exitCode = 1; }
+      else {
+        const files = filesStr ? filesStr.split(',').map((f) => f.trim()).filter(Boolean) : undefined;
+        const runPlan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
+        const execPlan = buildExecutionPlan('', type as TaskType, Number(level) as VerifiabilityLevel, runPlan, files, target);
+        jsonOut(execPlan);
+      }
+    }
+  }
+} else if (arg === 'execute') {
+  const flags = parseFlags(args.slice(1), ['--type', '--level', '--files', '--target']);
+  if (flags._error) {
+    process.stderr.write(`veridia: execute ${flags._error}\n`);
+    process.exitCode = 1;
+  } else {
+    const type = flags['--type'] ?? '';
+    const level = flags['--level'] ?? '';
+    const filesStr = flags['--files'] ?? '';
+    const target = flags['--target'] ? path.resolve(flags['--target']) : process.cwd();
+    const typeErr = validateType(type);
+    if (typeErr) { process.stderr.write(`veridia: execute: ${typeErr}\n`); process.exitCode = 1; }
+    else {
+      const levelErr = validateLevel(level);
+      if (levelErr) { process.stderr.write(`veridia: execute: ${levelErr}\n`); process.exitCode = 1; }
+      else {
+        const files = filesStr ? filesStr.split(',').map((f) => f.trim()).filter(Boolean) : undefined;
+        const runPlan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
+        const execPlan = buildExecutionPlan('', type as TaskType, Number(level) as VerifiabilityLevel, runPlan, files, target);
+        const result = delegate(execPlan, target);
+        jsonOut({ exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
       }
     }
   }

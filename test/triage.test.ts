@@ -67,4 +67,14 @@ describe('triage', () => {
     expect(first.level).toBe(second.level);
     expect(first.verdict).toBe(second.verdict);
   });
+
+  it('includes execution plan and result in output', () => {
+    const target = makeTmpDir();
+    writeFile(target, 'package.json', '{}');
+    const result = triage('add feature', target);
+    expect(result.executionPlan).toBeDefined();
+    expect(result.executionPlan!.task).toBe('add feature');
+    expect(result.executionResult).toBeDefined();
+    expect(result.executionResult!.exitCode).toBe(0);
+  });
 });

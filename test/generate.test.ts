@@ -39,10 +39,10 @@ describe('getCommandFiles', () => {
     expect(classifyFile!.path).toContain('.opencode/commands/veridia-classify');
   });
 
-  it('generates all 9 commands', () => {
+  it('generates all 11 commands', () => {
     const agent = getAgent('cursor')!;
     const files = getCommandFiles(agent);
-    expect(files).toHaveLength(9);
+    expect(files).toHaveLength(11);
   });
 });
 
@@ -51,7 +51,7 @@ describe('generateCommands', () => {
     const target = makeTmpDir();
     const agent = getAgent('claude')!;
     const generated = generateCommands(agent, target);
-    expect(generated.length).toBe(9);
+    expect(generated.length).toBe(11);
     for (const filePath of generated) {
       const full = path.join(target, filePath);
       expect(fs.existsSync(full)).toBe(true);

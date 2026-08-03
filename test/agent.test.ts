@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAllAgents, getAgent, formatInvocation } from '../src/agent/agents.js';
+import { getAllAgents, getAgent, formatInvocation, getAgentCapabilities } from '../src/agent/agents.js';
 
 describe('getAllAgents', () => {
   it('returns all 35 agents', () => {
@@ -43,5 +43,34 @@ describe('formatInvocation', () => {
   it('formats amazon-q invocation with @ prefix', () => {
     const agent = getAgent('amazon-q')!;
     expect(formatInvocation(agent, 'apply')).toBe('@ww-apply');
+  });
+});
+
+describe('agent capabilities', () => {
+  it('every agent has delegationModes array', () => {
+    for (const agent of getAllAgents()) {
+      expect(agent.delegationModes.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('claude supports all three delegation modes', () => {
+    const agent = getAgent('claude')!;
+    expect(agent.delegationModes).toContain('stdout');
+    expect(agent.delegationModes).toContain('file');
+    expect(agent.delegationModes).toContain('shell');
+    expect(agent.canWriteFiles).toBe(true);
+    expect(agent.canRunShell).toBe(true);
+    expect(agent.canCallModels).toBe(true);
+  });
+
+  it('skills-only agents cannot call models or run shell', () => {
+    const agent = getAgent('codex')!;
+    expect(agent.canCallModels).toBe(false);
+    expect(agent.canRunShell).toBe(false);
+    expect(agent.delegationModes).not.toContain('shell');
+  });
+
+  it('getAgentCapabilities returns same as getAgent', () => {
+    expect(getAgentCapabilities('claude')).toEqual(getAgent('claude'));
   });
 });
