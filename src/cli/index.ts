@@ -15,6 +15,8 @@ import { triage } from '../triage/triage.js';
 import { buildReviewInstructions } from '../review/review.js';
 import { getAllAgents, getAgent, formatInvocation } from '../agent/agents.js';
 import { buildAgentInstruction, formatAgentInstructionJson } from '../util/agent-instruction.js';
+import { loadConfig, DEFAULT_CONFIG } from '../config/config.js';
+import { generateCommands } from '../generate/generate.js';
 import { VERSION } from './version.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
@@ -38,6 +40,10 @@ Usage:
   veridia review [--target <path>]
                             Output code review instructions for an AI agent
   veridia agents --list     List all supported AI agents
+  veridia init --agent <name>
+                            Initialize veridia config and agent command files
+  veridia generate --agent <name>
+                            Generate agent command files
 
 Options:
   -h, --help     Show this help message and exit
@@ -73,12 +79,15 @@ function validateLevel(v: string): string | undefined {
   return VALID_LEVELS.includes(v as typeof VALID_LEVELS[number]) ? undefined : `invalid verifiability level: ${v}`;
 }
 
+function jsonOut(data: unknown): void {
+  process.stdout.write(JSON.stringify(data) + '\n');
+}
+
 if (arg === undefined || arg === '--help' || arg === '-h') {
   process.stdout.write(USAGE);
   process.exitCode = 0;
 } else if (arg === 'version' || arg === '-v' || arg === '--version') {
-  process.stdout.write(`${VERSION}\n`);
-  process.exitCode = 0;
+  jsonOut({ version: VERSION });
 } else if (arg === 'classify') {
   let agentId = '';
   let taskStart = 1;
@@ -98,12 +107,10 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       'JSON with type and confidence fields',
       agent ?? null,
     );
-    process.stdout.write(formatAgentInstructionJson(ai) + '\n');
-    process.exitCode = 0;
+    jsonOut(ai);
   } else {
     const result = classify(task);
-    process.stdout.write(`${result.type}\t${result.confidence}\n`);
-    process.exitCode = 0;
+    jsonOut({ type: result.type, confidence: result.confidence });
   }
 } else if (arg === 'assess') {
   const flags = parseFlags(args.slice(1), ['--target', '--type']);
@@ -117,9 +124,7 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       process.exitCode = 1;
     } else {
       const result = assess(target, undefined, flags['--type']);
-      const oracles = result.oracles.map((o) => o.kind).join(',');
-      process.stdout.write(`${result.level}\t${oracles}\n`);
-      process.exitCode = 0;
+      jsonOut({ level: result.level, oracles: result.oracles.map((o) => o.kind) });
     }
   }
 } else if (arg === 'route') {
@@ -144,12 +149,10 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
           'Execution result with step outcomes and check results',
           agent ?? null,
         );
-        process.stdout.write(formatAgentInstructionJson(ai) + '\n');
-        process.exitCode = 0;
+        jsonOut(ai);
       } else {
         const plan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
-        process.stdout.write(`${plan.depth}\t${plan.tier}\t${plan.trust}\tsteps=${plan.steps.join(',')}\tchecks=${plan.checks.join(',')}\n`);
-        process.exitCode = 0;
+        jsonOut({ depth: plan.depth, tier: plan.tier, trust: plan.trust, steps: plan.steps, checks: plan.checks });
       }
     }
   }
@@ -175,18 +178,10 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
           'Array of questions with id, prompt, and options fields',
           agent ?? null,
         );
-        process.stdout.write(formatAgentInstructionJson(ai) + '\n');
-        process.exitCode = 0;
+        jsonOut(ai);
       } else {
         const result = ask(type as TaskType, Number(level) as VerifiabilityLevel);
-        if (result.questions.length === 0) {
-          process.stdout.write('no clarifying questions needed\n');
-        } else {
-          for (const q of result.questions) {
-            process.stdout.write(`${q.id}\t${q.prompt}\t${q.options.join('|')}\n`);
-          }
-        }
-        process.exitCode = 0;
+        jsonOut({ questions: result.questions });
       }
     }
   }
@@ -214,11 +209,7 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
           } else {
             const kinds = probeOracles(resolved, realFs).map((o) => o.kind);
             const result = verify(resolved, Number(level) as VerifiabilityLevel, kinds);
-            for (const check of result.checks) {
-              process.stdout.write(`${check.kind}\t${check.passed ? 'PASS' : 'FAIL'}\t${check.weak ? 'weak' : 'strong'}\t${check.command}\n`);
-            }
-            process.stdout.write(`verdict\t${result.verdict}\n`);
-            process.exitCode = 0;
+            jsonOut({ checks: result.checks, verdict: result.verdict });
           }
         }
       }
@@ -231,6 +222,7 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
   let type = '';
   let level = '';
   let verdict = '';
+  let measureTarget = '';
   let invalid = false;
   for (let i = 1; i < args.length; i++) {
     if (args[i] === '--record') {
@@ -251,6 +243,8 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       level = args[++i];
     } else if (args[i] === '--verdict') {
       verdict = args[++i];
+    } else if (args[i] === '--target') {
+      measureTarget = args[++i];
     } else {
       process.stderr.write(`veridia: unknown argument for measure: ${args[i]}\n`);
       process.exitCode = 1;
@@ -259,19 +253,10 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     }
   }
   if (!invalid) {
+    const deps = measureTarget ? { root: path.resolve(measureTarget) } : undefined;
     if (history) {
-      const summary = measureHistory();
-      process.stdout.write(`totalRuns\t${summary.totalRuns}\n`);
-      for (const [v, n] of Object.entries(summary.perVerdict)) {
-        process.stdout.write(`perVerdict\t${v}\t${n}\n`);
-      }
-      for (const [l, n] of Object.entries(summary.perLevel)) {
-        process.stdout.write(`perLevel\t${l}\t${n}\n`);
-      }
-      for (const e of summary.recent) {
-        process.stdout.write(`recent\t${e.timestamp}\t${e.task}\t${e.verdict}\n`);
-      }
-      process.exitCode = 0;
+      const summary = measureHistory(deps);
+      jsonOut(summary);
     } else if (record) {
       let parsed: Record<string, unknown>;
       try {
@@ -294,9 +279,8 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
           process.stderr.write('veridia: measure --record requires task, type, and verdict\n');
           process.exitCode = 1;
         } else {
-          measureRecord(entry);
-          process.stdout.write('recorded\n');
-          process.exitCode = 0;
+          measureRecord(entry, deps);
+          jsonOut({ recorded: true });
         }
       }
     } else {
@@ -316,21 +300,58 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       process.exitCode = 1;
     } else {
       const instructions = buildReviewInstructions(target);
-      process.stdout.write(JSON.stringify(instructions, null, 2) + '\n');
-      process.exitCode = 0;
+      jsonOut(instructions);
     }
   }
 } else if (arg === 'agents') {
   if (args[1] === '--list') {
     const agents = getAllAgents();
-    process.stdout.write('id\tname\tconfigDir\tinvocation\n');
-    for (const a of agents) {
-      process.stdout.write(`${a.id}\t${a.name}\t${a.configDir}\t${formatInvocation(a, 'command')}\n`);
-    }
-    process.exitCode = 0;
+    jsonOut({ agents: agents.map((a) => ({ id: a.id, name: a.name, configDir: a.configDir, invocation: formatInvocation(a, 'command') })) });
   } else {
     process.stderr.write('veridia: agents requires --list\n');
     process.exitCode = 1;
+  }
+} else if (arg === 'init') {
+  const agentIdx = args.indexOf('--agent');
+  const agentId = agentIdx >= 0 && args[agentIdx + 1] ? args[agentIdx + 1] : '';
+  if (!agentId) {
+    process.stderr.write('veridia: init requires --agent <name>\n');
+    process.exitCode = 1;
+  } else {
+    const agent = getAgent(agentId);
+    if (!agent) {
+      process.stderr.write(`veridia: init: unknown agent: ${agentId}\n`);
+      process.exitCode = 1;
+    } else {
+      const target = process.cwd();
+      const configDir = path.join(target, '.veridia');
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+      }
+      const configPath = path.join(configDir, 'config.json');
+      if (!fs.existsSync(configPath)) {
+        fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2) + '\n', 'utf8');
+      }
+      const generated = generateCommands(agent, target);
+      jsonOut({ initialized: true, agent: agentId, configFile: '.veridia/config.json', commandsGenerated: generated });
+    }
+  }
+} else if (arg === 'generate') {
+  const agentIdx = args.indexOf('--agent');
+  const agentId = agentIdx >= 0 && args[agentIdx + 1] ? args[agentIdx + 1] : '';
+  if (!agentId) {
+    process.stderr.write('veridia: generate requires --agent <name>\n');
+    process.exitCode = 1;
+  } else {
+    const agent = getAgent(agentId);
+    if (!agent) {
+      process.stderr.write(`veridia: generate: unknown agent: ${agentId}\n`);
+      process.exitCode = 1;
+    } else {
+      const target = process.cwd();
+      const generated = generateCommands(agent, target);
+      jsonOut({ generated: true, agent: agentId, commandsGenerated: generated });
+    }
   }
 } else if (arg.startsWith('--')) {
   process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
@@ -358,12 +379,7 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       process.exitCode = 1;
     } else {
       const result = triage(task, resolved);
-      process.stdout.write(`type\t${result.type}\t${result.confidence}\n`);
-      process.stdout.write(`level\t${result.level}\n`);
-      process.stdout.write(`plan\t${result.plan}\n`);
-      process.stdout.write(`questions\t${result.questions}\n`);
-      process.stdout.write(`verdict\t${result.verdict}\n`);
-      process.exitCode = 0;
+      jsonOut(result);
     }
   }
 }

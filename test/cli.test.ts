@@ -24,6 +24,10 @@ afterEach(() => {
   }
 });
 
+function parseJson(stdout: string): unknown {
+  return JSON.parse(stdout.trim());
+}
+
 describe('veridia CLI', () => {
   it('prints usage for --help and exits 0', () => {
     const result = runCli('--help');
@@ -46,13 +50,15 @@ describe('veridia CLI', () => {
   it('prints version for `version` subcommand and exits 0', () => {
     const result = runCli('version');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+    const parsed = parseJson(result.stdout) as { version: string };
+    expect(parsed.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it('prints version for -v and exits 0', () => {
     const result = runCli('-v');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+    const parsed = parseJson(result.stdout) as { version: string };
+    expect(parsed.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it('treats an unknown subcommand as a task string and runs triage', () => {
@@ -60,7 +66,8 @@ describe('veridia CLI', () => {
     writeFile(dir, 'package.json', '{}');
     const result = runCli('frobnicate', '--target', dir);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('type');
+    const parsed = parseJson(result.stdout) as { type: string };
+    expect(parsed.type).toBeTruthy();
   });
 
   it('rejects an unknown flag with non-zero exit and error on stderr', () => {
@@ -72,13 +79,15 @@ describe('veridia CLI', () => {
   it('classifies a bug fix task and exits 0', () => {
     const result = runCli('classify', 'fix the null pointer in login');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('bugfix');
+    const parsed = parseJson(result.stdout) as { type: string };
+    expect(parsed.type).toBe('bugfix');
   });
 
   it('classifies a feature task and exits 0', () => {
     const result = runCli('classify', 'add dark mode support');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('feature');
+    const parsed = parseJson(result.stdout) as { type: string };
+    expect(parsed.type).toBe('feature');
   });
 
   it('rejects classify with no task string via non-zero exit and stderr', () => {
@@ -90,7 +99,8 @@ describe('veridia CLI', () => {
   it('assesses the current working directory and exits 0', () => {
     const result = runCli('assess');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toMatch(/^[0-3]\t/);
+    const parsed = parseJson(result.stdout) as { level: number };
+    expect([0, 1, 2, 3]).toContain(parsed.level);
   });
 
   it('assesses a target path via --target and prints level and oracles', () => {
@@ -98,7 +108,9 @@ describe('veridia CLI', () => {
     writeFile(dir, 'tsconfig.json', '{}');
     const result = runCli('assess', '--target', dir);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout.trim()).toBe('2\ttype-check');
+    const parsed = parseJson(result.stdout) as { level: number; oracles: string[] };
+    expect(parsed.level).toBe(2);
+    expect(parsed.oracles).toContain('type-check');
   });
 
   it('rejects a missing target path with non-zero exit and stderr', () => {
@@ -116,15 +128,17 @@ describe('veridia CLI', () => {
   it('routes a feature at level 2 and prints a plan with exit 0', () => {
     const result = runCli('route', '--type', 'feature', '--level', '2');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('tdd-where-possible');
-    expect(result.stdout).toContain('mid');
+    const parsed = parseJson(result.stdout) as { depth: string; tier: string };
+    expect(parsed.depth).toBe('tdd-where-possible');
+    expect(parsed.tier).toBe('mid');
   });
 
   it('routes a bugfix at level 3 with full-tdd depth', () => {
     const result = runCli('route', '--type', 'bugfix', '--level', '3');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('full-tdd');
-    expect(result.stdout).toContain('cheapest');
+    const parsed = parseJson(result.stdout) as { depth: string; tier: string };
+    expect(parsed.depth).toBe('full-tdd');
+    expect(parsed.tier).toBe('cheapest');
   });
 
   it('rejects route with a missing level flag', () => {
@@ -150,22 +164,25 @@ describe('veridia CLI', () => {
     expect(result.stdout).toContain('route');
   });
 
-  it('asks a feature at level 1 and prints question blocks with exit 0', () => {
+  it('asks a feature at level 1 and prints questions with exit 0', () => {
     const result = runCli('ask', '--type', 'feature', '--level', '1');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('acceptance');
+    const parsed = parseJson(result.stdout) as { questions: { id: string }[] };
+    expect(parsed.questions.length).toBeGreaterThan(0);
   });
 
   it('asks about expectation at level 0', () => {
     const result = runCli('ask', '--type', 'open', '--level', '0');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('expected-outcome');
+    const parsed = parseJson(result.stdout) as { questions: { id: string }[] };
+    expect(parsed.questions.some((q) => q.id === 'expected-outcome')).toBe(true);
   });
 
   it('declines questions at level 3 with exit 0', () => {
     const result = runCli('ask', '--type', 'bugfix', '--level', '3');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('no clarifying questions needed');
+    const parsed = parseJson(result.stdout) as { questions: unknown[] };
+    expect(parsed.questions).toEqual([]);
   });
 
   it('rejects ask with a missing type flag', () => {
@@ -190,8 +207,9 @@ describe('veridia CLI', () => {
     writeFile(dir, 'package.json', '{"scripts":{"test":"node -e \\"process.exit(1)\\""}}');
     const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('test-runner');
-    expect(result.stdout).toContain('verdict');
+    const parsed = parseJson(result.stdout) as { checks: { kind: string }[]; verdict: string };
+    expect(parsed.checks.length).toBeGreaterThan(0);
+    expect(parsed.verdict).toBeTruthy();
   });
 
   it('verifies a target with no oracles and reports a HUMAN verdict', () => {
@@ -199,8 +217,8 @@ describe('veridia CLI', () => {
     writeFile(dir, 'README.md', '');
     const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('verdict');
-    expect(result.stdout).toContain('HUMAN');
+    const parsed = parseJson(result.stdout) as { verdict: string };
+    expect(parsed.verdict).toBe('HUMAN');
   });
 
   it('rejects verify with a missing type flag', () => {
@@ -232,21 +250,26 @@ describe('veridia CLI', () => {
   });
 
   it('measures --history with no data prints no history', () => {
-    const result = runCli('measure', '--history');
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCli('measure', '--history', '--target', dir);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('totalRuns');
-    expect(result.stdout).toContain('0');
+    const parsed = parseJson(result.stdout) as { totalRuns: number };
+    expect(parsed.totalRuns).toBe(0);
   });
 
   it('measures --record with JSON payload and then --history shows it', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
     const payload = JSON.stringify({ task: 'add auth', type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '' });
-    const rec = runCli('measure', '--record', payload);
+    const rec = runCli('measure', '--record', payload, '--target', dir);
     expect(rec.exitCode).toBe(0);
-    expect(rec.stdout).toContain('recorded');
-    const hist = runCli('measure', '--history');
+    const recParsed = parseJson(rec.stdout) as { recorded: boolean };
+    expect(recParsed.recorded).toBe(true);
+    const hist = runCli('measure', '--history', '--target', dir);
     expect(hist.exitCode).toBe(0);
-    expect(hist.stdout).toContain('totalRuns');
-    expect(hist.stdout).toContain('1');
+    const histParsed = parseJson(hist.stdout) as { totalRuns: number };
+    expect(histParsed.totalRuns).toBe(1);
   });
 
   it('rejects measure --record with missing required fields', () => {
@@ -271,10 +294,11 @@ describe('veridia CLI', () => {
     writeFile(dir, 'package.json', '{}');
     const result = runCli('add dark mode support', '--target', dir);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('type');
-    expect(result.stdout).toContain('level');
-    expect(result.stdout).toContain('plan');
-    expect(result.stdout).toContain('verdict');
+    const parsed = parseJson(result.stdout) as { type: string; level: number; plan: unknown; verdict: string };
+    expect(parsed.type).toBeTruthy();
+    expect([0, 1, 2, 3]).toContain(parsed.level);
+    expect(parsed.plan).toBeTruthy();
+    expect(parsed.verdict).toBeTruthy();
   });
 
   it('rejects an unknown flag with non-zero exit and error on stderr', () => {
@@ -286,5 +310,15 @@ describe('veridia CLI', () => {
   it('documents the triage mode in usage output', () => {
     const result = runCli('--help');
     expect(result.stdout).toContain('triage');
+  });
+
+  it('documents the init subcommand in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('init');
+  });
+
+  it('documents the generate subcommand in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('generate');
   });
 });

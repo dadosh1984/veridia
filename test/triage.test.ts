@@ -34,7 +34,7 @@ describe('triage', () => {
     expect(result.type).toBe('feature');
     expect(result.confidence).toBeGreaterThan(0);
     expect([0, 1, 2, 3]).toContain(result.level);
-    expect(result.plan).toBeTruthy();
+    expect(result.plan.depth).toBeTruthy();
     expect(result.verdict).toBeTruthy();
   });
 

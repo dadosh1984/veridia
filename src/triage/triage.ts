@@ -13,8 +13,14 @@ export interface TriageResult {
   type: TaskType;
   confidence: number;
   level: VerifiabilityLevel;
-  plan: string;
-  questions: string;
+  plan: {
+    depth: string;
+    tier: string;
+    trust: string;
+    steps: string[];
+    checks: string[];
+  };
+  questions: { id: string; prompt: string; options: string[] }[];
   verdict: Verdict;
 }
 
@@ -25,10 +31,6 @@ export function triage(task: string, target: string = process.cwd()): TriageResu
   const askResult = ask(classification.type, assessment.level);
   const kinds = assessment.oracles.map((o) => o.kind);
   const verifyResult = verify(target, assessment.level, kinds);
-
-  const questions = askResult.questions.length > 0
-    ? askResult.questions.map((q) => `${q.id}: ${q.prompt}`).join(' | ')
-    : 'none';
 
   measureRecord({
     task,
@@ -44,8 +46,14 @@ export function triage(task: string, target: string = process.cwd()): TriageResu
     type: classification.type,
     confidence: classification.confidence,
     level: assessment.level,
-    plan: `${plan.depth}\t${plan.tier}\t${plan.trust}\tsteps=${plan.steps.join(',')}`,
-    questions,
+    plan: {
+      depth: plan.depth,
+      tier: plan.tier,
+      trust: plan.trust,
+      steps: plan.steps,
+      checks: plan.checks,
+    },
+    questions: askResult.questions,
     verdict: verifyResult.verdict,
   };
 }
