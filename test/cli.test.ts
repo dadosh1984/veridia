@@ -228,4 +228,39 @@ describe('veridia CLI', () => {
     const result = runCli('--help');
     expect(result.stdout).toContain('verify');
   });
+
+  it('measures --history with no data prints no history', () => {
+    const result = runCli('measure', '--history');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('totalRuns');
+    expect(result.stdout).toContain('0');
+  });
+
+  it('measures --record with JSON payload and then --history shows it', () => {
+    const payload = JSON.stringify({ task: 'add auth', type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '' });
+    const rec = runCli('measure', '--record', payload);
+    expect(rec.exitCode).toBe(0);
+    expect(rec.stdout).toContain('recorded');
+    const hist = runCli('measure', '--history');
+    expect(hist.exitCode).toBe(0);
+    expect(hist.stdout).toContain('totalRuns');
+    expect(hist.stdout).toContain('1');
+  });
+
+  it('rejects measure --record with missing required fields', () => {
+    const result = runCli('measure', '--record', '{"task":"only-task"}');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('task, type, and verdict');
+  });
+
+  it('rejects measure with no --record or --history', () => {
+    const result = runCli('measure');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('--record');
+  });
+
+  it('documents the measure subcommand in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('measure');
+  });
 });

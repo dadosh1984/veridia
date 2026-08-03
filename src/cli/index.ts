@@ -9,6 +9,8 @@ import type { TaskType } from '../classify/types.js';
 import { buildPlan } from '../route/route.js';
 import { probeOracles, realFs } from '../assess/probe.js';
 import { verify } from '../verify/verify.js';
+import type { Verdict } from '../verify/types.js';
+import { measureRecord, measureHistory } from '../measure/measure.js';
 import { VERSION } from './version.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
@@ -25,6 +27,9 @@ Usage:
                             Ask clarifying questions (levels 0/1)
   veridia verify --target <path> --type <type> --level <level>
                             Run a target's checks and print a verdict
+  veridia measure --record <json> [--task <task> --type <type> --level <level> --verdict <verdict>]
+                            Record a run outcome
+  veridia measure --history  Print history summary
 
 Options:
   -h, --help     Show this help message and exit
@@ -263,6 +268,86 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     }
     process.stdout.write(`verdict\t${result.verdict}\n`);
     process.exitCode = 0;
+  }
+} else if (arg === 'measure') {
+  let record: string | undefined;
+  let history = false;
+  let task = '';
+  let type = '';
+  let level = '';
+  let verdict = '';
+  let invalid = false;
+  for (let i = 1; i < args.length; i++) {
+    if (args[i] === '--record') {
+      record = args[++i];
+      if (record === undefined) {
+        process.stderr.write('veridia: measure --record requires a JSON string\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else if (args[i] === '--history') {
+      history = true;
+    } else if (args[i] === '--task') {
+      task = args[++i];
+    } else if (args[i] === '--type') {
+      type = args[++i];
+    } else if (args[i] === '--level') {
+      level = args[++i];
+    } else if (args[i] === '--verdict') {
+      verdict = args[++i];
+    } else {
+      process.stderr.write(`veridia: unknown argument for measure: ${args[i]}\n`);
+      process.exitCode = 1;
+      invalid = true;
+      break;
+    }
+  }
+  if (!invalid) {
+    if (history) {
+      const summary = measureHistory();
+      process.stdout.write(`totalRuns\t${summary.totalRuns}\n`);
+      for (const [v, n] of Object.entries(summary.perVerdict)) {
+        process.stdout.write(`perVerdict\t${v}\t${n}\n`);
+      }
+      for (const [l, n] of Object.entries(summary.perLevel)) {
+        process.stdout.write(`perLevel\t${l}\t${n}\n`);
+      }
+      for (const e of summary.recent) {
+        process.stdout.write(`recent\t${e.timestamp}\t${e.task}\t${e.verdict}\n`);
+      }
+      process.exitCode = 0;
+    } else if (record) {
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = JSON.parse(record);
+      } catch {
+        process.stderr.write('veridia: measure --record requires valid JSON\n');
+        process.exitCode = 1;
+        invalid = true;
+      }
+      if (!invalid) {
+        const entry = {
+          task: (parsed!.task as string) || task,
+          type: (parsed!.type as string) || type,
+          level: Number((parsed!.level as string) || level),
+          verdict: (parsed!.verdict as Verdict) || (verdict as Verdict),
+          checks: (parsed!.checks as { kind: string; passed: boolean }[]) || [],
+          drift: (parsed!.drift as string) || '',
+        };
+        if (!entry.task || !entry.type || !entry.verdict) {
+          process.stderr.write('veridia: measure --record requires task, type, and verdict\n');
+          process.exitCode = 1;
+        } else {
+          measureRecord(entry);
+          process.stdout.write('recorded\n');
+          process.exitCode = 0;
+        }
+      }
+    } else {
+      process.stderr.write('veridia: measure requires --record or --history\n');
+      process.exitCode = 1;
+    }
   }
 } else {
   process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
