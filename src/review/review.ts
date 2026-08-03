@@ -1,6 +1,8 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { join, relative, extname } from 'node:path';
 import type { ReviewFile, ReviewInstruction } from './types.js';
+import { runAnalysis } from '../analyze/analyze.js';
+import type { AnalyzeResult } from '../analyze/types.js';
 
 const SOURCE_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.mts', '.cjs', '.cts']);
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.cache', 'coverage']);
@@ -21,7 +23,7 @@ function collectSourceFiles(target: string, base: string, files: ReviewFile[]): 
       if (stat.isDirectory()) {
         collectSourceFiles(full, base, files);
       } else if (SOURCE_EXTS.has(extname(entry))) {
-        files.push({ path: rel, reason: 'source file' });
+        files.push({ path: rel.replace(/\\/g, '/'), reason: 'source file' });
       }
     } catch {
       continue;
@@ -29,10 +31,11 @@ function collectSourceFiles(target: string, base: string, files: ReviewFile[]): 
   }
 }
 
-export function buildReviewInstructions(target: string): ReviewInstruction {
+export function buildReviewInstructions(target: string): ReviewInstruction & { analysis: AnalyzeResult } {
   const resolved = join(target);
   const files: ReviewFile[] = [];
   collectSourceFiles(resolved, resolved, files);
+  const analysis = runAnalysis(target);
 
   return {
     instruction: 'Review the following source files for bugs, security issues, code quality problems, and improvement suggestions.',
@@ -48,5 +51,6 @@ export function buildReviewInstructions(target: string): ReviewInstruction {
       'performance bottlenecks',
     ],
     outputFormat: 'For each file, list findings with severity (ERROR/WARNING/INFO), file path, line number, description, and suggested fix.',
+    analysis,
   };
 }
