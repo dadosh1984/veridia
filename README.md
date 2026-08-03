@@ -15,6 +15,45 @@ veridia is a personal "know-how" project. It is **not** a fork of warpweave/Open
 veridia does not "understand you." It *sorts well*:
 task → verifiability → process → model → check.
 
+## Usage
+
+```bash
+# Run the full triage loop on a task
+veridia "add dark mode support"
+
+# Classify a task
+veridia classify "fix the null pointer crash"
+
+# Assess verifiability of a target
+veridia assess --target /path/to/repo
+
+# Route (type, level) to a run plan
+veridia route --type feature --level 2
+
+# Ask clarifying questions (levels 0/1)
+veridia ask --type feature --level 1
+
+# Run a target's checks and print a verdict
+veridia verify --target /path/to/repo --type feature --level 2
+
+# Record a run outcome
+veridia measure --record '{"task":"add auth","type":"feature","level":2,"verdict":"PASS","checks":[],"drift":""}'
+
+# Print history summary
+veridia measure --history
+```
+
+## Architecture
+
+veridia implements six mechanisms in a triage pipeline:
+
+```
+INTENT ──▶ CLASSIFY ──▶ ASSESS ──▶ ROUTE ──▶ ASK? ──▶ VERIFY ──▶ MEASURE
+             type        level       plan      clarify    check     learn
+```
+
+All mechanisms are deterministic, local-only, and require zero runtime dependencies.
+
 ## Docs index
 
 - [Philosophy](docs/philosophy.md) — the why and the core thesis.
@@ -27,4 +66,4 @@ task → verifiability → process → model → check.
 
 ## Status
 
-Exploration/design phase. Nothing implemented yet.
+All six mechanisms implemented. End-to-end triage loop operational.

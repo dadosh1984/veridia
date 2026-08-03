@@ -11,6 +11,7 @@ import { probeOracles, realFs } from '../assess/probe.js';
 import { verify } from '../verify/verify.js';
 import type { Verdict } from '../verify/types.js';
 import { measureRecord, measureHistory } from '../measure/measure.js';
+import { triage } from '../triage/triage.js';
 import { VERSION } from './version.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
@@ -18,6 +19,7 @@ const USAGE = `veridia - model-agnostic quality through mechanics
 Usage:
   veridia [--help] [-h]     Print usage information
   veridia version [-v]      Print the veridia version
+  veridia <task>            Run the full triage loop on a task string
   veridia classify <task>   Classify a task string
   veridia assess [--target <path>] [--type <type>]
                             Assess verifiability of a target
@@ -349,7 +351,38 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
       process.exitCode = 1;
     }
   }
-} else {
+} else if (arg.startsWith('--')) {
   process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
   process.exitCode = 1;
+} else {
+  let task = arg;
+  let target = process.cwd();
+  for (let i = 1; i < args.length; i++) {
+    if (args[i] === '--target') {
+      target = args[++i];
+      if (target === undefined) {
+        process.stderr.write('veridia: --target requires a path\n');
+        process.exitCode = 1;
+        break;
+      }
+    } else {
+      task = args.slice(i).join(' ').trim();
+      break;
+    }
+  }
+  if (process.exitCode !== 1) {
+    const resolved = path.resolve(target);
+    if (!fs.existsSync(resolved)) {
+      process.stderr.write(`veridia: target path does not exist: ${target}\n`);
+      process.exitCode = 1;
+    } else {
+      const result = triage(task, resolved);
+      process.stdout.write(`type\t${result.type}\t${result.confidence}\n`);
+      process.stdout.write(`level\t${result.level}\n`);
+      process.stdout.write(`plan\t${result.plan}\n`);
+      process.stdout.write(`questions\t${result.questions}\n`);
+      process.stdout.write(`verdict\t${result.verdict}\n`);
+      process.exitCode = 0;
+    }
+  }
 }

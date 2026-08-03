@@ -55,10 +55,12 @@ describe('veridia CLI', () => {
     expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it('rejects an unknown subcommand with non-zero exit and error on stderr', () => {
-    const result = runCli('frobnicate');
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain('frobnicate');
+  it('treats an unknown subcommand as a task string and runs triage', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCli('frobnicate', '--target', dir);
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('type');
   });
 
   it('rejects an unknown flag with non-zero exit and error on stderr', () => {
@@ -262,5 +264,27 @@ describe('veridia CLI', () => {
   it('documents the measure subcommand in usage output', () => {
     const result = runCli('--help');
     expect(result.stdout).toContain('measure');
+  });
+
+  it('runs end-to-end triage on a task string and prints type, level, plan, verdict', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCli('add dark mode support', '--target', dir);
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('type');
+    expect(result.stdout).toContain('level');
+    expect(result.stdout).toContain('plan');
+    expect(result.stdout).toContain('verdict');
+  });
+
+  it('rejects an unknown flag with non-zero exit and error on stderr', () => {
+    const result = runCli('--bogus');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('--bogus');
+  });
+
+  it('documents the triage mode in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('triage');
   });
 });

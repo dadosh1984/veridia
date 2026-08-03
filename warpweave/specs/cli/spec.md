@@ -41,20 +41,19 @@ The system SHALL provide a `version` subcommand that prints the current veridia 
 
 ### Requirement: CLI dispatches subcommands
 
-The CLI entrypoint SHALL accept a subcommand as the first positional argument and dispatch to the corresponding module. Supported subcommands SHALL be: `classify`, `assess`, `route`, `ask`, `verify`, `measure`, `version`, and `--help`/`-h`.
+The CLI entrypoint SHALL accept a subcommand as the first positional argument and dispatch to the corresponding module. Supported subcommands SHALL be: `classify`, `assess`, `route`, `ask`, `verify`, `measure`, `version`, and `--help`/`-h`. When the first argument is not a recognized subcommand or flag, the CLI SHALL treat it as a task string and run the end-to-end triage loop.
 
 #### Scenario: measure subcommand dispatched
 - **WHEN** the user runs `veridia measure --history`
 - **THEN** the CLI dispatches to the measure module and prints the history
 
+#### Scenario: end-to-end triage with task string
+- **WHEN** the user runs `veridia add dark mode support`
+- **THEN** the CLI dispatches to the triage module and prints a summary
+
 ### Requirement: Unknown argument handling
 
-The system SHALL reject unrecognized arguments with a non-zero exit status and a message identifying the problem.
-
-#### Scenario: Unknown subcommand
-- **WHEN** the user runs `veridia frobnicate`
-- **THEN** the CLI exits with a non-zero status
-- **AND** the CLI writes an error message to stderr that mentions the unknown argument
+The system SHALL reject unrecognized flags with a non-zero exit status and a message identifying the problem.
 
 #### Scenario: Unknown flag
 - **WHEN** the user runs `veridia --bogus`
@@ -63,12 +62,12 @@ The system SHALL reject unrecognized arguments with a non-zero exit status and a
 
 ### Requirement: Exit status contract
 
-The system SHALL use exit status 0 for successful help/version output and non-zero for unrecognized arguments, so scripts can gate on success.
+The system SHALL use exit status 0 for successful help/version/triage output and non-zero for unrecognized flags, so scripts can gate on success.
 
 #### Scenario: Success is zero
-- **WHEN** the CLI prints help or version successfully
+- **WHEN** the CLI prints help, version, or triage output successfully
 - **THEN** the exit status SHALL be 0
 
 #### Scenario: Failure is non-zero
-- **WHEN** the CLI rejects an unknown argument
+- **WHEN** the CLI rejects an unknown flag
 - **THEN** the exit status SHALL be non-zero
