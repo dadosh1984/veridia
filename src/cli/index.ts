@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { ask } from '../ask/ask.js';
 import { assess } from '../assess/assess.js';
 import type { VerifiabilityLevel } from '../assess/types.js';
 import { classify } from '../classify/classify.js';
@@ -18,6 +19,8 @@ Usage:
                             Assess verifiability of a target
   veridia route --type <type> --level <level>
                             Route (type, level) to a run plan
+  veridia ask --type <type> --level <level>
+                            Ask clarifying questions (levels 0/1)
 
 Options:
   -h, --help     Show this help message and exit
@@ -129,6 +132,58 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     process.stdout.write(
       `${plan.depth}\t${plan.tier}\t${plan.trust}\tsteps=${plan.steps.join(',')}\tchecks=${plan.checks.join(',')}\n`,
     );
+    process.exitCode = 0;
+  }
+} else if (arg === 'ask') {
+  let type = '';
+  let level = '';
+  let invalid = false;
+  for (let i = 1; i < args.length; i++) {
+    if (args[i] === '--type') {
+      type = args[++i];
+      if (type === undefined) {
+        process.stderr.write('veridia: ask --type requires a value\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else if (args[i] === '--level') {
+      level = args[++i];
+      if (level === undefined) {
+        process.stderr.write('veridia: ask --level requires a value\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else {
+      process.stderr.write(`veridia: unknown argument for ask: ${args[i]}\n`);
+      process.exitCode = 1;
+      invalid = true;
+      break;
+    }
+  }
+  const validTypes = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'];
+  const validLevels = ['0', '1', '2', '3'];
+  if (!invalid) {
+    if (!validTypes.includes(type)) {
+      process.stderr.write(`veridia: ask: invalid task type: ${type}\n`);
+      process.exitCode = 1;
+      invalid = true;
+    } else if (!validLevels.includes(level)) {
+      process.stderr.write(`veridia: ask: invalid verifiability level: ${level}\n`);
+      process.exitCode = 1;
+      invalid = true;
+    }
+  }
+  if (!invalid) {
+    const result = ask(type as TaskType, Number(level) as VerifiabilityLevel);
+    if (result.questions.length === 0) {
+      process.stdout.write('no clarifying questions needed\n');
+    } else {
+      for (const q of result.questions) {
+        process.stdout.write(`${q.id}\t${q.prompt}\t${q.options.join('|')}\n`);
+      }
+    }
     process.exitCode = 0;
   }
 } else {

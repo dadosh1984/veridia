@@ -147,4 +147,39 @@ describe('veridia CLI', () => {
     const result = runCli('--help');
     expect(result.stdout).toContain('route');
   });
+
+  it('asks a feature at level 1 and prints question blocks with exit 0', () => {
+    const result = runCli('ask', '--type', 'feature', '--level', '1');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('acceptance');
+  });
+
+  it('asks about expectation at level 0', () => {
+    const result = runCli('ask', '--type', 'open', '--level', '0');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('expected-outcome');
+  });
+
+  it('declines questions at level 3 with exit 0', () => {
+    const result = runCli('ask', '--type', 'bugfix', '--level', '3');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('no clarifying questions needed');
+  });
+
+  it('rejects ask with a missing type flag', () => {
+    const result = runCli('ask', '--level', '1');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('type');
+  });
+
+  it('rejects ask with an invalid level value', () => {
+    const result = runCli('ask', '--type', 'feature', '--level', '9');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('9');
+  });
+
+  it('documents the ask subcommand in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('ask');
+  });
 });
