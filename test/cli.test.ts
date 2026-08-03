@@ -43,4 +43,22 @@ describe('veridia CLI', () => {
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain('--bogus');
   });
+
+  it('classifies a bug fix task and exits 0', () => {
+    const result = runCli('classify', 'fix the null pointer in login');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('bugfix');
+  });
+
+  it('classifies a feature task and exits 0', () => {
+    const result = runCli('classify', 'add dark mode support');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('feature');
+  });
+
+  it('rejects classify with no task string via non-zero exit and stderr', () => {
+    const result = runCli('classify');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('task');
+  });
 });
