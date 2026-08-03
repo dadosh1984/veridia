@@ -110,4 +110,41 @@ describe('veridia CLI', () => {
     const result = runCli('--help');
     expect(result.stdout).toContain('assess');
   });
+
+  it('routes a feature at level 2 and prints a plan with exit 0', () => {
+    const result = runCli('route', '--type', 'feature', '--level', '2');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('tdd-where-possible');
+    expect(result.stdout).toContain('mid');
+  });
+
+  it('routes a bugfix at level 3 with full-tdd depth', () => {
+    const result = runCli('route', '--type', 'bugfix', '--level', '3');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('full-tdd');
+    expect(result.stdout).toContain('cheapest');
+  });
+
+  it('rejects route with a missing level flag', () => {
+    const result = runCli('route', '--type', 'feature');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('level');
+  });
+
+  it('rejects route with an invalid type value', () => {
+    const result = runCli('route', '--type', 'bogus', '--level', '2');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('bogus');
+  });
+
+  it('rejects route with an invalid level value', () => {
+    const result = runCli('route', '--type', 'feature', '--level', '9');
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('9');
+  });
+
+  it('documents the route subcommand in usage output', () => {
+    const result = runCli('--help');
+    expect(result.stdout).toContain('route');
+  });
 });
