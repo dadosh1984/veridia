@@ -15,12 +15,56 @@ veridia is a personal "know-how" project. It is **not** a fork of warpweave/Open
 veridia does not "understand you." It *sorts well*:
 task → verifiability → process → model → check.
 
-## Usage
+## Quick Start
+
+### 1. Install
 
 ```bash
-# Run the full triage loop on a task
-veridia "add dark mode support"
+# From the veridia project directory
+npm link
 
+# Now you can use `veridia` from anywhere
+veridia --help
+```
+
+### 2. Analyse a task
+
+```bash
+# veridia analyses your task description — it does NOT generate code
+veridia "add user authentication"
+```
+
+Output example:
+```
+type    feature     0.29        ← task classification
+level   3                       ← verifiability level (0-3)
+plan    full-tdd   cheapest     ← recommended process
+questions   none                ← clarifying questions
+verdict    FAIL                ← check results
+```
+
+### 3. Analyse a specific project
+
+```bash
+# Point veridia at your project directory
+veridia "fix login bug" --target /path/to/my-project
+```
+
+### 4. What the numbers mean
+
+| Output | Meaning |
+|--------|---------|
+| `type` | bugfix / feature / refactor / doc / explore / open |
+| `level` | **3** = tests + TypeScript + CI (full automated verification) |
+| | **2** = partial verification (TypeScript or linter) |
+| | **1** = human check only (no tests, no TypeScript) |
+| | **0** = nothing detected |
+| `plan` | full-tdd / tdd-where-possible / minimal / just-do-it |
+| `verdict` | PASS / FAIL / HUMAN (requires manual review) |
+
+### 5. Individual commands
+
+```bash
 # Classify a task
 veridia classify "fix the null pointer crash"
 
