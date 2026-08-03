@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
+import { assess } from '../assess/assess.js';
 import { classify } from '../classify/classify.js';
 import { VERSION } from './version.js';
 
@@ -8,6 +11,8 @@ Usage:
   veridia [--help] [-h]     Print usage information
   veridia version [-v]      Print the veridia version
   veridia classify <task>   Classify a task string
+  veridia assess [--target <path>] [--type <type>]
+                            Assess verifiability of a target
 
 Options:
   -h, --help     Show this help message and exit
@@ -32,6 +37,46 @@ if (arg === undefined || arg === '--help' || arg === '-h') {
     const result = classify(task);
     process.stdout.write(`${result.type}\t${result.confidence}\n`);
     process.exitCode = 0;
+  }
+} else if (arg === 'assess') {
+  let target = process.cwd();
+  let taskHint: string | undefined;
+  let invalid = false;
+  for (let i = 1; i < args.length; i++) {
+    if (args[i] === '--target') {
+      target = args[++i];
+      if (target === undefined) {
+        process.stderr.write('veridia: assess --target requires a path\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else if (args[i] === '--type') {
+      taskHint = args[++i];
+      if (taskHint === undefined) {
+        process.stderr.write('veridia: assess --type requires a value\n');
+        process.exitCode = 1;
+        invalid = true;
+        break;
+      }
+    } else {
+      process.stderr.write(`veridia: unknown argument for assess: ${args[i]}\n`);
+      process.exitCode = 1;
+      invalid = true;
+      break;
+    }
+  }
+  if (!invalid) {
+    const resolved = path.resolve(target);
+    if (!fs.existsSync(resolved)) {
+      process.stderr.write(`veridia: assess: target path does not exist: ${target}\n`);
+      process.exitCode = 1;
+    } else {
+      const result = assess(resolved, undefined, taskHint);
+      const oracles = result.oracles.map((o) => o.kind).join(',');
+      process.stdout.write(`${result.level}\t${oracles}\n`);
+      process.exitCode = 0;
+    }
   }
 } else {
   process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
