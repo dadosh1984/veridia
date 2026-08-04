@@ -233,17 +233,30 @@ describe('buildExecutionPlan', () => {
     expect(gate!.command).toBe('')
   })
 
-  it('falls back to vitest run for a test-runner gate', () => {
-    const plan = buildExecutionPlan('add feature', 'feature', 3, {
-      depth: 'full-tdd',
-      tier: 'cheapest',
-      trust: 'verifier',
-      steps: [],
-      checks: ['run-tests'],
-    })
-    const gate = plan.plan.gates.find((g) => g.id === 'run-tests')
-    expect(gate).toBeDefined()
-    expect(gate!.command).toBe('vitest run')
+  it('resolves the test-runner gate command from the target test script', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'veridia-plan-gate-'))
+    try {
+      fs.writeFileSync(path.join(tmpDir, 'package.json'), '{"scripts":{"test":"node -e \\"process.exit(0)\\""}}')
+      const plan = buildExecutionPlan(
+        'add feature',
+        'feature',
+        3,
+        {
+          depth: 'full-tdd',
+          tier: 'cheapest',
+          trust: 'verifier',
+          steps: [],
+          checks: ['run-tests'],
+        },
+        undefined,
+        tmpDir,
+      )
+      const gate = plan.plan.gates.find((g) => g.id === 'run-tests')
+      expect(gate).toBeDefined()
+      expect(gate!.command).toBe('node -e "process.exit(0)"')
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 })
 

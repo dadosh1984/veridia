@@ -45,7 +45,10 @@ export function buildExecutionPlan(
   const host = detectHostAgent(target)
   const resolvedTarget = target ?? process.cwd()
 
-  const resolved = resolveCommands(runPlan.checks as OracleKind[], resolvedTarget)
+  const resolved = resolveCommands(
+    runPlan.checks.map((id) => CHECK_GATE_MAP[id]?.kind ?? (id as OracleKind)),
+    resolvedTarget,
+  )
 
   const steps: ExecutionStep[] = runPlan.steps.map((stepId) => {
     const step: ExecutionStep = {

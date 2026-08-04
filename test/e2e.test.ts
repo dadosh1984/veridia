@@ -115,8 +115,6 @@ describe('e2e: session pipeline', () => {
 
     const result = runCliIn(dir, 'add feature', '--auto')
     expect(result.exitCode).toBe(0)
-    const snippet = JSON.stringify(result.stdout.slice(0, 300))
-    expect(snippet).toBe('')
     const parsed = JSON.parse(result.stdout) as { type: string; verdict: string }
     expect(parsed.type).toBe('feature')
     expect(parsed.verdict).toBeTruthy()

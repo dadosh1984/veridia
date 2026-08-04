@@ -11,10 +11,10 @@ import { type SpawnSyncOptions, spawnSync } from 'node:child_process'
  * @throws If the command fails or exits with a non-zero code.
  */
 export function execFileWithShim(cmd: string, args: string[], options: SpawnSyncOptions = {}): void {
-  const result = spawnSync(cmd, args, { ...options, stdio: ['inherit', 'inherit', 'pipe'] })
+  const result = spawnSync(cmd, args, { ...options, stdio: ['inherit', 'pipe', 'pipe'] })
   if (result.error && (result.error as NodeJS.ErrnoException).code === 'ENOENT' && process.platform === 'win32') {
     const shellCmd = [cmd, ...args].map((p) => (p.includes(' ') ? `"${p}"` : p)).join(' ')
-    const shellResult = spawnSync(shellCmd, [], { ...options, shell: true, stdio: ['inherit', 'inherit', 'pipe'] })
+    const shellResult = spawnSync(shellCmd, [], { ...options, shell: true, stdio: ['inherit', 'pipe', 'pipe'] })
     if (shellResult.error) throw shellResult.error
     const code = shellResult.status ?? 1
     if (code !== 0) {
