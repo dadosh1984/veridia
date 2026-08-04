@@ -1,6 +1,6 @@
 {
   "name": "veridia",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Model-agnostic quality through mechanics, not through the model.",
   "type": "module",
   "bin": {
@@ -13,6 +13,7 @@
     "build": "node build.js",
     "lint": "eslint .",
     "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },
@@ -25,7 +26,13 @@
   "bugs": {
     "url": "https://github.com/dadosh1984/veridia/issues"
   },
-  "keywords": ["quality", "triage", "verification", "cli", "typescript"],
+  "keywords": [
+    "quality",
+    "triage",
+    "verification",
+    "cli",
+    "typescript"
+  ],
   "files": [
     "dist/",
     "README.md",
@@ -35,6 +42,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.2",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.0",
     "globals": "^17.8.0",
     "typescript": "^6.0.3",
