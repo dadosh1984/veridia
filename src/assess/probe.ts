@@ -64,6 +64,8 @@ const DEFAULT_PROBES: ProbeSpec[] = [
   { kind: 'type-check', files: ['tsconfig.json'], scripts: ['typecheck', 'type-check'] },
   { kind: 'lint', files: ['eslint.config.js', 'eslint.config.ts', 'eslint.config.mjs', '.eslintrc', '.eslintrc.json', '.eslintrc.js'], scripts: ['lint'] },
   { kind: 'ci', files: ['.gitlab-ci.yml', '.circleci/config.yml', 'azure-pipelines.yml'], dirs: ['.github/workflows'], dirExts: ['.yml', '.yaml'] },
+  { kind: 'dead-code', files: ['knip.json', 'knip.ts', '.knip.json', 'knip.config.ts', 'knip.config.js'], scripts: ['knip'] },
+  { kind: 'bundler', files: ['oxc.json', '.oxrc.json', 'oxlint.json', '.oxlintrc.json'], scripts: ['oxlint'] },
 ]
 
 function buildProbesFromConfig(config: VeridiaConfig): ProbeSpec[] {

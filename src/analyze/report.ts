@@ -1,17 +1,14 @@
-import { readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { runAnalysis } from './analyze.js'
+import { assess } from '../assess/assess.js'
+import { loadConfig } from '../config/config.js'
 import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
-import { loadConfig } from '../config/config.js'
-import { assess } from '../assess/assess.js'
-import { classify } from '../classify/classify.js'
+import { runAnalysis } from './analyze.js'
 
 export function generateReport(target: string): string {
   const analysis = runAnalysis(target)
   const history = readHistory({ root: target })
   const precision = computePrecision(history)
-  const config = loadConfig(target)
+  const _config = loadConfig(target)
   const assessment = assess(target)
   const now = new Date().toISOString()
 
@@ -96,16 +93,22 @@ th { background: #f3f4f6; }
 .verdict-human { color: #d97706; font-weight: 600; }
 </style></head>
 <body>
-${md.split('\n').map((l) => {
-  if (l.startsWith('# ')) return `<h1>${l.slice(2)}</h1>`
-  if (l.startsWith('## ')) return `<h2>${l.slice(3)}</h2>`
-  if (l.startsWith('|')) {
-    if (l.includes('---')) return ''
-    const cells = l.split('|').filter(Boolean).map((c) => c.trim())
-    return `<tr>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`
-  }
-  if (l.startsWith('- ')) return `<li>${l.slice(2)}</li>`
-  return `<p>${l}</p>`
-}).join('\n')}
+${md
+  .split('\n')
+  .map((l) => {
+    if (l.startsWith('# ')) return `<h1>${l.slice(2)}</h1>`
+    if (l.startsWith('## ')) return `<h2>${l.slice(3)}</h2>`
+    if (l.startsWith('|')) {
+      if (l.includes('---')) return ''
+      const cells = l
+        .split('|')
+        .filter(Boolean)
+        .map((c) => c.trim())
+      return `<tr>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`
+    }
+    if (l.startsWith('- ')) return `<li>${l.slice(2)}</li>`
+    return `<p>${l}</p>`
+  })
+  .join('\n')}
 </body></html>`
 }

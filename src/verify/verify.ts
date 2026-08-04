@@ -1,9 +1,9 @@
 import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'
+import { computeSensitivity } from './mutate.js'
 import { resolveCommands } from './resolve.js'
 import { type RunFn, runCommand } from './run.js'
 import type { Check, Verdict, VerifyResult } from './types.js'
 import { baseWeight, calibrateWeight, isTestsWeak } from './weight.js'
-import { computeSensitivity } from './mutate.js'
 
 /** Dependencies for the verify function, allowing injection of custom run logic and calibration data. */
 export interface VerifyDeps {
@@ -87,7 +87,7 @@ export function verify(target: string, level: VerifiabilityLevel, kinds: OracleK
     const weak = kind === 'test-runner' && isTestsWeak(target)
     const bw = baseWeight(kind, deps.weights)
     let sens = deps.sensitivity?.[kind]
-    let prec = deps.precision?.[kind]
+    const prec = deps.precision?.[kind]
 
     if (deps.mutationTest && kind === 'test-runner' && command) {
       try {

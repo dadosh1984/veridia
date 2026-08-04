@@ -14,10 +14,10 @@ export function isVerifiabilityLevel(x: number): x is VerifiabilityLevel {
 }
 
 /** The kind of verification oracle that can be detected in a target directory. */
-export type OracleKind = 'test-runner' | 'type-check' | 'lint' | 'ci' | 'test-content' | 'human-review'
+export type OracleKind = 'test-runner' | 'type-check' | 'lint' | 'ci' | 'test-content' | 'human-review' | 'dead-code' | 'bundler'
 
 /** All valid oracle kind values. */
-export const ORACLE_KINDS: readonly OracleKind[] = ['test-runner', 'type-check', 'lint', 'ci', 'test-content', 'human-review']
+export const ORACLE_KINDS: readonly OracleKind[] = ['test-runner', 'type-check', 'lint', 'ci', 'test-content', 'human-review', 'dead-code', 'bundler']
 
 /**
  * Type guard for OracleKind.

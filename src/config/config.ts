@@ -18,6 +18,10 @@ export interface VeridiaConfig {
     lint: { files: string[]; scripts: string[] }
     /** CI probe configuration. */
     ci: { files: string[]; dirs: string[]; dirExts: string[] }
+    /** Dead code analysis probe (knip). */
+    'dead-code': { files: string[]; scripts: string[] }
+    /** Bundler/linter probe (oxc). */
+    bundler: { files: string[]; scripts: string[] }
   }
   /** Optional AI model configuration. */
   model?: {
@@ -80,6 +84,14 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
       dirs: ['.github/workflows'],
       dirExts: ['.yml', '.yaml'],
     },
+    'dead-code': {
+      files: ['knip.json', 'knip.ts', '.knip.json', 'knip.config.ts', 'knip.config.js'],
+      scripts: ['knip'],
+    },
+    bundler: {
+      files: ['oxc.json', '.oxrc.json', 'oxlint.json', '.oxlintrc.json'],
+      scripts: ['oxlint'],
+    },
   },
 }
 
@@ -94,7 +106,7 @@ export function loadConfig(target: string): VeridiaConfig {
   const configPath = join(target, '.veridia', 'config.json')
   if (existsSync(configPath)) {
     try {
-      const raw = readFileSync(configPath, 'utf8')
+      const raw = readFileSync(configPath, 'utf8').replace(/^\uFEFF/, '')
       const user = JSON.parse(raw) as Partial<VeridiaConfig>
       return mergeConfig(DEFAULT_CONFIG, user)
     } catch {

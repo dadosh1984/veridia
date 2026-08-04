@@ -100,6 +100,24 @@ describe('probeOracles', () => {
     expect(found).toContainEqual<Oracle>({ kind: 'ci' })
   })
 
+  it('detects a dead-code oracle from a knip config', () => {
+    const target = makeTmpDir()
+    const found = probeOracles(target, fakeFs(target, { 'knip.json': '{}' }))
+    expect(found).toContainEqual<Oracle>({ kind: 'dead-code' })
+  })
+
+  it('detects a bundler oracle from an oxlint config', () => {
+    const target = makeTmpDir()
+    const found = probeOracles(target, fakeFs(target, { 'oxlint.json': '{}' }))
+    expect(found).toContainEqual<Oracle>({ kind: 'bundler' })
+  })
+
+  it('detects a dead-code oracle from a knip script in package.json', () => {
+    const target = makeTmpDir()
+    const found = probeOracles(target, fakeFs(target, { 'package.json': '{"scripts":{"knip":"knip"}}' }))
+    expect(found).toContainEqual<Oracle>({ kind: 'dead-code' })
+  })
+
   it('returns an empty oracle list when nothing is detected', () => {
     const target = makeTmpDir()
     const found = probeOracles(target, fakeFs(target, { 'README.md': '' }))

@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
-import { collectFiles } from '../util/collect-files.js'
+import { join } from 'node:path'
 import { runAnalysis } from './analyze.js'
 import type { Finding } from './types.js'
 
@@ -48,9 +47,7 @@ export function autoFix(target: string): FixResult {
 
   const consoleFindings = analysis.findings.filter((f) => f.pattern === 'console-log')
   const todoFindings = analysis.findings.filter((f) => f.pattern === 'todo')
-  const skipFindings = analysis.findings.filter(
-    (f) => f.pattern !== 'console-log' && f.pattern !== 'todo',
-  )
+  const skipFindings = analysis.findings.filter((f) => f.pattern !== 'console-log' && f.pattern !== 'todo')
 
   const filesToFix = new Map<string, { content: string; findings: Finding[] }>()
   for (const f of [...consoleFindings, ...todoFindings]) {

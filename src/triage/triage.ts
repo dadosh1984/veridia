@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import { askInteractive } from '../ask/ask.js'
 import type { AskResult } from '../ask/types.js'
 import { assess } from '../assess/assess.js'
@@ -16,7 +17,6 @@ import type { ModelTier, OrchestrationDepth } from '../route/types.js'
 import { clearSession, readSession, writeSession } from '../session/session.js'
 import type { Verdict } from '../verify/types.js'
 import { verify } from '../verify/verify.js'
-import { performance } from 'node:perf_hooks'
 
 /** The complete result of a triage run, including classification, assessment, planning, and execution. */
 export interface TriageResult {

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { note, outro } from '@clack/prompts'
-import { generateReport, generateHtmlReport } from '../../analyze/report.js'
+import { generateHtmlReport, generateReport } from '../../analyze/report.js'
 import { jsonOut } from '../shared.js'
 
 export async function handle(opts: { target?: string; format?: string; output?: string; json?: boolean }): Promise<void> {

@@ -9,6 +9,8 @@ const KIND_WEIGHTS: Record<OracleKind, number> = {
   ci: 0,
   'test-content': 0,
   'human-review': 0,
+  'dead-code': 1,
+  bundler: 1,
 }
 
 /**

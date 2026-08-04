@@ -45,6 +45,39 @@ describe('learn', () => {
     const result = learn({ root: dir })
     expect(result.driftPatterns.length).toBeGreaterThan(0)
   })
+
+  it('auto-adds classification patterns for low-accuracy types', () => {
+    const dir = makeTmpDir()
+    fs.mkdirSync(path.join(dir, '.veridia'), { recursive: true })
+    fs.writeFileSync(path.join(dir, '.veridia', 'config.json'), JSON.stringify({ classify: { patterns: { bugfix: [] } } }))
+    appendEntry({ task: 'fix pipeline crash', type: 'bugfix', level: 1, verdict: 'FAIL', checks: [], drift: '0' }, { root: dir })
+    appendEntry({ task: 'fix pipeline timeout', type: 'bugfix', level: 1, verdict: 'FAIL', checks: [], drift: '0' }, { root: dir })
+    const result = learn({ root: dir })
+    const config = JSON.parse(fs.readFileSync(path.join(dir, '.veridia', 'config.json'), 'utf8'))
+    expect(config.classify.patterns.bugfix).toContain('\\bpipeline\\b')
+    expect(result.recommendations.some((r) => r.includes('Auto-added'))).toBe(true)
+  })
+
+  it('auto-adds patterns to a config with a leading BOM', () => {
+    const dir = makeTmpDir()
+    fs.mkdirSync(path.join(dir, '.veridia'), { recursive: true })
+    fs.writeFileSync(path.join(dir, '.veridia', 'config.json'), `\uFEFF${JSON.stringify({ classify: { patterns: { bugfix: [] } } })}`)
+    appendEntry({ task: 'fix pipeline crash', type: 'bugfix', level: 1, verdict: 'FAIL', checks: [], drift: '0' }, { root: dir })
+    appendEntry({ task: 'fix pipeline timeout', type: 'bugfix', level: 1, verdict: 'FAIL', checks: [], drift: '0' }, { root: dir })
+    learn({ root: dir })
+    const config = JSON.parse(fs.readFileSync(path.join(dir, '.veridia', 'config.json'), 'utf8'))
+    expect(config.classify.patterns.bugfix).toContain('\\bpipeline\\b')
+  })
+
+  it('does not modify config when accuracy is healthy', () => {
+    const dir = makeTmpDir()
+    fs.mkdirSync(path.join(dir, '.veridia'), { recursive: true })
+    fs.writeFileSync(path.join(dir, '.veridia', 'config.json'), JSON.stringify({ classify: { patterns: { bugfix: [] } } }))
+    appendEntry({ task: 'fix bug', type: 'bugfix', level: 3, verdict: 'PASS', checks: [], drift: '0' }, { root: dir })
+    const before = fs.readFileSync(path.join(dir, '.veridia', 'config.json'), 'utf8')
+    learn({ root: dir })
+    expect(fs.readFileSync(path.join(dir, '.veridia', 'config.json'), 'utf8')).toBe(before)
+  })
 })
 
 describe('computePrecision', () => {

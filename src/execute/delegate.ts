@@ -114,8 +114,8 @@ export async function delegateShell(plan: ExecutionPlan, target?: string): Promi
 
 /** Options for the delegate function, including model orchestration settings. */
 export interface DelegateOptions {
-  /** Model configuration for AI orchestration. */
-  modelConfig?: ModelConfig
+  /** Model configuration for AI orchestration (single or array for A/B testing). */
+  modelConfig?: ModelConfig | ModelConfig[]
   /** The original task description. */
   task?: string
   /** The classified task type. */

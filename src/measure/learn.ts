@@ -1,3 +1,5 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { type HistoryDeps, readHistory } from './history.js'
 import type { MeasureEntry } from './types.js'
 
@@ -126,6 +128,43 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
 
   if (recommendations.length === 0) {
     recommendations.push('No issues detected. All metrics look healthy.')
+  }
+
+  if (patternsToAdjust.length > 0) {
+    const configPath = join(deps.root ?? process.cwd(), '.veridia', 'config.json')
+    if (existsSync(configPath)) {
+      try {
+        const raw = readFileSync(configPath, 'utf8').replace(/^\uFEFF/, '')
+        const config = JSON.parse(raw)
+        if (!config.classify) config.classify = { patterns: {} }
+        for (const type of patternsToAdjust) {
+          if (!config.classify.patterns[type]) {
+            config.classify.patterns[type] = []
+          }
+          const currentPatterns = config.classify.patterns[type]
+          const lowAccuracyEntries = byType[type]?.filter((e) => e.verdict !== 'PASS') ?? []
+          const commonTerms = new Map<string, number>()
+          for (const entry of lowAccuracyEntries) {
+            const words = entry.task.toLowerCase().split(/\s+/)
+            for (const word of words) {
+              if (word.length > 3 && !currentPatterns.some((p: string) => new RegExp(p, 'i').test(word))) {
+                commonTerms.set(word, (commonTerms.get(word) ?? 0) + 1)
+              }
+            }
+          }
+          for (const [term, count] of commonTerms) {
+            if (count >= 2) {
+              const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              config.classify.patterns[type].push(`\\b${escaped}\\b`)
+              recommendations.push(`Auto-added pattern '\\b${escaped}\\b' to '${type}' in .veridia/config.json`)
+            }
+          }
+        }
+        writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
+      } catch {
+        // config update failed silently
+      }
+    }
   }
 
   return {

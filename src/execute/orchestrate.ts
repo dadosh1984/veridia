@@ -34,6 +34,8 @@ export interface OrchestrateResult {
   verdict: Verdict
   /** The number of retries performed. */
   retries: number
+  /** The model used (for A/B testing). */
+  model?: string
 }
 
 /**
@@ -146,31 +148,46 @@ export async function orchestrate(
   plan: { depth: string; tier: string; steps: string[]; checks: string[] },
   target: string,
   kinds: OracleKind[],
-  config: ModelConfig,
+  config: ModelConfig | ModelConfig[],
   answers?: Record<string, string>,
   maxRetries = 3,
 ): Promise<OrchestrateResult> {
-  const prompt = assemblePrompt(task, type, level, plan, answers)
-  let lastOutput = ''
+  const configs = Array.isArray(config) ? config : [config]
+  let bestResult: OrchestrateResult = { output: '', verdict: 'FAIL', retries: maxRetries }
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    let output: string
-    try {
-      const feedback = attempt > 0 ? `\n\nPrevious attempt failed. Fix the issues and try again.\n${lastOutput}` : ''
-      output = await callModelAsync(config, prompt + feedback)
-    } catch (err) {
-      lastOutput = `model call failed: ${(err as Error).message}`
-      continue
+  for (const cfg of configs) {
+    const prompt = assemblePrompt(task, type, level, plan, answers)
+    let lastOutput = ''
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      let output: string
+      try {
+        const feedback = attempt > 0 ? `\n\nPrevious attempt failed. Fix the issues and try again.\n${lastOutput}` : ''
+        output = await callModelAsync(cfg, prompt + feedback)
+      } catch (err) {
+        lastOutput = `model call failed: ${(err as Error).message}`
+        continue
+      }
+      lastOutput = output
+
+      const precision = computePrecision(readHistory({ root: target }))
+      const weights = loadConfig(target).weights
+      const verifyResult = verify(target, level, kinds, { precision, weights })
+      if (verifyResult.verdict === 'PASS') {
+        const result: OrchestrateResult = { output, verdict: 'PASS', retries: attempt }
+        if (configs.length > 1) {
+          result.model = cfg.model
+        }
+        return result
+      }
     }
-    lastOutput = output
 
-    const precision = computePrecision(readHistory({ root: target }))
-    const weights = loadConfig(target).weights
-    const verifyResult = verify(target, level, kinds, { precision, weights })
-    if (verifyResult.verdict === 'PASS') {
-      return { output, verdict: 'PASS', retries: attempt }
+    if (configs.length > 1) {
+      bestResult = { output: lastOutput, verdict: 'FAIL', retries: maxRetries, model: cfg.model }
+    } else {
+      bestResult = { output: lastOutput, verdict: 'FAIL', retries: maxRetries }
     }
   }
 
-  return { output: lastOutput, verdict: 'FAIL', retries: maxRetries }
+  return bestResult
 }

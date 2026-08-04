@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { note, outro, select, isCancel, cancel, intro } from '@clack/prompts'
+import { cancel, intro, isCancel, note, outro, select } from '@clack/prompts'
 import { jsonOut } from '../shared.js'
 
 const CI_TEMPLATES: Record<string, (config: CiConfig) => string> = {
@@ -51,7 +51,7 @@ ${c.linter ? `    - pnpm ${c.linter === 'biome' ? 'lint' : 'lint'}` : ''}
     - pnpm coverage
     - npx veridia run "verify project quality" --self --auto
 `,
-  'circleci': (c) => `version: 2.1
+  circleci: (c) => `version: 2.1
 
 jobs:
   quality:
@@ -110,7 +110,10 @@ export async function handle(opts: { provider?: string; output?: string; json?: 
       { value: 'circleci', label: 'CircleCI' },
     ],
   })
-  if (isCancel(provider)) { cancel('Cancelled'); return }
+  if (isCancel(provider)) {
+    cancel('Cancelled')
+    return
+  }
 
   const linter = await select({
     message: 'Select linter:',
@@ -120,7 +123,10 @@ export async function handle(opts: { provider?: string; output?: string; json?: 
       { value: 'none', label: 'None' },
     ],
   })
-  if (isCancel(linter)) { cancel('Cancelled'); return }
+  if (isCancel(linter)) {
+    cancel('Cancelled')
+    return
+  }
 
   config = {
     provider: provider as string,
@@ -138,11 +144,9 @@ export async function handle(opts: { provider?: string; output?: string; json?: 
   }
 
   const content = template(config)
-  const outputPath = opts.output ?? (
-    config.provider === 'github-actions' ? '.github/workflows/quality.yml' :
-    config.provider === 'gitlab-ci' ? '.gitlab-ci.yml' :
-    '.circleci/config.yml'
-  )
+  const outputPath =
+    opts.output ??
+    (config.provider === 'github-actions' ? '.github/workflows/quality.yml' : config.provider === 'gitlab-ci' ? '.gitlab-ci.yml' : '.circleci/config.yml')
 
   const fullPath = join(process.cwd(), outputPath)
   mkdirSync(join(fullPath, '..'), { recursive: true })

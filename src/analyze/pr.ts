@@ -1,15 +1,15 @@
 import { execSync } from 'node:child_process'
-import { classify } from '../classify/classify.js'
 import { assess } from '../assess/assess.js'
-import { buildPlan } from '../route/route.js'
-import { verify } from '../verify/verify.js'
 import { probeOracles, realFs } from '../assess/probe.js'
+import type { VerifiabilityLevel } from '../assess/types.js'
+import { classify } from '../classify/classify.js'
+import type { TaskType } from '../classify/types.js'
 import { loadConfig } from '../config/config.js'
 import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
+import { buildPlan } from '../route/route.js'
+import { verify } from '../verify/verify.js'
 import { runAnalysis } from './analyze.js'
-import type { TaskType } from '../classify/types.js'
-import type { VerifiabilityLevel } from '../assess/types.js'
 
 export interface PrResult {
   baseBranch: string
@@ -77,7 +77,10 @@ export function analyzePr(target: string, baseBranch = 'main'): PrResult {
     classification: { type: classification.type, confidence: classification.confidence },
     assessment: { level: assessment.level, oracles: kinds },
     plan: { depth: plan.depth, tier: plan.tier },
-    verifyResult: { verdict: verifyResult.verdict, checks: verifyResult.checks.map((c: { kind: string; passed: boolean }) => ({ kind: c.kind, passed: c.passed })) },
+    verifyResult: {
+      verdict: verifyResult.verdict,
+      checks: verifyResult.checks.map((c: { kind: string; passed: boolean }) => ({ kind: c.kind, passed: c.passed })),
+    },
     analysis: { totalFiles: analysis.totalFiles, totalFindings: analysis.totalFindings, errors: analysis.errors, warnings: analysis.warnings },
   }
 }

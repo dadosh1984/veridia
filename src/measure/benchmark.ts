@@ -1,14 +1,13 @@
 import { performance } from 'node:perf_hooks'
-import { classify } from '../classify/classify.js'
+import { runAnalysis } from '../analyze/analyze.js'
 import { assess } from '../assess/assess.js'
-import { buildPlan } from '../route/route.js'
-import { verify } from '../verify/verify.js'
 import { probeOracles, realFs } from '../assess/probe.js'
+import { classify } from '../classify/classify.js'
 import { loadConfig } from '../config/config.js'
 import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
-import { runAnalysis } from '../analyze/analyze.js'
-import { jsonOut } from '../cli/shared.js'
+import { buildPlan } from '../route/route.js'
+import { verify } from '../verify/verify.js'
 
 export interface BenchmarkResult {
   classify: { mean: number; min: number; max: number; runs: number }
@@ -28,7 +27,7 @@ function bench(fn: () => void, runs = 10): { mean: number; min: number; max: num
     times.push(end - start)
   }
   return {
-    mean: Math.round(times.reduce((a, b) => a + b, 0) / times.length * 100) / 100,
+    mean: Math.round((times.reduce((a, b) => a + b, 0) / times.length) * 100) / 100,
     min: Math.round(Math.min(...times) * 100) / 100,
     max: Math.round(Math.max(...times) * 100) / 100,
     runs,
