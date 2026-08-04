@@ -1,5 +1,11 @@
 # veridia
 
+## 0.5.0
+
+### Minor Changes
+
+- d4cffbf: feat: veridia report � generate Markdown/HTML quality report
+
 ## 0.4.0
 
 ### Minor Changes
