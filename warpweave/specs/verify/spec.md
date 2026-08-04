@@ -57,6 +57,17 @@ The `verify` command SHALL assign each oracle a weight reflecting how much it ca
 - **WHEN** both a test runner with real tests and a lint are detected
 - **THEN** the test oracle has higher weight than lint
 
+### Requirement: verify honors configurable oracle weights
+The `verify` command SHALL allow the base weight of an oracle to be overridden by a user-supplied `weights` map (of oracle kind to numeric weight) from the veridia config when present, while falling back to the built-in default weights for any oracle kind not overridden. The override SHALL NOT involve any model or judgment and SHALL only scale the base weight before sensitivity/precision calibration.
+
+#### Scenario: configured weight overrides default
+- **WHEN** the config supplies a weight for the `test-runner` oracle and a target declares a test runner
+- **THEN** the test oracle uses the configured weight instead of the built-in default
+
+#### Scenario: unconfigured oracle keeps default
+- **WHEN** the config supplies weights only for the `test-runner` oracle and a target declares a lint oracle
+- **THEN** the lint oracle keeps its built-in default weight
+
 ### Requirement: verify gates on a verdict
 The `verify` command SHALL derive a verdict from the level and weighted checks: at level 3, PASS requires all strong checks to pass (any strong failure → FAIL); at level 2, PASS requires all runnable checks to pass with judgment flagged for a human; at level 0/1, the verdict SHALL be HUMAN (checks run and are reported but do not pass/fail the result).
 

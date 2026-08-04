@@ -86,7 +86,7 @@ describe('triage', () => {
   it('drift is 0 on first run (no history)', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const result = await triage('add feature', target, undefined, { ask: mockAsk });
+    await triage('add feature', target, undefined, { ask: mockAsk });
     const historyFile = path.join(target, '.veridia', 'history.jsonl');
     const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
     const entry = JSON.parse(lines[0]);
@@ -96,7 +96,7 @@ describe('triage', () => {
   it('drift is non-empty string', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const result = await triage('add feature', target, undefined, { ask: mockAsk });
+    await triage('add feature', target, undefined, { ask: mockAsk });
     const historyFile = path.join(target, '.veridia', 'history.jsonl');
     const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
     const entry = JSON.parse(lines[0]);

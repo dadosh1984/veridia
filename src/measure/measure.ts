@@ -2,7 +2,7 @@ import type { MeasureEntry, HistorySummary } from './types.js';
 import { appendEntry, readHistory, buildSummary } from './history.js';
 import type { HistoryDeps } from './history.js';
 
-export interface MeasureDeps extends HistoryDeps {}
+export type MeasureDeps = HistoryDeps;
 
 export function measureRecord(
   entry: Omit<MeasureEntry, 'timestamp'>,

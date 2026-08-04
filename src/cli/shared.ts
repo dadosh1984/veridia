@@ -1,6 +1,3 @@
-import type { TaskType } from '../classify/types.js';
-import type { VerifiabilityLevel } from '../assess/types.js';
-
 export const VALID_TYPES = ['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'] as const;
 export const VALID_LEVELS = ['0', '1', '2', '3'] as const;
 

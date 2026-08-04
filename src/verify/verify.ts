@@ -9,6 +9,7 @@ export interface VerifyDeps {
   dryRun?: boolean;
   sensitivity?: Record<string, number>;
   precision?: Record<string, number>;
+  weights?: Record<string, number>;
 }
 
 export function deriveVerdict(level: VerifiabilityLevel, checks: Check[]): Verdict {
@@ -35,7 +36,7 @@ export function verify(
   const resolved = resolveCommands(kinds, target);
   const checks: Check[] = resolved.map(({ kind, command }) => {
     if (deps.dryRun) {
-      return { kind, command, weight: calibrateWeight(baseWeight(kind), 1, 1), weak: false, passed: true };
+      return { kind, command, weight: calibrateWeight(baseWeight(kind, deps.weights), 1, 1), weak: false, passed: true };
     }
     let exitCode: number;
     try {
@@ -45,7 +46,7 @@ export function verify(
       exitCode = 1;
     }
     const weak = kind === 'test-runner' && isTestsWeak(target);
-    const bw = baseWeight(kind);
+    const bw = baseWeight(kind, deps.weights);
     const sens = deps.sensitivity?.[kind];
     const prec = deps.precision?.[kind];
     const weight = sens !== undefined && prec !== undefined ? calibrateWeight(bw, sens, prec) : bw;

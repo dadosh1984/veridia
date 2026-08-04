@@ -1,0 +1,1 @@
+- [x] 2.1 Add dogfooding step to .github/workflows/ci.yml

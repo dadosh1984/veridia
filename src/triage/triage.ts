@@ -11,7 +11,6 @@ import { buildExecutionPlan } from '../execute/plan.js';
 import { delegate } from '../execute/delegate.js';
 import { loadConfig, getModelConfig } from '../config/config.js';
 import { readSession, writeSession, clearSession } from '../session/session.js';
-import type { Session } from '../session/types.js';
 import type { TaskType } from '../classify/types.js';
 import type { VerifiabilityLevel, OracleKind } from '../assess/types.js';
 import type { Verdict } from '../verify/types.js';
@@ -105,7 +104,7 @@ export async function triage(task: string, target: string = process.cwd(), optio
   const historyEntries = readHistory({ root: target });
   const precision = computePrecision(historyEntries);
 
-  const verifyResult = verify(target, assessment.level, kinds, { precision });
+  const verifyResult = verify(target, assessment.level, kinds, { precision, weights: config.weights });
   const drift = calculateDrift(verifyResult.verdict, target);
 
   const oracleResults = verifyResult.checks.map((c) => ({

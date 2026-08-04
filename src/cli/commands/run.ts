@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { triage } from '../../triage/triage.js';
-import { jsonOut } from '../shared.js';
 
 export async function handle(args: string[]): Promise<void> {
   let task = '';

@@ -20,10 +20,6 @@ const DANGEROUS_CALLS = [
 ];
 
 function hasTryCatch(content: string, callIndex: number): boolean {
-  const before = content.slice(Math.max(0, callIndex - 500), callIndex);
-  const after = content.slice(callIndex, callIndex + 200);
-  const lineStart = before.lastIndexOf('\n') + 1;
-  const line = content.slice(lineStart, callIndex + after.indexOf('\n') > -1 ? callIndex + after.indexOf('\n') : callIndex + 100);
   const lines = content.slice(0, callIndex).split('\n');
   let braceCount = 0;
   for (let i = lines.length - 1; i >= 0; i--) {

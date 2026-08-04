@@ -5,7 +5,7 @@ import { clearSession } from '../../session/session.js';
 import { jsonOut } from '../shared.js';
 
 export async function handle(args: string[]): Promise<void> {
-  let task = '';
+  const task = (args[0] ?? '').trim();
   let target = process.cwd();
   let auto = false;
   for (let i = 1; i < args.length; i++) {
@@ -18,9 +18,6 @@ export async function handle(args: string[]): Promise<void> {
       }
     } else if (args[i] === '--auto' || args[i] === '--non-interactive' || args[i] === '--yes') {
       auto = true;
-    } else {
-      task = args.slice(i).join(' ').trim();
-      break;
     }
   }
   if (!task) {

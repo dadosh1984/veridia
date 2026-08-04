@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { TaskType } from '../../classify/types.js';
 import type { VerifiabilityLevel } from '../../assess/types.js';
 import { probeOracles, realFs } from '../../assess/probe.js';
 import { verify } from '../../verify/verify.js';

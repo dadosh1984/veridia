@@ -67,7 +67,8 @@ export function isTestsWeak(target: string, fsLike: FsLike = realFs): boolean {
   return true;
 }
 
-export function baseWeight(kind: OracleKind): number {
+export function baseWeight(kind: OracleKind, weights?: Record<string, number>): number {
+  if (weights && weights[kind] !== undefined) return weights[kind];
   return KIND_WEIGHTS[kind];
 }
 

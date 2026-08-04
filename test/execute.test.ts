@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { ExecutionPlan, HostAgentInfo, ExecuteResult, ExecutionStep, VerificationGate } from '../src/execute/types.js';
+import type { ExecutionPlan, HostAgentInfo, ExecuteResult } from '../src/execute/types.js';
 import { assemblePrompt, callModelStdio } from '../src/execute/orchestrate.js';
 import { detectHostAgent } from '../src/execute/detect.js';
 import { buildExecutionPlan } from '../src/execute/plan.js';

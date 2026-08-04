@@ -13,9 +13,25 @@
     "build": "node build.js",
     "lint": "eslint .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dadosh1984/veridia.git"
+  },
+  "homepage": "https://github.com/dadosh1984/veridia#readme",
+  "bugs": {
+    "url": "https://github.com/dadosh1984/veridia/issues"
+  },
+  "keywords": ["quality", "triage", "verification", "cli", "typescript"],
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "skills/"
+  ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.2",

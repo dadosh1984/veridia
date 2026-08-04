@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { MeasureEntry, HistorySummary } from '../src/measure/types.js';
+import type { MeasureEntry } from '../src/measure/types.js';
 import { appendEntry, readHistory, buildSummary } from '../src/measure/history.js';
 import { measureRecord, measureHistory } from '../src/measure/measure.js';
 

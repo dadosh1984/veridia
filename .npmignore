@@ -1,0 +1,16 @@
+node_modules/
+src/
+test/
+warpweave/
+tsconfig.json
+build.js
+vitest.config.ts
+vitest.setup.ts
+eslint.config.js
+pnpm-lock.yaml
+.git/
+.gitignore
+.gitattributes
+.github/
+AGENTS.md
+.env.example

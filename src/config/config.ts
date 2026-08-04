@@ -20,6 +20,7 @@ export interface VeridiaConfig {
     command?: string;
     apiUrl?: string;
   };
+  weights?: Record<string, number>;
 }
 
 export const DEFAULT_CONFIG: VeridiaConfig = {
@@ -82,6 +83,9 @@ function mergeConfig(base: VeridiaConfig, user: Partial<VeridiaConfig>): Veridia
   }
   if (user.model) {
     result.model = { ...user.model };
+  }
+  if (user.weights) {
+    result.weights = { ...user.weights };
   }
   return result;
 }
