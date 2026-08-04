@@ -140,6 +140,7 @@ integration for execution (via stdio or HTTP API).
 ## Docs index
 
 - [Philosophy](docs/philosophy.md) — the why and the core thesis.
+- [Usage](docs/usage.md) — how to apply veridia to a task (setup, run, session mode).
 - [Mechanics](docs/mechanics.md) — the six mechanisms, the heart of the product.
 - [Verifiability (the crux)](docs/verifiability.md) — how we decide, mechanically,
   whether a task can be verified (this is the deepest design problem we have).
