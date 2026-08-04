@@ -8,7 +8,7 @@
     "veridia-mcp": "dist/mcp/index.js"
   },
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.13"
   },
   "scripts": {
     "build": "tsup",
