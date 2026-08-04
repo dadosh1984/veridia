@@ -59,7 +59,8 @@ export function buildExecutionPlan(
     if (!gate) return { id: checkId, command: checkId, kind: 'lint' as OracleKind };
     if (gate.command) return { ...gate };
     const resolvedCmd = resolved.find((r) => r.kind === gate.kind);
-    return { id: gate.id, command: resolvedCmd?.command ?? 'vitest run', kind: gate.kind };
+    const fallback = gate.kind === 'test-runner' ? 'vitest run' : '';
+    return { id: gate.id, command: resolvedCmd?.command ?? fallback, kind: gate.kind };
   });
 
   return {

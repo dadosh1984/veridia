@@ -197,6 +197,26 @@ describe('delegateFile', () => {
   });
 });
 
+describe('buildExecutionPlan', () => {
+  it('keeps a lint/human-review gate empty (no vitest run fallback)', () => {
+    const plan = buildExecutionPlan('add feature', 'feature', 1, {
+      depth: 'minimal', tier: 'any', trust: 'human', steps: ['ask', 'research', 'present-options'], checks: ['human-review'],
+    });
+    const gate = plan.plan.gates.find((g) => g.id === 'human-review');
+    expect(gate).toBeDefined();
+    expect(gate!.command).toBe('');
+  });
+
+  it('falls back to vitest run for a test-runner gate', () => {
+    const plan = buildExecutionPlan('add feature', 'feature', 3, {
+      depth: 'full-tdd', tier: 'cheapest', trust: 'verifier', steps: [], checks: ['run-tests'],
+    });
+    const gate = plan.plan.gates.find((g) => g.id === 'run-tests');
+    expect(gate).toBeDefined();
+    expect(gate!.command).toBe('vitest run');
+  });
+});
+
 describe('delegateShell', () => {
   it('returns success when no gates to run', () => {
     const plan: ExecutionPlan = {
