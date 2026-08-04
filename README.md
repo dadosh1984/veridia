@@ -43,6 +43,26 @@ veridia --help
 
 Requires **Node ≥ 22.12**.
 
+### 1.1 Set up for your AI agents
+
+`veridia init` wires veridia into one or more of the 35 supported AI agents (OpenCode, Claude Code, Cursor, Codex, ...):
+
+```bash
+# interactive: pick one or more agents from a checklist
+veridia init
+
+# non-interactive / scripting / CI:
+veridia init --agent opencode
+veridia init --agent opencode --agent claude
+```
+
+Run it in the project root that holds the agent's config directory (`.opencode/`, `.claude/`, ...). For each selected agent `init`:
+
+- installs the bundled veridia **skills** (`skills/veridia-*`) into `. <configDir>/skills/`, and
+- generates **slash commands** (`veridia-classify`, `veridia-triage`, ...) for agents with a command surface.
+
+After `init`, **restart your agent** for the new commands/skills to take effect. The checklist is skipped automatically when stdin is not a terminal (then `--agent <id>` is required); use `--no-interactive` to force this. List supported agents with `veridia agents --list`.
+
 ### 2. Analyse a task
 
 ```bash
