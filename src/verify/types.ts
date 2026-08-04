@@ -8,6 +8,7 @@ export interface Check {
   weight: number;
   weak: boolean;
   passed: boolean;
+  error?: string;
 }
 
 export interface VerifyResult {

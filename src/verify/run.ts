@@ -3,6 +3,7 @@ import { splitCommand } from '../util/split-command.js';
 
 export interface RunResult {
   exitCode: number;
+  error?: string;
 }
 
 export type RunFn = (cwd: string, command: string) => RunResult;
@@ -18,10 +19,12 @@ export function runCommand(cwd: string, command: string): RunResult {
     execFileSync(cmd, cmdArgs, { cwd, timeout: TIMEOUT_MS, encoding: 'utf8' });
     return { exitCode: 0 };
   } catch (err) {
-    const e = err as { status?: number | null; signal?: string };
+    const e = err as { status?: number | null; signal?: string; stderr?: string; code?: string; message?: string };
     const code = e.status;
-    if (code !== undefined && code !== null) return { exitCode: code };
-    if (e.signal) return { exitCode: 1 };
-    return { exitCode: 1 };
+    if (code !== undefined && code !== null) {
+      return { exitCode: code, error: e.stderr?.trim() || undefined };
+    }
+    const message = e.message || (e.code ? `command failed (${e.code})` : undefined);
+    return { exitCode: 1, error: message?.trim() || undefined };
   }
 }

@@ -6,6 +6,7 @@ import type { OracleKind } from '../src/assess/types.js';
 import { resolveCommands } from '../src/verify/resolve.js';
 import type { Check, Verdict, VerifyResult } from '../src/verify/types.js';
 import { deriveVerdict, verify } from '../src/verify/verify.js';
+import { runCommand } from '../src/verify/run.js';
 import { baseWeight, isTestsWeak, calibrateWeight } from '../src/verify/weight.js';
 import { mutate, computeSensitivity } from '../src/verify/mutate.js';
 
@@ -222,6 +223,20 @@ describe('deriveVerdict', () => {
   });
 });
 
+describe('runCommand', () => {
+  it('returns stderr text when a command fails', () => {
+    const result = runCommand(process.cwd(), `"${process.execPath}" -e "process.stderr.write('boom'); process.exit(1)"`);
+    expect(result.exitCode).toBe(1);
+    expect(result.error).toMatch(/boom/);
+  });
+
+  it('returns an error when the command cannot be spawned', () => {
+    const result = runCommand(process.cwd(), 'veridia-no-such-binary-xyzabc');
+    expect(result.exitCode).toBe(1);
+    expect(result.error).toBeTruthy();
+  });
+});
+
 describe('verify', () => {
   it('runs resolved commands and reports passed checks with a PASS verdict', () => {
     const target = makeTmpDir();
@@ -238,6 +253,19 @@ describe('verify', () => {
     writeFile(target, 'package.json', '{"scripts":{"test":"vitest run"}}');
     const result = verify(target, 2, ['test-runner'], { run: exitOne });
     expect(result.checks[0].passed).toBe(false);
+    expect(result.verdict).toBe<Verdict>('FAIL');
+  });
+
+  it('carries optional error text on a Check', () => {
+    const c: Check = { kind: 'lint', command: 'eslint .', weight: 1, weak: false, passed: false, error: 'oops' };
+    expect(c.error).toBe('oops');
+  });
+
+  it('reports why a check failed', () => {
+    const target = makeTmpDir();
+    writeFile(target, 'package.json', '{}');
+    const result = verify(target, 2, ['type-check'], { run: () => ({ exitCode: 1, error: 'tsc: boom' }) });
+    expect(result.checks[0].error).toMatch(/boom/);
     expect(result.verdict).toBe<Verdict>('FAIL');
   });
 
