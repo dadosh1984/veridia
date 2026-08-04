@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { join, delimiter } from 'node:path';
 import { splitCommand } from '../util/split-command.js';
+import { execFileWithShim } from '../util/exec-shim.js';
 import type { ExecutionPlan, DelegationMode, ExecuteResult, VerificationGate } from './types.js';
 import { detectHostAgent } from './detect.js';
 import type { ModelConfig } from './orchestrate.js';
@@ -53,16 +54,13 @@ function runGates(cwd: string, gates: VerificationGate[]): ExecuteResult {
     if (args.length === 0) continue;
     try {
       const env = { ...process.env, PATH: `${join(cwd, 'node_modules', '.bin')}${delimiter}${process.env.PATH ?? ''}` };
-      const result = spawnSync(args[0], args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8', env, stdio: 'inherit' });
-      if (result.status !== 0) {
-        return { exitCode: result.status ?? 1, stdout: '', stderr: `Gate "${gate.id}" failed` };
-      }
+      execFileWithShim(args[0], args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8', env });
     } catch (err) {
-      const e = err as { status?: number | null; stdout?: string; stderr?: string };
+      const nodeErr = err as NodeJS.ErrnoException;
       return {
-        exitCode: e.status ?? 1,
-        stdout: e.stdout ?? '',
-        stderr: e.stderr ?? `Gate "${gate.id}" failed`,
+        exitCode: (err as { status?: number }).status ?? 1,
+        stdout: '',
+        stderr: nodeErr.message ?? `Gate "${gate.id}" failed`,
       };
     }
   }

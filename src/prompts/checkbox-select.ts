@@ -39,6 +39,16 @@ export async function checkboxSelect<T>(
     emitKeypressEvents(input);
     input.setRawMode?.(true);
 
+    const cleanup = (): void => {
+      input.off('keypress', onKey);
+      input.setRawMode?.(false);
+    };
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve([...selected]);
+    }, 120_000);
+
     const onKey = (_str: string, key: { name?: string }): void => {
       if (Date.now() < readyAt) {
         render();
@@ -54,8 +64,8 @@ export async function checkboxSelect<T>(
         if (selected.has(value)) selected.delete(value);
         else selected.add(value);
       } else if (name === 'return' || name === 'enter') {
-        input.off('keypress', onKey);
-        input.setRawMode?.(false);
+        clearTimeout(timeout);
+        cleanup();
         resolve([...selected]);
         return;
       }

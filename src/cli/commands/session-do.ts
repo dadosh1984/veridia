@@ -3,6 +3,16 @@ import { measureRecord } from '../../measure/measure.js'
 import { readSession, writeSession } from '../../session/session.js'
 import type { OracleKind } from '../../assess/types.js'
 
+const CHECK_TO_KIND: Record<string, OracleKind> = {
+  'run-tests': 'test-runner',
+  'type-check': 'type-check',
+  'human-review': 'human-review',
+  'test-runner': 'test-runner',
+  'lint': 'lint',
+  'ci': 'ci',
+  'test-content': 'test-content',
+}
+
 export function handle(): void {
   const session = readSession()
   if (!session || !session.type || session.level === undefined || !session.plan) {
@@ -12,12 +22,7 @@ export function handle(): void {
   }
   const target = process.cwd()
   const kinds: OracleKind[] = session.plan.checks
-    .map((c) => {
-      if (c === 'test-runner' || c === 'type-check' || c === 'lint' || c === 'ci' || c === 'test-content') return c as OracleKind
-      if (c === 'run-tests') return 'test-runner' as const
-      if (c === 'human-review') return 'lint' as const
-      return null
-    })
+    .map((c) => CHECK_TO_KIND[c] ?? null)
     .filter((k): k is OracleKind => k !== null)
   const verifyResult = verify(target, session.level, kinds)
   session.verdict = verifyResult.verdict

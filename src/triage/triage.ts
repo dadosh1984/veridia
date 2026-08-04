@@ -82,9 +82,14 @@ export async function triage(task: string, target: string = process.cwd(), optio
     kinds = assessment.oracles.map((o) => o.kind);
     askResult = { questions: [] };
 
-    writeSession({ task, type: classification.type, confidence: classification.confidence, step: 'assess' }, target);
-    writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, step: 'route' }, target);
-    writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks }, step: 'ask' }, target);
+    writeSession({
+      task,
+      type: classification.type,
+      confidence: classification.confidence,
+      level: assessment.level,
+      plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks },
+      step: 'ask',
+    }, target);
   }
 
   const progress = options?.progress;

@@ -43,7 +43,7 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
       scripts: ['typecheck', 'type-check'],
     },
     lint: {
-      files: ['eslint.config.js', 'eslint.config.ts', '.eslintrc', '.eslintrc.json', '.eslintrc.js'],
+      files: ['eslint.config.js', 'eslint.config.ts', 'eslint.config.mjs', '.eslintrc', '.eslintrc.json', '.eslintrc.js'],
       scripts: ['lint'],
     },
     ci: {

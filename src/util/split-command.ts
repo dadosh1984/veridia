@@ -11,7 +11,7 @@ export function splitCommand(command: string): string[] {
       }
     } else if (ch === '"' || ch === "'") {
       inQuote = ch;
-    } else if (ch === ' ') {
+    } else if (ch === ' ' || ch === '\t') {
       if (current) {
         parts.push(current);
         current = '';
