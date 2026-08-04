@@ -1,0 +1,13 @@
+{
+  "name": "@dadosh1984/veridia",
+  "version": "0.7.0",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./classify": "./src/classify/classify.ts",
+    "./assess": "./src/assess/assess.ts",
+    "./route": "./src/route/route.ts",
+    "./verify": "./src/verify/verify.ts",
+    "./measure": "./src/measure/measure.ts",
+    "./config": "./src/config/config.ts"
+  }
+}
