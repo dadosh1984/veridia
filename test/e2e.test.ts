@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { runCli } from './helpers/run-cli.js';
+import { runCli, runCliIn } from './helpers/run-cli.js';
 
 const tmpDirs: string[] = [];
 
@@ -82,5 +82,58 @@ describe('e2e: triage', () => {
     expect(parsed.verdict).toBeTruthy();
     expect(parsed.executionPlan).toBeTruthy();
     expect(parsed.executionResult).toBeTruthy();
+  });
+});
+
+describe('e2e: session pipeline', () => {
+  it('runs the full step-by-step pipeline via session commands', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{"scripts":{"test":"node -e \\"process.exit(0)\\""}}');
+    const run = (args: string[]) => runCliIn(dir, ...args);
+
+    expect(run(['session-classify', 'add feature']).exitCode).toBe(0);
+    expect(run(['session-assess']).exitCode).toBe(0);
+    expect(run(['session-route']).exitCode).toBe(0);
+    const ask = run(['session-ask']);
+    expect(ask.exitCode).toBe(0);
+    expect(ask.stdout).toContain('No questions needed');
+    const done = run(['session-do']);
+    expect(done.exitCode).toBe(0);
+    expect(run(['session-archive']).exitCode).toBe(0);
+
+    expect(fs.existsSync(path.join(dir, '.veridia', 'session.json'))).toBe(false);
+    expect(fs.existsSync(path.join(dir, '.veridia', 'history.jsonl'))).toBe(true);
+  });
+
+  it('resumes the pipeline from a session after an interruption', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{"scripts":{"test":"node -e \\"process.exit(0)\\""}}');
+    runCliIn(dir, 'session-classify', 'add feature');
+    runCliIn(dir, 'session-assess');
+    runCliIn(dir, 'session-route');
+    runCliIn(dir, 'session-ask');
+
+    const result = runCliIn(dir, 'add feature', '--auto');
+    expect(result.exitCode).toBe(0);
+    const parsed = JSON.parse(result.stdout) as { type: string; verdict: string };
+    expect(parsed.type).toBe('feature');
+    expect(parsed.verdict).toBeTruthy();
+  });
+});
+
+describe('e2e: feedback loop', () => {
+  it('records oracle results and completes with calibration history', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{"scripts":{"test":"node -e \\"process.exit(0)\\""}}');
+    const args = ['run', '--target', dir, '--auto', 'add feature'];
+    expect(runCliIn(dir, ...args).exitCode).toBe(0);
+    expect(runCliIn(dir, ...args).exitCode).toBe(0);
+
+    const historyFile = path.join(dir, '.veridia', 'history.jsonl');
+    expect(fs.existsSync(historyFile)).toBe(true);
+    const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
+    expect(lines.length).toBeGreaterThanOrEqual(2);
+    const entry = JSON.parse(lines[lines.length - 1]) as { oracleResults?: unknown };
+    expect(entry.oracleResults).toBeDefined();
   });
 });

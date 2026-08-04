@@ -71,18 +71,19 @@
 
 ## 4. Skills & Docs
 
-- [ ] 1.12 Sync `skills/veridia-*/SKILL.md` with session protocol
+- [x] 1.12 Sync `skills/veridia-*/SKILL.md` with session protocol
   - **Ladder rung**: 1 (YAGNI — docs update)
   - **Verify**: `rtk pnpm exec tsc --noEmit`
 
 ## 5. Testing
 
-- [ ] 1.13 Test: full pipeline step-by-step via session commands
+- [x] 1.13 Test: full pipeline step-by-step via session commands
   - **Ladder rung**: 2 (reuse — follow existing e2e pattern)
   - **Test first**: `test('e2e: step-by-step session pipeline', ...)`
   - **Verify**: `rtk pnpm exec vitest run test/e2e.test.ts`
 
-- [ ] 1.14 Test: resume after ask interruption
+- [x] 1.14 Test: resume after ask interruption
   - **Ladder rung**: 2 (reuse — follow existing e2e pattern)
   - **Test first**: `test('e2e: resume pipeline after ask', ...)`
   - **Verify**: `rtk pnpm exec vitest run test/e2e.test.ts`
+

@@ -18,7 +18,7 @@
   - **Test first**: `test('verify uses baseWeight when no calibration deps', ...)`
   - **Verify**: `rtk pnpm exec vitest run test/verify.test.ts`
 
-- [ ] 1.4 Add e2e test: verify that sensitivity + precision affect verdict
+- [x] 1.4 Add e2e test: verify that sensitivity + precision affect verdict
   - **Spec scenario**: Sensitivity affects oracle weight, Precision converges
   - **Ladder rung**: 2 (reuse — follow existing e2e test pattern)
   - **Test first**: `test('feedback loop: sensitivity and precision affect verdict', ...)`
@@ -53,3 +53,4 @@
 - [x] 2.5 Update `warpweave/specs/assess/spec.md` with new test-content oracle
   - **Ladder rung**: 1 (YAGNI — docs update)
   - **Verify**: `rtk pnpm exec tsc --noEmit`
+
