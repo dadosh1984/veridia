@@ -37,7 +37,7 @@ A VerificationReport tells veridia (or any consumer) whether the executed work p
 |-------|------|-------------|
 | `protocol` | string | Always `"veridia/verification-report/v1"` |
 | `checks` | array | List of verification checks run |
-| `checks[].kind` | string | Oracle kind: `test-runner`, `type-check`, `lint`, `ci` |
+| `checks[].kind` | string | Oracle kind: `test-runner`, `type-check`, `lint`, `ci`, `test-content` |
 | `checks[].command` | string | The command that was executed |
 | `checks[].weight` | number | Oracle weight (3=test-runner, 2=type-check, 1=lint, 0=ci) |
 | `checks[].weak` | boolean | True if the check is considered weak (empty test files) |

@@ -13,7 +13,7 @@ from scratch. Quality comes from process, not from the model. The workflow is
    minimum. Mark deliberate simplifications `// ponytail: <reason>`.
 3. **Follow TDD (RED-GREEN-REFACTOR).** Write a failing test, watch it fail,
    write minimal code, watch it pass.
-4. **No code without an approved spec.** Specs live in `warpweave/changes/`.
+4. **No code without an approved spec.** Specs live in `warpweave/specs/`. Docs are a note-taking layer, not a hard gate (see Variant B in roadmap).
 5. **Verify each task before marking it done.** Run the task's `**Verify:**`
    command (RTK-wrapped).
 6. **Run `rtk` on every shell command.** Compressed feedback; read tee logs at
@@ -36,6 +36,7 @@ Each stage ends with something testable before the next starts.
 - Stage 5 — Execute + Verify: weighted verifier, gate on it.
 - Stage 6 — Measure/learn: record drift, token/cost, outcomes.
 - Stage 7 — Integration & polish.
+- Stage 8 — AI integration & feedback loops: mutation sensitivity, historical precision, interactive ask, AI orchestration, dogfooding.
 
 See `docs/` for the full method (philosophy, mechanics, verifiability, roadmap,
 reuse, naming).

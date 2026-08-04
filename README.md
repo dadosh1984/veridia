@@ -35,12 +35,14 @@ veridia "add user authentication"
 ```
 
 Output example:
-```
-type    feature     0.29        ← task classification
-level   3                       ← verifiability level (0-3)
-plan    full-tdd   cheapest     ← recommended process
-questions   none                ← clarifying questions
-verdict    FAIL                ← check results
+```json
+{
+  "type": "feature",
+  "confidence": 0.29,
+  "level": 3,
+  "plan": { "depth": "full-tdd", "tier": "cheapest" },
+  "verdict": "FAIL"
+}
 ```
 
 ### 3. Analyse a specific project

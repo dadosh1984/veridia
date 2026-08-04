@@ -22,6 +22,10 @@ A LearnResult tells veridia (or any consumer) how well the system has been perfo
     "2": 0.75,
     "1": 0.40
   },
+  "oraclePrecision": {
+    "test-runner": 0.95,
+    "type-check": 0.80
+  },
   "driftPatterns": [
     "fix login: drift=1 (type=bugfix, level=3)"
   ],
@@ -40,6 +44,7 @@ A LearnResult tells veridia (or any consumer) how well the system has been perfo
 | `totalRuns` | number | Total number of recorded runs |
 | `classificationAccuracy` | object | PASS rate per task type |
 | `successRateByLevel` | object | PASS rate per verifiability level |
+| `oraclePrecision` | object | Precision (TP/(TP+FP)) per oracle kind |
 | `driftPatterns` | string[] | Entries with non-zero drift |
 | `recommendations` | string[] | Actionable suggestions |
 

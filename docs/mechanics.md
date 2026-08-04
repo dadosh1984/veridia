@@ -4,8 +4,8 @@ The heart of veridia is six mechanisms. Each is measurable mechanics, not a
 marketing promise.
 
 ```
-CLASSIFY ──▶ ASSESS ──▶ ROUTE ──▶ ASK? ──▶ VERIFY ──▶ MEASURE
-  type        level       plan      clarify   check     learn
+CLASSIFY ──▶ ASSESS ──▶ ROUTE ──▶ ASK? ──▶ EXECUTE ──▶ VERIFY ──▶ MEASURE
+  type        level       plan      clarify    do        check     learn
 ```
 
 ## 1. Classify — task type
@@ -63,16 +63,31 @@ drift-check + token-budget + learn ideas:
 If cost grows but meaning doesn't → signal of false verifiability.
 This loop is what makes the "intuition" self-correcting instead of a lottery.
 
-## Proposed interface (skills/commands)
+## Commands
 
-| Skill | Mechanism | Purpose |
+| Command | Mechanism | Purpose |
 |---|---|---|
 | `classify` | 1 | classify task type from description |
 | `assess` | 2 | determine verifiability level by probing repo |
 | `route` | 3 | choose model + orchestration thickness |
 | `ask`   | 4 | 2-3 clarifying questions when level is 1/0 |
+| `plan`  | 3 | generate execution plan for host agent |
+| `execute`| 5 | dispatch plan to host agent |
 | `verify`| 5 | run + weigh the verifier |
 | `measure`| 6 | drift vs expectations, accumulate into learn |
+| `review`| 5 | generate code review instructions |
+| `agents`| — | list supported AI agents |
+| `init`  | — | bootstrap veridia config |
+| `generate`| — | generate agent command files |
+| `learn` | 6 | analyze history, produce recommendations |
+| `run`   | all | full triage with human-readable output |
+| `session-classify` | 1 | classify and write to session |
+| `session-assess` | 2 | assess and write to session |
+| `session-route` | 3 | route from session |
+| `session-ask` | 4 | ask from session |
+| `session-do` | 5 | execute from session |
+| `session-status` | — | show session state |
+| `session-archive` | 6 | archive session to history |
 
 Sequence: `classify → assess → route → ask? → execute → verify → measure`
 
@@ -82,9 +97,9 @@ Ceremony thickness adapts to verifiability:
 
 | Verifiability | Runtime path |
 |---|---|
-| 3 (full machine) | classify → assess → route → do → VERIFY → measure |
-| 2 (partial) | classify → assess → route → ask → do → PARTIAL verify → measure |
-| 1 (human-only) | classify → assess → route → ask(3) → do → HUMAN check → measure |
-| 0 (none) | classify → assess → route → ask(expectation) → do → measure |
+| 3 (full machine) | classify → assess → route → execute → VERIFY → measure |
+| 2 (partial) | classify → assess → route → ask → execute → PARTIAL verify → measure |
+| 1 (human-only) | classify → assess → route → ask(3) → execute → HUMAN check → measure |
+| 0 (none) | classify → assess → route → ask(expectation) → execute → measure |
 
 Our vocabulary: `classify → assess → route → ask? → execute → verify → measure`.

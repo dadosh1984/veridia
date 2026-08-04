@@ -1,12 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { triage } from '../../triage/triage.js';
-import { readSession } from '../../session/session.js';
+import { clearSession } from '../../session/session.js';
 import { jsonOut } from '../shared.js';
 
 export async function handle(args: string[]): Promise<void> {
-  const existing = readSession();
-  let task = args[0] || existing?.task || '';
+  let task = '';
   let target = process.cwd();
   let auto = false;
   for (let i = 1; i < args.length; i++) {
@@ -25,7 +24,7 @@ export async function handle(args: string[]): Promise<void> {
     }
   }
   if (!task) {
-    process.stderr.write('veridia: no task provided and no active session\n');
+    process.stderr.write('veridia: no task provided\n');
     process.exitCode = 1;
     return;
   }
@@ -35,6 +34,7 @@ export async function handle(args: string[]): Promise<void> {
     process.exitCode = 1;
     return;
   }
+  clearSession(target);
   const result = await triage(task, resolved, { auto });
   jsonOut(result);
 }

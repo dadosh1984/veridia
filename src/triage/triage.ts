@@ -4,7 +4,6 @@ import { buildPlan } from '../route/route.js';
 import { askInteractive } from '../ask/ask.js';
 import type { AskResult } from '../ask/types.js';
 import { verify } from '../verify/verify.js';
-import { computeSensitivity } from '../verify/mutate.js';
 import { measureRecord } from '../measure/measure.js';
 import { readHistory } from '../measure/history.js';
 import { computePrecision } from '../measure/learn.js';

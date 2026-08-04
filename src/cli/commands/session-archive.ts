@@ -1,5 +1,4 @@
 import { readSession, clearSession } from '../../session/session.js';
-import { measureRecord } from '../../measure/measure.js';
 
 export function handle(_args: string[]): void {
   const session = readSession();
@@ -12,14 +11,6 @@ export function handle(_args: string[]): void {
     process.exitCode = 1;
     return;
   }
-  measureRecord({
-    task: session.task,
-    type: session.type || 'unknown',
-    level: session.level ?? 0,
-    verdict: session.verdict || 'HUMAN',
-    checks: [],
-    drift: '0',
-  });
   clearSession();
   process.stdout.write('  Session archived to history.\n');
 }

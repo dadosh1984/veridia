@@ -26,10 +26,10 @@ Axis B — WHAT KIND OF ORACLE (determines verifier strength)?
 ## Mechanical probe (decision tree)
 
 ```
-Does the repo have a test runner + tests touching the target?   → 2 or 3
-Does CI / type-check / lint cover the target?                   → strengthens to 3/2
-Is the task deterministic ("return X", "equal to Y")?            → 3
-Otherwise / uncertain                                            → level 1 → ASK
+Does the repo have a test runner with tests containing assertions?   → 3 (if deterministic task)
+Does the repo have a test runner but tests are empty/weak?           → 2 (capped)
+Does the repo have type-check or lint?                               → 2
+Nothing detected                                                     → 1 → ASK
 ```
 
 ## Consequence matrix

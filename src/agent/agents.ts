@@ -48,5 +48,5 @@ export function getAllAgents(): AgentInfo[] {
 
 export function formatInvocation(agent: AgentInfo, commandId: string): string {
   const separator = agent.invocationStyle === 'namespaced' ? ':' : '-';
-  return `${agent.invocationPrefix}ww${separator}${commandId}`;
+  return `${agent.invocationPrefix}veridia${separator}${commandId}`;
 }

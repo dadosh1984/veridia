@@ -64,7 +64,7 @@ describe('veridia CLI', () => {
   it('treats an unknown subcommand as a task string and runs triage', () => {
     const dir = makeTmpDir();
     writeFile(dir, 'package.json', '{}');
-    const result = runCli('frobnicate', '--target', dir);
+    const result = runCli('frobnicate', '--target', dir, '--auto');
     expect(result.exitCode).toBe(0);
     const parsed = parseJson(result.stdout) as { type: string };
     expect(parsed.type).toBeTruthy();
@@ -292,7 +292,7 @@ describe('veridia CLI', () => {
   it('runs end-to-end triage on a task string and prints type, level, plan, verdict', () => {
     const dir = makeTmpDir();
     writeFile(dir, 'package.json', '{}');
-    const result = runCli('add dark mode support', '--target', dir);
+    const result = runCli('add dark mode support', '--target', dir, '--auto');
     expect(result.exitCode).toBe(0);
     const parsed = parseJson(result.stdout) as { type: string; level: number; plan: unknown; verdict: string };
     expect(parsed.type).toBeTruthy();

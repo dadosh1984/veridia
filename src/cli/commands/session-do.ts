@@ -11,8 +11,14 @@ export function handle(_args: string[]): void {
     return;
   }
   const target = process.cwd();
-  const validKinds = new Set<OracleKind>(['test-runner', 'type-check', 'lint', 'ci', 'test-content']);
-  const kinds: OracleKind[] = session.plan.checks.filter((c): c is OracleKind => validKinds.has(c as OracleKind));
+  const kinds: OracleKind[] = session.plan.checks
+    .map((c) => {
+      if (c === 'test-runner' || c === 'type-check' || c === 'lint' || c === 'ci' || c === 'test-content') return c as OracleKind;
+      if (c === 'run-tests') return 'test-runner' as const;
+      if (c === 'human-review') return 'lint' as const;
+      return null;
+    })
+    .filter((k): k is OracleKind => k !== null);
   const verifyResult = verify(target, session.level, kinds);
   session.verdict = verifyResult.verdict;
   session.step = 'done';

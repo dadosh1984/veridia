@@ -66,7 +66,7 @@ describe('e2e: triage', () => {
   it('runs full triage loop and returns valid JSON with all fields', () => {
     const dir = makeTmpDir();
     writeFile(dir, 'package.json', '{}');
-    const result = runCli('add dark mode support', '--target', dir);
+    const result = runCli('add dark mode support', '--target', dir, '--auto');
     expect(result.exitCode).toBe(0);
     const parsed = JSON.parse(result.stdout) as {
       type: string;

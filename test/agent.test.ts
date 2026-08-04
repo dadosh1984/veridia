@@ -32,17 +32,17 @@ describe('getAgent', () => {
 describe('formatInvocation', () => {
   it('formats namespaced invocation (claude)', () => {
     const agent = getAgent('claude')!;
-    expect(formatInvocation(agent, 'apply')).toBe('/ww:apply');
+    expect(formatInvocation(agent, 'apply')).toBe('/veridia:apply');
   });
 
   it('formats flat invocation (cursor)', () => {
     const agent = getAgent('cursor')!;
-    expect(formatInvocation(agent, 'apply')).toBe('/ww-apply');
+    expect(formatInvocation(agent, 'apply')).toBe('/veridia-apply');
   });
 
   it('formats amazon-q invocation with @ prefix', () => {
     const agent = getAgent('amazon-q')!;
-    expect(formatInvocation(agent, 'apply')).toBe('@ww-apply');
+    expect(formatInvocation(agent, 'apply')).toBe('@veridia-apply');
   });
 });
 
