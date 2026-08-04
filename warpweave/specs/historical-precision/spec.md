@@ -2,7 +2,7 @@
 
 Track per-oracle precision over time by recording whether a PASS verdict predicted real correctness (no human fix needed later), and feed this data back into oracle weighting so the system learns which oracles to trust.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Record per-oracle precision
 
