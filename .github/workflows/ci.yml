@@ -31,3 +31,33 @@ jobs:
       - run: pnpm test
       - run: node dist/cli/index.js run "classify task" --self --auto
       - run: node dist/cli/index.js run "assess project" --self --auto
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Publish on version change
+        run: |
+          LOCAL="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view veridia version 2>/dev/null || echo '')"
+          echo "local=$LOCAL published=$PUBLISHED"
+          if [ "$LOCAL" != "$PUBLISHED" ]; then
+            npm publish --access public
+          else
+            echo "Version $LOCAL already published on npm; skipping publish."
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
