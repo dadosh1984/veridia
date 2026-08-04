@@ -115,7 +115,9 @@ describe('e2e: session pipeline', () => {
 
     const result = runCliIn(dir, 'add feature', '--auto')
     expect(result.exitCode).toBe(0)
-    const firstBytes = Array.from(result.stdout.slice(0, 40)).map((c) => c.codePointAt(0)?.toString(16)).join(' ')
+    const firstBytes = Array.from(result.stdout.slice(0, 40))
+      .map((c) => c.codePointAt(0)?.toString(16))
+      .join(' ')
     expect(firstBytes).toBe('7b')
     const parsed = JSON.parse(result.stdout) as { type: string; verdict: string }
     expect(parsed.type).toBe('feature')
