@@ -103,4 +103,15 @@ describe('triage', () => {
     expect(typeof entry.drift).toBe('string');
     expect(entry.drift.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('emits progress across the stages', async () => {
+    const target = makeTmpDir();
+    writeFile(target, 'package.json', '{}');
+    const stages: string[] = [];
+    await triage('add feature', target, { auto: true, progress: (stage) => stages.push(stage) }, { ask: mockAsk });
+    for (const expected of ['classify', 'assess', 'route', 'plan', 'execute', 'verify', 'measure']) {
+      expect(stages).toContain(expected);
+    }
+    expect(stages[0]).toBe('classify');
+  });
 });

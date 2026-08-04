@@ -62,7 +62,12 @@ export async function handle(args: string[]): Promise<void> {
     return;
   }
 
-  const result = await triage(task, resolved, { auto });
+  const result = await triage(task, resolved, {
+    auto,
+    progress: (stage, detail) => {
+      process.stdout.write(`→ ${stage}${detail ? `: ${detail}` : ''}\n`);
+    },
+  });
 
   process.stdout.write(`\n`);
   process.stdout.write(`  type       ${result.type.padEnd(12)} ${result.confidence.toFixed(2)}\n`);

@@ -49,6 +49,7 @@ function calculateDrift(verdict: Verdict, target: string): string {
 
 export interface TriageOptions {
   auto?: boolean;
+  progress?: (stage: string, detail?: string) => void;
 }
 
 export interface TriageDeps {
@@ -84,13 +85,20 @@ export async function triage(task: string, target: string = process.cwd(), optio
     writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks }, step: 'ask' }, target);
   }
 
+  const progress = options?.progress;
+  progress?.('classify', `${classification.type} (${classification.confidence})`);
+  progress?.('assess', `level ${assessment.level} · ${kinds.join(', ') || 'no oracles'}`);
+  progress?.('route', `${plan.depth} / ${plan.tier}`);
+
   const askFn = deps?.ask ?? askInteractive;
   if (!existing || existing.step === 'ask' || existing.step === 'classify' || existing.step === 'assess' || existing.step === 'route') {
     askResult = await askFn(classification.type, assessment.level, options?.auto);
     writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks }, answers: askResult.answers, step: 'do' }, target);
   }
+  progress?.('ask', `${askResult.questions.length} question(s)`);
 
   const execPlan = buildExecutionPlan(task, classification.type, assessment.level, plan, undefined, target);
+  progress?.('plan', `${execPlan.plan.steps.length} steps · ${execPlan.plan.gates.length} gates`);
   const modelConfig = getModelConfig(config);
   const execResult = await delegate(execPlan, target, modelConfig ? {
     modelConfig,
@@ -100,11 +108,13 @@ export async function triage(task: string, target: string = process.cwd(), optio
     kinds,
     answers: askResult.answers,
   } : undefined);
+  progress?.('execute', 'delegated');
 
   const historyEntries = readHistory({ root: target });
   const precision = computePrecision(historyEntries);
 
   const verifyResult = verify(target, assessment.level, kinds, { precision, weights: config.weights });
+  progress?.('verify', verifyResult.verdict);
   const drift = calculateDrift(verifyResult.verdict, target);
 
   const oracleResults = verifyResult.checks.map((c) => ({
@@ -122,6 +132,7 @@ export async function triage(task: string, target: string = process.cwd(), optio
     drift,
     oracleResults,
   }, { root: target });
+  progress?.('measure', 'recorded');
 
   return {
     task,
