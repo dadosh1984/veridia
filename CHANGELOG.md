@@ -1,5 +1,15 @@
 # veridia
 
+## 0.6.0
+
+### Minor Changes
+
+- 88df3b3: feat: veridia pr � analyze pull requests with triage
+  feat: veridia report � generate Markdown/HTML quality report
+  feat: self-dogfooding in CI (full triage, analysis, verify, learn, measure)
+  feat: mutation testing auto-wired into verify pipeline
+  feat: veridia fix � auto-fix console.log and TODO comments
+
 ## 0.5.0
 
 ### Minor Changes
