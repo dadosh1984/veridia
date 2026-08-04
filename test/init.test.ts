@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { buildAgentChoices } from '../src/cli/commands/init.js';
+import { buildAgentChoices, formatInitSummary } from '../src/cli/commands/init.js';
 
 const tmpDirs: string[] = [];
 
@@ -28,5 +28,20 @@ describe('buildAgentChoices', () => {
     expect(opencode?.selected).toBe(true);
     expect(claude?.selected).toBe(false);
     expect(choices.length).toBeGreaterThan(20);
+  });
+});
+
+describe('formatInitSummary', () => {
+  it('renders agent counts and the config line', () => {
+    const summary = formatInitSummary([
+      { agent: 'opencode', commandsGenerated: ['a', 'b'], skillsInstalled: ['s1', 's2', 's3'] },
+      { agent: 'claude', commandsGenerated: [], skillsInstalled: ['s1'] },
+    ]);
+    expect(summary).toContain('opencode');
+    expect(summary).toContain('2 command');
+    expect(summary).toContain('3 skill');
+    expect(summary).toContain('claude');
+    expect(summary).toContain('.veridia/config.json');
+    expect(summary).not.toContain('s1');
   });
 });

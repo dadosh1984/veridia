@@ -17,6 +17,14 @@ export function buildAgentChoices(target: string, agents: AgentInfo[] = getAllAg
   }));
 }
 
+export function formatInitSummary(setup: Array<{ agent: string; commandsGenerated: string[]; skillsInstalled: string[] }>): string {
+  const lines = setup.map((s) => {
+    const cmds = s.commandsGenerated.length > 0 ? `${s.commandsGenerated.length} command(s)` : 'skills-only';
+    return `  ${s.agent}: ${cmds}, ${s.skillsInstalled.length} skill(s)`;
+  });
+  return `veridia initialized for:\n${lines.join('\n')}\nconfig: .veridia/config.json\n`;
+}
+
 function parseAgentIds(args: string[]): string[] {
   const ids: string[] = [];
   for (let i = 1; i < args.length; i++) {
@@ -45,6 +53,7 @@ export async function handle(args: string[]): Promise<void> {
   ensureConfig(target);
 
   let agents: AgentInfo[];
+  let interactive = false;
   if (agentIds.length > 0) {
     agents = [];
     for (const id of agentIds) {
@@ -57,6 +66,7 @@ export async function handle(args: string[]): Promise<void> {
       agents.push(agent);
     }
   } else if (shouldPrompt({ noInteractive })) {
+    interactive = true;
     const selectedIds = await checkboxSelect(buildAgentChoices(target));
     agents = selectedIds.map((id) => getAgent(id) as AgentInfo);
     if (agents.length === 0) {
@@ -76,5 +86,9 @@ export async function handle(args: string[]): Promise<void> {
     return { agent: agent.id, commandsGenerated: commands, skillsInstalled: skills };
   });
 
+  if (interactive) {
+    process.stdout.write(formatInitSummary(setup));
+    return;
+  }
   jsonOut({ initialized: true, agents: setup, configFile: '.veridia/config.json' });
 }
