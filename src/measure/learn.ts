@@ -115,6 +115,15 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
   if (driftEntries.length > 0) {
     recommendations.push(`${driftEntries.length} run(s) had non-zero drift. Review intent vs actual outcome.`)
   }
+
+  const durations = entries.filter((e) => e.durationMs !== undefined).map((e) => e.durationMs!)
+  if (durations.length > 0) {
+    const avgDuration = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+    const maxDuration = Math.max(...durations)
+    const minDuration = Math.min(...durations)
+    recommendations.push(`Time-to-fix: avg ${avgDuration}ms, min ${minDuration}ms, max ${maxDuration}ms (${durations.length} runs)`)
+  }
+
   if (recommendations.length === 0) {
     recommendations.push('No issues detected. All metrics look healthy.')
   }

@@ -16,6 +16,7 @@ import type { ModelTier, OrchestrationDepth } from '../route/types.js'
 import { clearSession, readSession, writeSession } from '../session/session.js'
 import type { Verdict } from '../verify/types.js'
 import { verify } from '../verify/verify.js'
+import { performance } from 'node:perf_hooks'
 
 /** The complete result of a triage run, including classification, assessment, planning, and execution. */
 export interface TriageResult {
@@ -90,6 +91,7 @@ export interface TriageDeps {
  * @returns A promise resolving to a TriageResult with all phase outputs.
  */
 export async function triage(task: string, target: string = process.cwd(), options?: TriageOptions, deps?: TriageDeps): Promise<TriageResult> {
+  const startTime = performance.now()
   const config = loadConfig(target)
   const existing = readSession(target)
 
@@ -187,6 +189,8 @@ export async function triage(task: string, target: string = process.cwd(), optio
     falsePositives: c.passed ? 0 : 1,
   }))
 
+  const durationMs = Math.round(performance.now() - startTime)
+
   measureRecord(
     {
       task,
@@ -196,6 +200,7 @@ export async function triage(task: string, target: string = process.cwd(), optio
       checks: verifyResult.checks.map((c) => ({ kind: c.kind, passed: c.passed })),
       drift,
       oracleResults,
+      durationMs,
     },
     { root: target },
   )

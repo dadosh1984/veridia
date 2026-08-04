@@ -18,6 +18,8 @@ export interface MeasureEntry {
   timestamp: string
   /** Optional per-oracle precision data (true/false positives). */
   oracleResults?: { kind: string; truePositives: number; falsePositives: number }[]
+  /** Time in ms from task start to verdict (time-to-fix). */
+  durationMs?: number
 }
 
 /** A summary of historical measurement data. */
