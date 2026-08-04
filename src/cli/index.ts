@@ -13,6 +13,7 @@ import * as initCmd from './commands/init.js'
 import * as learnCmd from './commands/learn.js'
 import * as measureCmd from './commands/measure.js'
 import * as planCmd from './commands/plan.js'
+import * as reportCmd from './commands/report.js'
 import * as reviewCmd from './commands/review.js'
 import * as routeCmd from './commands/route.js'
 import * as runCmd from './commands/run.js'
@@ -101,6 +102,14 @@ cli
   .command('agents', 'List all supported AI agents')
   .option('--list', 'List agents')
   .action((opts: { list?: boolean }) => agentsCmd.handle(opts))
+
+cli
+  .command('report', 'Generate a quality report (markdown or HTML)')
+  .option('--target <path>', 'Target directory')
+  .option('--format <format>', 'Output format: markdown or html')
+  .option('--output <path>', 'Output file path')
+  .option('--json', 'Output as JSON')
+  .action((opts: { target?: string; format?: string; output?: string; json?: boolean }) => reportCmd.handle(opts))
 
 cli
   .command('fix', 'Auto-fix found problems (console.log, TODO comments)')
