@@ -56,18 +56,11 @@ export async function callModelApi(url: string, model: string, prompt: string, a
   }
 }
 
-export function callModel(config: ModelConfig, prompt: string): string {
-  if (config.provider === 'stdio') {
-    return callModelStdio(config.command ?? config.model, prompt);
-  }
-  return '';
-}
-
 export async function callModelAsync(config: ModelConfig, prompt: string): Promise<string> {
   if (config.provider === 'api') {
     return callModelApi(config.apiUrl ?? '', config.model, prompt, config.apiKey);
   }
-  return callModel(config, prompt);
+  return callModelStdio(config.command ?? config.model, prompt);
 }
 
 export async function orchestrate(

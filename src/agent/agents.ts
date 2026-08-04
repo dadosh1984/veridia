@@ -50,7 +50,3 @@ export function formatInvocation(agent: AgentInfo, commandId: string): string {
   const separator = agent.invocationStyle === 'namespaced' ? ':' : '-';
   return `${agent.invocationPrefix}ww${separator}${commandId}`;
 }
-
-export function getAgentCapabilities(id: string): AgentInfo | undefined {
-  return getAgent(id);
-}

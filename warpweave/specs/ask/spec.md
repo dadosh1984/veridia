@@ -63,14 +63,14 @@ The `ask` command SHALL be deterministic for a given input, MUST NOT call any ex
 - **WHEN** the user runs `veridia ask --type feature --level 1` twice
 - **THEN** both runs print the identical question set
 
-### Requirement: ask with --agent flag
+### Requirement: ask declines at high verifiability
 
-When the `--agent` flag is provided, the `ask` command SHALL output structured JSON instructions for the specified AI agent to generate clarifying questions dynamically, instead of using the static question bank.
+When the verifiability level is 2 or 3, the `ask` command SHALL print a decline message and return no questions, since the task is mechanically verifiable.
 
-#### Scenario: ask with --agent
-- **WHEN** the user runs `veridia ask --agent claude --type feature --level 1`
-- **THEN** the command outputs JSON with `taskType`, `level`, `agent`, and `instruction` fields
+#### Scenario: level 3 declines
+- **WHEN** the user runs `veridia ask --type bugfix --level 3`
+- **THEN** the command prints a decline message and returns no questions
 
-#### Scenario: ask without --agent
-- **WHEN** the user runs `veridia ask --type feature --level 1`
-- **THEN** the command uses the existing static question bank (unchanged behavior)
+#### Scenario: level 2 declines
+- **WHEN** the user runs `veridia ask --type feature --level 2`
+- **THEN** the command prints a decline message and returns no questions

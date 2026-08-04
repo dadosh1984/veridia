@@ -45,9 +45,10 @@ export function verify(
       exitCode = 1;
     }
     const weak = kind === 'test-runner' && isTestsWeak(target);
-    const sens = deps.sensitivity?.[kind] ?? 1;
-    const prec = deps.precision?.[kind] ?? 1;
-    const weight = calibrateWeight(baseWeight(kind), sens, prec);
+    const bw = baseWeight(kind);
+    const sens = deps.sensitivity?.[kind];
+    const prec = deps.precision?.[kind];
+    const weight = sens !== undefined && prec !== undefined ? calibrateWeight(bw, sens, prec) : bw;
     return { kind, command, weight, weak, passed: exitCode === 0 };
   });
   return { protocol: 'veridia/verification-report/v1', checks, verdict: deriveVerdict(level, checks) };

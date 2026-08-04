@@ -7,7 +7,13 @@ export function mapLevel(oracles: Oracle[], taskHint?: string): VerifiabilityLev
   if (kinds.size === 0) return 1;
 
   const deterministic = taskHint === undefined || !NON_DETERMINISTIC_HINTS.has(taskHint);
-  if (kinds.has('test-runner') && deterministic) return 3;
 
-  return 2;
+  const testContent = oracles.find((o) => o.kind === 'test-content');
+  const testsWeak = testContent !== undefined && testContent.present === false;
+
+  if (kinds.has('test-runner') && deterministic && !testsWeak) return 3;
+
+  if (kinds.has('test-runner') || kinds.has('type-check') || kinds.has('lint')) return 2;
+
+  return 1;
 }

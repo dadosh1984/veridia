@@ -6,7 +6,7 @@ Lets users ask veridia how verifiable a task is by probing a target directory an
 ## Requirements
 ### Requirement: assess subcommand accepts a target path
 
-The `assess` subcommand SHALL accept an optional `--target <path>` flag (or a positional path) naming the directory or repository to probe. When no target is given, the probe SHALL target the current working directory.
+The `assess` subcommand SHALL accept an optional `--target <path>` flag naming the directory or repository to probe. When no target is given, the probe SHALL target the current working directory.
 
 #### Scenario: target flag given
 - **WHEN** the user runs `veridia assess --target <path>`
@@ -42,7 +42,7 @@ The `assess` command SHALL output a verifiability level for the probed target: `
 
 ### Requirement: assess lists detected oracles
 
-The `assess` command SHALL list each detected oracle with its kind (test runner, type-check, lint, CI) so the caller can see what backs the level. When no oracle is detected, the oracle list SHALL be empty. Oracle detection SHALL ignore a leading UTF-8 byte-order mark (BOM) in `package.json` when checking scripts.
+The `assess` command SHALL list each detected oracle with its kind (test runner, type-check, lint, CI, test-content) so the caller can see what backs the level. When no oracle is detected, the oracle list SHALL be empty. Oracle detection SHALL ignore a leading UTF-8 byte-order mark (BOM) in `package.json` when checking scripts.
 
 #### Scenario: oracles present
 - **WHEN** the probe detects a test runner and a CI config
@@ -51,6 +51,14 @@ The `assess` command SHALL list each detected oracle with its kind (test runner,
 #### Scenario: no oracles present
 - **WHEN** the probe detects no oracles
 - **THEN** the output reports an empty oracle list
+
+#### Scenario: test-content oracle emitted when test-runner detected
+- **WHEN** the probe detects a test-runner oracle
+- **THEN** the output also includes a test-content oracle indicating whether test files contain assertions
+
+#### Scenario: weak tests cap level
+- **WHEN** test-runner is detected but test-content is weak (no assertions in test files)
+- **THEN** the level is capped at 2 (partial) even if other oracles suggest level 3
 
 #### Scenario: oracle detection ignores a BOM in package.json
 - **WHEN** the probed target has a `package.json` with a leading UTF-8 BOM that declares a `test` script

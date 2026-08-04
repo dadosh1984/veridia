@@ -78,14 +78,14 @@ The `route` command SHALL be deterministic for a given input, MUST NOT call any 
 - **WHEN** the user runs `veridia route --type feature --level 2` twice
 - **THEN** both runs print the identical plan
 
-### Requirement: route includes ai-ready tier
+### Requirement: route includes model tier
 
-The `route` command SHALL support an `ai-ready` orchestration depth that outputs agent instructions for AI-assisted execution, in addition to the existing deterministic depths.
+The `route` command SHALL include a model tier in the plan (`cheapest`, `mid`, `any`) based on the verifiability level.
 
-#### Scenario: route with ai-ready depth
-- **WHEN** the user runs `veridia route --type feature --level 3 --agent claude`
-- **THEN** the plan includes `ai-ready` depth with agent instructions
-
-#### Scenario: route without --agent
+#### Scenario: route with level 3
 - **WHEN** the user runs `veridia route --type feature --level 3`
-- **THEN** the plan uses existing deterministic depths (unchanged behavior)
+- **THEN** the plan includes `cheapest` tier
+
+#### Scenario: route with level 2
+- **WHEN** the user runs `veridia route --type feature --level 2`
+- **THEN** the plan includes `mid` tier

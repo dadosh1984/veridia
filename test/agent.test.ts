@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAllAgents, getAgent, formatInvocation, getAgentCapabilities } from '../src/agent/agents.js';
+import { getAllAgents, getAgent, formatInvocation } from '../src/agent/agents.js';
 
 describe('getAllAgents', () => {
   it('returns all 35 agents', () => {
@@ -68,9 +68,5 @@ describe('agent capabilities', () => {
     expect(agent.canCallModels).toBe(false);
     expect(agent.canRunShell).toBe(false);
     expect(agent.delegationModes).not.toContain('shell');
-  });
-
-  it('getAgentCapabilities returns same as getAgent', () => {
-    expect(getAgentCapabilities('claude')).toEqual(getAgent('claude'));
   });
 });

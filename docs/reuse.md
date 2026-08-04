@@ -61,7 +61,8 @@ scratch**; never copy.
 
 ## Also skip
 - `pnpm-lock.yaml`, `node_modules/`, `dist/` → regenerate via `pnpm install`.
-- `.opencode/`, `.unified/` → local session artifacts (gitignored), not part of source.
+- `.opencode/` → local session artifacts (gitignored), not part of source.
+- `.unified/` → project-level configuration, part of source.
 - `CHANGELOG.md` / version-sync files → start fresh for veridia.
 
 ## Bottom line

@@ -4,6 +4,7 @@ import { buildPlan } from '../route/route.js';
 import { askInteractive } from '../ask/ask.js';
 import type { AskResult } from '../ask/types.js';
 import { verify } from '../verify/verify.js';
+import { computeSensitivity } from '../verify/mutate.js';
 import { measureRecord } from '../measure/measure.js';
 import { readHistory } from '../measure/history.js';
 import { computePrecision } from '../measure/learn.js';
@@ -79,6 +80,12 @@ export async function triage(task: string, target: string = process.cwd(), optio
   const verifyResult = verify(target, assessment.level, kinds, { precision });
   const drift = calculateDrift(verifyResult.verdict, target);
 
+  const oracleResults = verifyResult.checks.map((c) => ({
+    kind: c.kind,
+    truePositives: c.passed ? 1 : 0,
+    falsePositives: c.passed ? 0 : 1,
+  }));
+
   measureRecord({
     task,
     type: classification.type,
@@ -86,6 +93,7 @@ export async function triage(task: string, target: string = process.cwd(), optio
     verdict: verifyResult.verdict,
     checks: verifyResult.checks.map((c) => ({ kind: c.kind, passed: c.passed })),
     drift,
+    oracleResults,
   }, { root: target });
 
   return {

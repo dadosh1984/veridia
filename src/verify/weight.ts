@@ -7,6 +7,7 @@ const KIND_WEIGHTS: Record<OracleKind, number> = {
   'type-check': 2,
   lint: 1,
   ci: 0,
+  'test-content': 0,
 };
 
 const TEST_TOKEN = /\b(test|it|expect|assert)\b/;

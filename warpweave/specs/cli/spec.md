@@ -41,7 +41,7 @@ The system SHALL provide a `version` subcommand that prints the current veridia 
 
 ### Requirement: CLI dispatches subcommands
 
-The CLI entrypoint SHALL accept a subcommand as the first positional argument and dispatch to the corresponding module. Supported subcommands SHALL be: `classify`, `assess`, `route`, `ask`, `verify`, `measure`, `review`, `agents`, `version`, and `--help`/`-h`. When the first argument is not a recognized subcommand or flag, the CLI SHALL treat it as a task string and run the end-to-end triage loop.
+The CLI entrypoint SHALL accept a subcommand as the first positional argument and dispatch to the corresponding module. Supported subcommands SHALL be: `classify`, `assess`, `route`, `ask`, `plan`, `execute`, `verify`, `measure`, `review`, `agents`, `init`, `generate`, `learn`, `run`, `version`, and `--help`/`-h`. When the first argument is not a recognized subcommand or flag, the CLI SHALL treat it as a task string and run the end-to-end triage loop.
 
 #### Scenario: measure subcommand dispatched
 - **WHEN** the user runs `veridia measure --history`
@@ -58,14 +58,6 @@ The CLI entrypoint SHALL accept a subcommand as the first positional argument an
 #### Scenario: agents --list subcommand
 - **WHEN** the user runs `veridia agents --list`
 - **THEN** the CLI prints a table of all supported AI agents with their config directories and invocation styles
-
-#### Scenario: classify with --agent flag
-- **WHEN** the user runs `veridia classify --agent claude "refactor the module"`
-- **THEN** the CLI outputs agent instructions for AI-enhanced classification instead of regex result
-
-#### Scenario: ask with --agent flag
-- **WHEN** the user runs `veridia ask --agent claude --type feature --level 1`
-- **THEN** the CLI outputs agent instructions for dynamic question generation
 
 ### Requirement: Unknown argument handling
 

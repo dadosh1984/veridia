@@ -44,8 +44,9 @@ quality. We never promise "any model → great result on any task."
 
 - We keep: the method (spec-gate → TDD → minimalism), the skills ideas
   (drift, token-budget, learn), the domain understanding.
-- We drop: the OpenSpec-derived CLI, the `changes/`/`specs/` scaffolding, the
-  recognizable fork structure.
+- We drop: the OpenSpec-derived CLI, the recognizable fork structure.
+- We rebuild: the `warpweave/` planning scaffold from scratch (spec-driven,
+  not OpenSpec's schema).
 - Legal note: reusing warpweave/OpenSpec *code* would make us a derivative work
   (MIT, carries upstream copyright). We build the scaffold from scratch.
 

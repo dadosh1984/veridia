@@ -96,12 +96,13 @@ INTENT ──▶ CLASSIFY ──▶ ASSESS ──▶ ROUTE ──▶ ASK? ──
              type        level       plan      clarify    check     learn
 ```
 
-All mechanisms are deterministic, local-only, and require zero runtime dependencies.
+All mechanisms are deterministic, local-only for analysis, with optional AI model
+integration for execution (via stdio or HTTP API).
 
 ## Docs index
 
 - [Philosophy](docs/philosophy.md) — the why and the core thesis.
-- [Mechanics](docs/mechanics.md) — the five mechanisms, the heart of the product.
+- [Mechanics](docs/mechanics.md) — the six mechanisms, the heart of the product.
 - [Verifiability (the crux)](docs/verifiability.md) — how we decide, mechanically,
   whether a task can be verified (this is the deepest design problem we have).
 - [Roadmap](docs/roadmap.md) — how we eat the elephant piece by piece.
