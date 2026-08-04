@@ -19,13 +19,29 @@ task → verifiability → process → model → check.
 
 ### 1. Install
 
-```bash
-# From the veridia project directory
-npm link
+**Install from npm** (the published package):
 
-# Now you can use `veridia` from anywhere
+```bash
+# Global — use `veridia` from any directory
+npm install -g veridia
+
+# Local — only inside one project (run via npx, not `veridia` directly)
+npm install veridia
+npx veridia --help
+```
+
+> **Note:** a *local* `npm install veridia` does **not** put a `veridia` command on your
+> PATH. Use `npx veridia` there, or add a `package.json` script:
+> `"scripts": { "quality": "veridia \"add auth\"" }`.
+
+**From the source tree (development):**
+
+```bash
+npm link
 veridia --help
 ```
+
+Requires **Node ≥ 22.12**.
 
 ### 2. Analyse a task
 
