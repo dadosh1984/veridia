@@ -18,6 +18,7 @@ const SOURCES: ScriptSource[] = [
   { kind: 'test-runner', scriptKeys: ['test'], fallback: 'vitest run' },
   { kind: 'type-check', scriptKeys: ['typecheck', 'type-check'], fallback: 'tsc --noEmit' },
   { kind: 'lint', scriptKeys: ['lint'], fallback: 'eslint .' },
+  { kind: 'human-review', scriptKeys: [], fallback: '' },
 ];
 
 const CI_KIND: OracleKind = 'ci';

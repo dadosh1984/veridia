@@ -137,3 +137,27 @@ describe('e2e: feedback loop', () => {
     expect(entry.oracleResults).toBeDefined();
   });
 });
+
+describe('e2e: plan adherence', () => {
+  it('run command outputs the execution plan steps before delegating', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCliIn(dir, 'run', 'fix login bug', '--auto');
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('Execution Plan');
+    expect(result.stdout).toContain('write-failing-test');
+    expect(result.stdout).toContain('implement');
+    expect(result.stdout).toContain('verify');
+  });
+
+  it('triage result includes plan steps that must be followed', () => {
+    const dir = makeTmpDir();
+    writeFile(dir, 'package.json', '{}');
+    const result = runCliIn(dir, 'add dark mode', '--auto');
+    expect(result.exitCode).toBe(0);
+    const parsed = JSON.parse(result.stdout) as { plan: { steps: string[] }; verdict: string; mustFollowPlan: boolean };
+    expect(parsed.plan.steps).toBeDefined();
+    expect(parsed.plan.steps.length).toBeGreaterThan(0);
+    expect(parsed.mustFollowPlan).toBe(true);
+  });
+});

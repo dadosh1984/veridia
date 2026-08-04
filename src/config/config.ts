@@ -9,7 +9,7 @@ export interface VeridiaConfig {
     'test-runner': { files: string[]; scripts: string[] };
     'type-check': { files: string[]; scripts: string[] };
     lint: { files: string[]; scripts: string[] };
-    ci: { files: string[]; dirs: string[] };
+    ci: { files: string[]; dirs: string[]; dirExts: string[] };
   };
   model?: {
     provider: 'stdio' | 'api';
@@ -35,11 +35,11 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
   },
   probes: {
     'test-runner': {
-      files: ['vitest.config.ts', 'vitest.config.js', 'jest.config.ts', 'jest.config.js', 'playwright.config.ts', '.mocharc.json', 'karma.conf.js'],
+      files: ['vitest.config.ts', 'vitest.config.js', 'vitest.config.mts', 'vitest.config.mjs', 'jest.config.ts', 'jest.config.js', 'jest.config.mjs', 'playwright.config.ts', '.mocharc.json', 'karma.conf.js'],
       scripts: ['test'],
     },
     'type-check': {
-      files: ['tsconfig.json', 'jsconfig.json'],
+      files: ['tsconfig.json'],
       scripts: ['typecheck', 'type-check'],
     },
     lint: {
@@ -49,6 +49,7 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
     ci: {
       files: ['.gitlab-ci.yml', '.circleci/config.yml', 'azure-pipelines.yml'],
       dirs: ['.github/workflows'],
+      dirExts: ['.yml', '.yaml'],
     },
   },
 };

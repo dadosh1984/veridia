@@ -17,8 +17,7 @@ export function deriveVerdict(level: VerifiabilityLevel, checks: Check[]): Verdi
   if (checks.length === 0) return 'HUMAN';
   const strong = checks.filter((c) => !c.weak);
   if (strong.length === 0) {
-    if (level === 3) return 'HUMAN';
-    return checks.every((c) => c.passed) ? 'HUMAN' : 'FAIL';
+    return 'HUMAN';
   }
   if (level === 3) {
     return strong.every((c) => c.passed) ? 'PASS' : 'FAIL';

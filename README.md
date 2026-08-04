@@ -55,9 +55,7 @@ npm view veridia version       # check the latest published version
 
 ### 1.1 Set up for your AI agents
 
-`veridia init` wires veridia into one or more of the 35 supported AI agents (OpenCode, Claude Code, Cursor, Codex, ...):
-
-```bash
+`veridia init` wires veridia into one or more of the 35 supported AI agents (OpenCode, Claude Code, Cursor, Codex, ...):```bash
 # interactive: pick one or more agents from a checklist
 veridia init
 
@@ -135,11 +133,37 @@ veridia measure --record '{"task":"add auth","type":"feature","level":2,"verdict
 veridia measure --history
 ```
 
+## Security: shell delegation
+
+When no AI model or host agent is configured, `run`/`execute` may delegate the
+plan's verification **gates** by running their commands directly in a shell
+(`delegateShell`). Because a plan can originate from an untrusted directory
+(`.veridia/plan.json`), running arbitrary gate commands is a risk. Control it
+with the `VERIDIA_SHELL_DELEGATION` environment variable:
+
+| Value | Behaviour |
+|-------|-----------|
+| `allow` (default) | Run plan gates non-interactively (legacy behaviour). |
+| `deny` | Refuse to run gates; `execute` returns exit code 1. |
+| `ask` | Prompt `Run plan gates in shell? [y/N]` before running. Non-interactive (no TTY) or `N` → refused. |
+
+Example:
+
+```bash
+# lock down execution on untrusted repos / CI
+VERIDIA_SHELL_DELEGATION=deny veridia run "..."
+
+# one-off interactive confirmation
+VERIDIA_SHELL_DELEGATION=ask veridia run "..."
+```
+
+When a model config or a delegating host agent is detected, execution is routed
+through the model/agent instead of `delegateShell`, so this guard applies mainly
+to bare shell mode.
+
 ## Architecture
 
-veridia implements six mechanisms in a triage pipeline:
-
-```
+veridia implements six mechanisms in a triage pipeline:```
 INTENT ──▶ CLASSIFY ──▶ ASSESS ──▶ ROUTE ──▶ ASK? ──▶ VERIFY ──▶ MEASURE
              type        level       plan      clarify    check     learn
 ```

@@ -200,6 +200,11 @@ describe('deriveVerdict', () => {
     expect(deriveVerdict(3, checks)).toBe<Verdict>('HUMAN');
   });
 
+  it('returns HUMAN at level 2 when no strong checks exist', () => {
+    const checks = [check('test-runner', true, true)];
+    expect(deriveVerdict(2, checks)).toBe<Verdict>('HUMAN');
+  });
+
   it('returns PASS at level 2 when all checks pass', () => {
     const checks = [check('test-runner', true), check('type-check', true)];
     expect(deriveVerdict(2, checks)).toBe<Verdict>('PASS');
@@ -253,7 +258,7 @@ describe('verify', () => {
     writeFile(target, 'package.json', '{"scripts":{"test":"vitest run"}}');
     const result = verify(target, 2, ['test-runner'], { run: exitOne });
     expect(result.checks[0].passed).toBe(false);
-    expect(result.verdict).toBe<Verdict>('FAIL');
+    expect(result.verdict).toBe<Verdict>('HUMAN');
   });
 
   it('carries optional error text on a Check', () => {

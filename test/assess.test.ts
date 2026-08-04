@@ -5,7 +5,8 @@ import path from 'node:path';
 import { assess } from '../src/assess/assess.js';
 import { mapLevel } from '../src/assess/map-level.js';
 import { probeOracles, realFs } from '../src/assess/probe.js';
-import type { FsLike, Oracle, OracleKind, VerifiabilityLevel } from '../src/assess/types.js';
+import type { Oracle, OracleKind, VerifiabilityLevel } from '../src/assess/types.js';
+import type { FsLike } from '../src/assess/probe.js';
 
 const tmpDirs: string[] = [];
 

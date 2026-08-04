@@ -46,6 +46,7 @@ export function callModelStdio(command: string, prompt: string, timeout = 120_00
 }
 
 export async function callModelApi(url: string, model: string, prompt: string, apiKey?: string, timeout = 120_000): Promise<string> {
+  if (!url) throw new Error('model API URL is required — set apiUrl in config or VERIDIA_API_URL env');
   const body = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }] });
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
@@ -98,7 +99,8 @@ export async function orchestrate(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     let output: string;
     try {
-      output = await callModelAsync(config, prompt + (attempt > 0 ? `\n\nPrevious attempt failed. Fix the issues and try again.` : ''));
+      const feedback = attempt > 0 ? `\n\nPrevious attempt failed. Fix the issues and try again.\n${lastOutput}` : '';
+      output = await callModelAsync(config, prompt + feedback);
     } catch (err) {
       lastOutput = `model call failed: ${(err as Error).message}`;
       continue;

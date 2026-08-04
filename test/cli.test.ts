@@ -57,8 +57,7 @@ describe('veridia CLI', () => {
   it('prints version for -v and exits 0', () => {
     const result = runCli('-v');
     expect(result.exitCode).toBe(0);
-    const parsed = parseJson(result.stdout) as { version: string };
-    expect(parsed.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(result.stdout).toMatch(/veridia\/\d+\.\d+\.\d+/);
   });
 
   it('treats an unknown subcommand as a task string and runs triage', () => {

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { stripBom } from '../util/strip-bom.js';
+import { hasMeaningfulTests } from '../util/test-files.js';
 import type { Oracle, OracleKind } from './types.js';
 import type { VeridiaConfig } from '../config/config.js';
 
@@ -49,11 +50,13 @@ const DEFAULT_PROBES: ProbeSpec[] = [
 function buildProbesFromConfig(config: VeridiaConfig): ProbeSpec[] {
   const probes: ProbeSpec[] = [];
   for (const [kind, cfg] of Object.entries(config.probes)) {
+    const c = cfg as ProbeSpec;
     probes.push({
       kind: kind as OracleKind,
-      files: cfg.files ?? [],
-      scripts: (cfg as { scripts?: string[] }).scripts,
-      dirs: (cfg as { dirs?: string[] }).dirs,
+      files: c.files ?? [],
+      scripts: c.scripts,
+      dirs: c.dirs,
+      dirExts: c.dirExts,
     });
   }
   return probes;
@@ -93,62 +96,8 @@ export function probeOracles(target: string, fsLike: FsLike, config?: VeridiaCon
     if (detect(fsLike, target, spec)) oracles.push({ kind: spec.kind });
   }
   if (oracles.some((o) => o.kind === 'test-runner')) {
-    const weak = isTestsWeakLocal(fsLike, target);
-    oracles.push({ kind: 'test-content', present: !weak });
+    const strong = hasMeaningfulTests(fsLike, target);
+    oracles.push({ kind: 'test-content', present: strong });
   }
   return oracles;
-}
-
-const TEST_TOKEN = /\b(test|it|expect|assert)\b/;
-const TEST_FILE_PATTERN = /\.(test|spec)\.(ts|tsx|js|jsx|mjs|mts)$/;
-const TEST_DIR_NAMES = new Set(['test', 'tests', '__tests__']);
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.cache']);
-
-function isTestFile(name: string): boolean {
-  return TEST_FILE_PATTERN.test(name);
-}
-
-function isTestDir(name: string): boolean {
-  return TEST_DIR_NAMES.has(name);
-}
-
-function collectTestFiles(fsLike: FsLike, dir: string, out: string[]): void {
-  let entries: string[];
-  try {
-    entries = fsLike.readdirSync(dir);
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    if (SKIP_DIRS.has(entry)) continue;
-    const full = path.join(dir, entry);
-    if (isTestFile(entry)) {
-      out.push(full);
-      continue;
-    }
-    if (isTestDir(entry)) {
-      collectTestFiles(fsLike, full, out);
-      continue;
-    }
-    let children: string[];
-    try {
-      children = fsLike.readdirSync(full);
-    } catch {
-      continue;
-    }
-    if (children.length > 0) {
-      collectTestFiles(fsLike, full, out);
-    }
-  }
-}
-
-function isTestsWeakLocal(fsLike: FsLike, target: string): boolean {
-  const testFiles: string[] = [];
-  collectTestFiles(fsLike, target, testFiles);
-  if (testFiles.length === 0) return true;
-  for (const file of testFiles) {
-    const content = fsLike.readFileSync(file);
-    if (TEST_TOKEN.test(content)) return false;
-  }
-  return true;
 }

@@ -218,14 +218,14 @@ describe('buildExecutionPlan', () => {
 });
 
 describe('delegateShell', () => {
-  it('returns success when no gates to run', () => {
+  it('returns success when no gates to run', async () => {
     const plan: ExecutionPlan = {
       protocol: 'veridia/execution-plan/v1',
       task: 'test', type: 'bugfix', level: 3,
       plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
       metadata: { host: 'test', generatedAt: '' },
     };
-    const result = delegateShell(plan);
+    const result = await delegateShell(plan);
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('No gates');
   });

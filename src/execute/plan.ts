@@ -19,7 +19,7 @@ const STEP_ACTION_MAP: Record<string, string> = {
 const CHECK_GATE_MAP: Record<string, { id: string; command: string; kind: OracleKind }> = {
   'run-tests': { id: 'run-tests', command: '', kind: 'test-runner' },
   'type-check': { id: 'type-check', command: 'tsc --noEmit', kind: 'type-check' },
-  'human-review': { id: 'human-review', command: '', kind: 'lint' },
+  'human-review': { id: 'human-review', command: '', kind: 'human-review' },
 };
 
 export function buildExecutionPlan(
@@ -33,12 +33,7 @@ export function buildExecutionPlan(
   const host = detectHostAgent(target);
   const resolvedTarget = target ?? process.cwd();
 
-  const resolvedKinds: OracleKind[] = [];
-  for (const checkId of runPlan.checks) {
-    const gate = CHECK_GATE_MAP[checkId];
-    if (gate && gate.kind !== 'lint') resolvedKinds.push(gate.kind);
-  }
-  const resolved = resolveCommands(resolvedKinds, resolvedTarget);
+  const resolved = resolveCommands(runPlan.checks as OracleKind[], resolvedTarget);
 
   const steps: ExecutionStep[] = runPlan.steps.map((stepId) => {
     const step: ExecutionStep = {

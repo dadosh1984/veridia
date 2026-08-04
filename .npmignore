@@ -3,7 +3,7 @@ src/
 test/
 warpweave/
 tsconfig.json
-build.js
+tsup.config.ts
 vitest.config.ts
 vitest.setup.ts
 eslint.config.js
@@ -14,3 +14,5 @@ pnpm-lock.yaml
 .github/
 AGENTS.md
 .env.example
+.changeset/
+docs/

@@ -1,8 +1,9 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { createInterface } from 'node:readline';
 import { join, delimiter } from 'node:path';
 import { splitCommand } from '../util/split-command.js';
-import { execFileWithShim } from '../util/exec-shim.js';
-import type { ExecutionPlan, DelegationMode, ExecuteResult } from './types.js';
+import type { ExecutionPlan, DelegationMode, ExecuteResult, VerificationGate } from './types.js';
 import { detectHostAgent } from './detect.js';
 import type { ModelConfig } from './orchestrate.js';
 import { orchestrate } from './orchestrate.js';
@@ -27,19 +28,35 @@ export function delegateFile(plan: ExecutionPlan, target?: string): ExecuteResul
   return { exitCode: 0, stdout: `Plan written to ${planPath}`, stderr: '' };
 }
 
-export function delegateShell(plan: ExecutionPlan, target?: string): ExecuteResult {
-  const cwd = target ?? process.cwd();
-  const gates = plan.plan.gates;
-  if (gates.length === 0) {
-    return { exitCode: 0, stdout: 'No gates to run', stderr: '' };
-  }
+function shellDelegationPolicy(): 'allow' | 'deny' | 'ask' {
+  const v = process.env.VERIDIA_SHELL_DELEGATION;
+  if (v === 'deny') return 'deny';
+  if (v === 'ask') return 'ask';
+  return 'allow';
+}
+
+function confirmShell(): Promise<boolean> {
+  if (!process.stdin.isTTY) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question('veridia: run plan gates in shell? [y/N] ', (answer) => {
+      rl.close();
+      resolve(/^y(es)?$/i.test(answer.trim()));
+    });
+  });
+}
+
+function runGates(cwd: string, gates: VerificationGate[]): ExecuteResult {
   for (const gate of gates) {
     if (!gate.command) continue;
     const args = splitCommand(gate.command);
     if (args.length === 0) continue;
     try {
       const env = { ...process.env, PATH: `${join(cwd, 'node_modules', '.bin')}${delimiter}${process.env.PATH ?? ''}` };
-      execFileWithShim(args[0], args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8', env });
+      const result = spawnSync(args[0], args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8', env, stdio: 'inherit' });
+      if (result.status !== 0) {
+        return { exitCode: result.status ?? 1, stdout: '', stderr: `Gate "${gate.id}" failed` };
+      }
     } catch (err) {
       const e = err as { status?: number | null; stdout?: string; stderr?: string };
       return {
@@ -50,6 +67,30 @@ export function delegateShell(plan: ExecutionPlan, target?: string): ExecuteResu
     }
   }
   return { exitCode: 0, stdout: 'All gates passed', stderr: '' };
+}
+
+export async function delegateShell(plan: ExecutionPlan, target?: string): Promise<ExecuteResult> {
+  const cwd = target ?? process.cwd();
+  const gates = plan.plan.gates;
+  if (gates.length === 0) {
+    return { exitCode: 0, stdout: 'No gates to run', stderr: '' };
+  }
+  const policy = shellDelegationPolicy();
+  if (policy === 'deny') {
+    return {
+      exitCode: 1,
+      stdout: '',
+      stderr: 'Shell delegation is disabled. Set VERIDIA_SHELL_DELEGATION=allow (or ask) to run plan gates.',
+    };
+  }
+  if (policy === 'ask' && !(await confirmShell())) {
+    return {
+      exitCode: 1,
+      stdout: '',
+      stderr: 'Shell delegation not confirmed. Set VERIDIA_SHELL_DELEGATION=allow to run gates non-interactively.',
+    };
+  }
+  return runGates(cwd, gates);
 }
 
 export interface DelegateOptions {

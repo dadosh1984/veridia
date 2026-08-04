@@ -20,8 +20,9 @@ export function validateType(v: string): string | undefined {
   return VALID_TYPES.includes(v as typeof VALID_TYPES[number]) ? undefined : `invalid task type: ${v}`;
 }
 
-export function validateLevel(v: string): string | undefined {
-  return VALID_LEVELS.includes(v as typeof VALID_LEVELS[number]) ? undefined : `invalid verifiability level: ${v}`;
+export function validateLevel(v: string | number): string | undefined {
+  const s = String(v);
+  return VALID_LEVELS.includes(s as typeof VALID_LEVELS[number]) ? undefined : `invalid verifiability level: ${v}`;
 }
 
 export function jsonOut(data: unknown): void {

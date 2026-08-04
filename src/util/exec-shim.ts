@@ -1,16 +1,13 @@
-import { execFileSync, type ExecFileSyncOptions } from 'node:child_process';
+import { spawnSync, type SpawnSyncOptions } from 'node:child_process'
 
-export function execFileWithShim(cmd: string, args: string[], options: ExecFileSyncOptions = {}): void {
-  try {
-    execFileSync(cmd, args, options);
-    return;
-  } catch (err) {
-    if (process.platform === 'win32' && (err as NodeJS.ErrnoException).code === 'ENOENT') {
-      // npm .cmd/.ps1 shims need a shell. Pass the command line as one string so
-      // Node does not warn about unescaped per-argument concatenation.
-      execFileSync([cmd, ...args].join(' '), [], { ...options, shell: true });
-      return;
-    }
-    throw err;
+export function execFileWithShim(cmd: string, args: string[], options: SpawnSyncOptions = {}): void {
+  const result = spawnSync(cmd, args, { ...options, stdio: 'inherit' })
+  if (result.error && (result.error as NodeJS.ErrnoException).code === 'ENOENT' && process.platform === 'win32') {
+    const shellResult = spawnSync([cmd, ...args].join(' '), [], { ...options, shell: true, stdio: 'inherit' })
+    if (shellResult.error) throw shellResult.error
+    if (shellResult.status !== 0) throw Object.assign(new Error(), { status: shellResult.status })
+    return
   }
+  if (result.error) throw result.error
+  if (result.status !== 0) throw Object.assign(new Error(), { status: result.status })
 }

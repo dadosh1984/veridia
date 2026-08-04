@@ -25,8 +25,8 @@ describe('buildAgentChoices', () => {
     const choices = buildAgentChoices(target);
     const opencode = choices.find((c) => c.value === 'opencode');
     const claude = choices.find((c) => c.value === 'claude');
-    expect(opencode?.selected).toBe(true);
-    expect(claude?.selected).toBe(false);
+    expect(opencode?.hint).toBe('detected');
+    expect(claude?.hint).toBeUndefined();
     expect(choices.length).toBeGreaterThan(20);
   });
 });

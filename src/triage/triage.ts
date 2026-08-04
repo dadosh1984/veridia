@@ -34,6 +34,8 @@ export interface TriageResult {
   verdict: Verdict;
   executionPlan?: ExecutionPlan;
   executionResult?: ExecuteResult;
+  /** Агент обязан строго следовать шагам executionPlan, а не игнорировать его */
+  mustFollowPlan: true;
 }
 
 function calculateDrift(verdict: Verdict, target: string): string {
@@ -151,5 +153,6 @@ export async function triage(task: string, target: string = process.cwd(), optio
     verdict: verifyResult.verdict,
     executionPlan: execPlan,
     executionResult: execResult,
+    mustFollowPlan: true,
   };
 }

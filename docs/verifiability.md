@@ -61,26 +61,27 @@ we can't trust from a weak model. Solution is two MECHANICAL signals (no judgmen
 required):
 
 ```
-oracle_weight = mutation_sensitivity   (static, cheap, run now)  ✓ IMPLEMENTED
+oracle_weight = mutation_sensitivity   (static, primitive; NOT auto-wired into default verify)
               combined with
-                historical_precision    (dynamic, accumulates via measure/learn)  ✓ IMPLEMENTED
+                historical_precision    (dynamic, consumes measure/learn)  ✓ LIVE
 ```
 
-### 1. Mutation sensitivity (static)  ✓ IMPLEMENTED
+### 1. Mutation sensitivity (static) — primitive, not auto-wired
 Don't ask an opinion — test whether the oracle can *distinguish* good from broken:
 
 ```
 take a "correct" output → deliberately break it semantically (a mutation)
-   (change logic / data / condition)
-
 oracle passed the broken one?  → weak / theater  (does not sense meaning)
 oracle rejected the broken one? → strong          (senses meaning)
 ```
 
-Mutation testing applied to the oracle itself. No judgment about "correctness" —
-only "does the check tell good from broken." Model-independent.
+**Status: implemented as a library primitive** (`src/verify/mutate.ts` exposes
+`mutate()` and `computeSensitivity()`), but it is **not yet auto-applied** in the
+default `verify` path. Wiring it in requires a "known-correct output" per repo,
+which the pipeline does not always have. It is the top candidate for the next
+calibration upgrade; until then it is a TODO, not a live mechanism.
 
-### 2. Historical precision (dynamic, via learn)  ✓ IMPLEMENTED
+### 2. Historical precision (dynamic, via learn)  ✓ LIVE
 An oracle earns trust = how often a pass predicted real correctness:
 
 ```
@@ -88,8 +89,11 @@ how often did a "green" check actually mean "right" (per human feedback /
 later drift)? → the verifier's precision (positive predictive value)
 ```
 
-If over N runs the oracle "blesses" outputs the human then fixes, its weight drops.
-Accumulates in learn automatically, without one-off judgments.
+**Status: live.** `verify()` consumes `precision` (and config `weights`) to
+calibrate each check's weight. `triage` passes precision computed from history,
+and `orchestrate` now reads it from that target's own history before its
+internal verify loop. Precision accumulates in `measure/learn` automatically,
+without one-off judgments.
 
 Combined effect:
 ```
