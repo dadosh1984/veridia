@@ -1,6 +1,6 @@
 {
   "name": "veridia",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Model-agnostic quality through mechanics, not through the model.",
   "type": "module",
   "bin": {
