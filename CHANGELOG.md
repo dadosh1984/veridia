@@ -1,5 +1,22 @@
 # veridia
 
+## 0.10.0
+
+### Minor Changes
+
+- fix: repair CI — pnpm install no longer fails (pnpm 11 aligned across local and CI, broken workspace `packages` requirement removed)
+  fix: build via tsup instead of undeclared bun runtime; `build`, `typecheck`, and `prepublishOnly` now run on plain Node
+  fix: `run`, `verify`, and the bare task command now exit non-zero on a FAIL verdict (usable as a CI gate)
+  fix: orchestrate treats HUMAN verdicts as success (no wasted model retries on level 0/1) and tracks the best A/B result
+  fix: session resume re-derives oracle kinds instead of verifying with an empty list
+  fix: classify no longer crashes on an invalid regex in `.veridia/config.json`
+  fix: `veridia pr` uses execFileSync (no shell injection via `--base`)
+  fix: collect-files protects against symlink cycles
+  fix: split-command preserves Windows paths, escapes, and empty quoted args
+  fix: report uses the real version and escapes HTML
+  fix: learn feedback loop tolerates missing `classify.patterns` and invalid stored regexes
+  fix: removed duplicate interface and dead mutation block in verify
+
 ## 0.9.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "veridia",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Model-agnostic quality through mechanics, not through the model.",
   "type": "module",
   "bin": {
@@ -11,8 +11,8 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "build": "bun run build.ts",
-    "dev": "bun run build.ts --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "lint": "biome check src/ test/",
@@ -20,11 +20,11 @@
     "format": "biome format --write src/ test/",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "bun run build && changeset publish",
-    "prepublishOnly": "bun run build"
+    "release": "pnpm build && changeset publish",
+    "prepublishOnly": "pnpm build"
   },
   "license": "MIT",
   "repository": {
