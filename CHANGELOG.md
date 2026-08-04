@@ -1,5 +1,11 @@
 # veridia
 
+## 0.3.0
+
+### Minor Changes
+
+- 80c7ffd: feat: veridia fix � auto-fix console.log and TODO comments
+
 ## 0.2.0
 
 ### Minor Changes
