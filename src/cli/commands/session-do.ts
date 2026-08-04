@@ -1,6 +1,7 @@
 import { verify } from '../../verify/verify.js';
 import { measureRecord } from '../../measure/measure.js';
 import { readSession, writeSession } from '../../session/session.js';
+import type { OracleKind } from '../../assess/types.js';
 
 export function handle(_args: string[]): void {
   const session = readSession();
@@ -10,10 +11,8 @@ export function handle(_args: string[]): void {
     return;
   }
   const target = process.cwd();
-  const kinds = session.plan.checks.map((c) => {
-    if (c === 'test-runner' || c === 'type-check' || c === 'lint' || c === 'ci' || c === 'test-content') return c;
-    return 'lint' as const;
-  });
+  const validKinds = new Set<OracleKind>(['test-runner', 'type-check', 'lint', 'ci', 'test-content']);
+  const kinds: OracleKind[] = session.plan.checks.filter((c): c is OracleKind => validKinds.has(c as OracleKind));
   const verifyResult = verify(target, session.level, kinds);
   session.verdict = verifyResult.verdict;
   session.step = 'done';

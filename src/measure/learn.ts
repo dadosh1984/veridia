@@ -39,6 +39,7 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
       successRateByLevel: {},
       driftPatterns: [],
       recommendations: ['No history data yet. Run veridia <task> to start collecting data.'],
+      oraclePrecision: {},
     };
   }
 

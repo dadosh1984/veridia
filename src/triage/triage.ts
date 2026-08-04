@@ -14,8 +14,9 @@ import { loadConfig, getModelConfig } from '../config/config.js';
 import { readSession, writeSession, clearSession } from '../session/session.js';
 import type { Session } from '../session/types.js';
 import type { TaskType } from '../classify/types.js';
-import type { VerifiabilityLevel } from '../assess/types.js';
+import type { VerifiabilityLevel, OracleKind } from '../assess/types.js';
 import type { Verdict } from '../verify/types.js';
+import type { OrchestrationDepth, ModelTier } from '../route/types.js';
 import type { ExecutionPlan, ExecuteResult } from '../execute/types.js';
 
 export interface TriageResult {
@@ -64,12 +65,12 @@ export async function triage(task: string, target: string = process.cwd(), optio
   let assessment: ReturnType<typeof assess>;
   let plan: ReturnType<typeof buildPlan>;
   let askResult: AskResult;
-  let kinds: string[];
+  let kinds: OracleKind[];
 
   if (existing && existing.step !== 'done' && existing.task === task) {
     classification = { type: existing.type ?? 'open', confidence: existing.confidence ?? 0 };
     assessment = { level: existing.level ?? 1, oracles: [] };
-    plan = { depth: existing.plan?.depth ?? 'minimal', tier: existing.plan?.tier ?? 'cheapest', trust: 'human', steps: existing.plan?.steps ?? [], checks: existing.plan?.checks ?? [] };
+    plan = { depth: (existing.plan?.depth ?? 'minimal') as OrchestrationDepth, tier: (existing.plan?.tier ?? 'cheapest') as ModelTier, trust: 'human', steps: existing.plan?.steps ?? [], checks: existing.plan?.checks ?? [] };
     kinds = [];
     askResult = { questions: [], answers: existing.answers };
   } else {

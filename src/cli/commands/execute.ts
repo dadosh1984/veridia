@@ -7,7 +7,7 @@ import { delegate } from '../../execute/delegate.js';
 import { parseFlags, validateType, validateLevel } from '../shared.js';
 import { jsonOut } from '../shared.js';
 
-export function handle(args: string[]): void {
+export async function handle(args: string[]): Promise<void> {
   const flags = parseFlags(args.slice(1), ['--type', '--level', '--files', '--target']);
   if (flags._error) {
     process.stderr.write(`veridia: execute ${flags._error}\n`);
@@ -25,6 +25,6 @@ export function handle(args: string[]): void {
   const files = filesStr ? filesStr.split(',').map((f) => f.trim()).filter(Boolean) : undefined;
   const runPlan = buildPlan(type as TaskType, Number(level) as VerifiabilityLevel);
   const execPlan = buildExecutionPlan('', type as TaskType, Number(level) as VerifiabilityLevel, runPlan, files, target);
-  const result = delegate(execPlan, target);
+  const result = await delegate(execPlan, target);
   jsonOut({ exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
 }
