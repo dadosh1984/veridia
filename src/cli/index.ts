@@ -7,6 +7,7 @@ import * as classifyCmd from './commands/classify.js'
 import * as completionCmd from './commands/completion.js'
 import * as dashboardCmd from './commands/dashboard.js'
 import * as executeCmd from './commands/execute.js'
+import * as fixCmd from './commands/fix.js'
 import * as generateCmd from './commands/generate.js'
 import * as initCmd from './commands/init.js'
 import * as learnCmd from './commands/learn.js'
@@ -100,6 +101,12 @@ cli
   .command('agents', 'List all supported AI agents')
   .option('--list', 'List agents')
   .action((opts: { list?: boolean }) => agentsCmd.handle(opts))
+
+cli
+  .command('fix', 'Auto-fix found problems (console.log, TODO comments)')
+  .option('--target <path>', 'Target directory')
+  .option('--json', 'Output as JSON')
+  .action((opts: { target?: string; json?: boolean }) => fixCmd.handle(opts))
 
 cli
   .command('init', 'Initialize veridia config and agent command files')

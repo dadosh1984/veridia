@@ -22,4 +22,3 @@ if (!result.success) {
   process.exit(1)
 }
 
-console.log(`Built ${result.outputs.length} files in ${outDir}`)
