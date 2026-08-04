@@ -9,6 +9,7 @@ export interface SelectChoice<T> {
 export interface CheckboxSelectOptions {
   input?: NodeJS.ReadableStream & { setRawMode?: (m: boolean) => void };
   output?: { write: (s: string) => void };
+  readyDelayMs?: number;
 }
 
 export async function checkboxSelect<T>(
@@ -17,6 +18,7 @@ export async function checkboxSelect<T>(
 ): Promise<T[]> {
   const input = (options.input ?? process.stdin) as NodeJS.ReadableStream & { setRawMode?: (m: boolean) => void };
   const output = options.output ?? { write: (s: string) => void process.stdout.write(s) };
+  const readyAt = Date.now() + (options.readyDelayMs ?? 200);
   const selected = new Set<T>(choices.filter((c) => c.selected).map((c) => c.value));
   let cursor = 0;
 
@@ -38,6 +40,10 @@ export async function checkboxSelect<T>(
     input.setRawMode?.(true);
 
     const onKey = (_str: string, key: { name?: string }): void => {
+      if (Date.now() < readyAt) {
+        render();
+        return;
+      }
       const name = key?.name ?? '';
       if (name === 'up') {
         cursor = cursor > 0 ? cursor - 1 : choices.length - 1;
