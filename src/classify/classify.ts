@@ -32,9 +32,18 @@ const RULES: Rule[] = [
 function buildRulesFromConfig(config: VeridiaConfig): Rule[] {
   const rules: Rule[] = []
   for (const [type, patternStrings] of Object.entries(config.classify.patterns)) {
+    const patterns: RegExp[] = []
+    for (const p of patternStrings) {
+      try {
+        patterns.push(new RegExp(p, 'i'))
+      } catch {
+        process.stderr.write(`veridia: classify: skipping invalid pattern '${p}' for type '${type}'\n`)
+      }
+    }
+    if (patterns.length === 0) continue
     rules.push({
       type: type as TaskType,
-      patterns: patternStrings.map((p) => new RegExp(p, 'i')),
+      patterns,
     })
   }
   return rules

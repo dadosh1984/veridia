@@ -56,6 +56,12 @@ export function assemblePrompt(
   answers?: Record<string, string>,
 ): string {
   const parts = [`Task: ${task}`, `Type: ${type}`, `Verifiability level: ${level}`, `Plan depth: ${plan.depth}`, `Model tier: ${plan.tier}`]
+  if (plan.steps.length > 0) {
+    parts.push(`Plan steps: ${plan.steps.join(' -> ')}`)
+  }
+  if (plan.checks.length > 0) {
+    parts.push(`Verification gates: ${plan.checks.join(', ')}`)
+  }
   if (answers && Object.keys(answers).length > 0) {
     parts.push(`Answers: ${JSON.stringify(answers)}`)
   }
@@ -153,7 +159,7 @@ export async function orchestrate(
   maxRetries = 3,
 ): Promise<OrchestrateResult> {
   const configs = Array.isArray(config) ? config : [config]
-  let bestResult: OrchestrateResult = { output: '', verdict: 'FAIL', retries: maxRetries }
+  let bestResult: OrchestrateResult | null = null
 
   for (const cfg of configs) {
     const prompt = assemblePrompt(task, type, level, plan, answers)
@@ -173,8 +179,8 @@ export async function orchestrate(
       const precision = computePrecision(readHistory({ root: target }))
       const weights = loadConfig(target).weights
       const verifyResult = verify(target, level, kinds, { precision, weights })
-      if (verifyResult.verdict === 'PASS') {
-        const result: OrchestrateResult = { output, verdict: 'PASS', retries: attempt }
+      if (verifyResult.verdict === 'PASS' || verifyResult.verdict === 'HUMAN') {
+        const result: OrchestrateResult = { output, verdict: verifyResult.verdict, retries: attempt }
         if (configs.length > 1) {
           result.model = cfg.model
         }
@@ -182,12 +188,14 @@ export async function orchestrate(
       }
     }
 
+    const candidate: OrchestrateResult = { output: lastOutput, verdict: 'FAIL', retries: maxRetries }
     if (configs.length > 1) {
-      bestResult = { output: lastOutput, verdict: 'FAIL', retries: maxRetries, model: cfg.model }
-    } else {
-      bestResult = { output: lastOutput, verdict: 'FAIL', retries: maxRetries }
+      candidate.model = cfg.model
+    }
+    if (bestResult === null || candidate.retries < bestResult.retries) {
+      bestResult = candidate
     }
   }
 
-  return bestResult
+  return bestResult ?? { output: '', verdict: 'FAIL', retries: maxRetries }
 }

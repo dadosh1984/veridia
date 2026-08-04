@@ -201,14 +201,15 @@ describe('veridia CLI', () => {
     expect(result.stdout).toContain('ask')
   })
 
-  it('verifies a target with a failing test script and prints a verdict with exit 0', () => {
+  it('verifies a target with a failing test script and exits non-zero on a FAIL verdict', () => {
     const dir = makeTmpDir()
     writeFile(dir, 'package.json', '{"scripts":{"test":"node -e \\"process.exit(1)\\""}}')
+    writeFile(dir, 'test/foo.test.js', "it('works', () => {})\n")
     const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2')
-    expect(result.exitCode).toBe(0)
+    expect(result.exitCode).toBe(1)
     const parsed = parseJson(result.stdout) as { checks: { kind: string }[]; verdict: string }
     expect(parsed.checks.length).toBeGreaterThan(0)
-    expect(parsed.verdict).toBeTruthy()
+    expect(parsed.verdict).toBe('FAIL')
   })
 
   it('verifies a target with no oracles and reports a HUMAN verdict', () => {

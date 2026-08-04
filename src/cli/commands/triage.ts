@@ -17,4 +17,5 @@ export async function handle(task: string, opts: { target?: string; auto?: boole
   }
   const result = await triage(task, target, { auto: opts.auto })
   jsonOut(result)
+  process.exitCode = result.verdict === 'FAIL' ? 1 : 0
 }

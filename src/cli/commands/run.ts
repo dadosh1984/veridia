@@ -43,6 +43,7 @@ export async function handle(
   if (opts.json) {
     const result = await triage(task, resolved, { auto })
     process.stdout.write(`${JSON.stringify(result)}\n`)
+    process.exitCode = result.verdict === 'FAIL' ? 1 : 0
     return
   }
 
@@ -94,6 +95,8 @@ export async function handle(
   }
 
   outro(`verdict: ${result.verdict}`)
+
+  process.exitCode = result.verdict === 'FAIL' ? 1 : 0
 
   if (!auto && result.executionPlan) {
     const proceed = await confirm({

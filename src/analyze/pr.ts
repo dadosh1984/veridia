@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { assess } from '../assess/assess.js'
 import { probeOracles, realFs } from '../assess/probe.js'
 import type { VerifiabilityLevel } from '../assess/types.js'
@@ -27,10 +27,10 @@ export interface PrResult {
 export function analyzePr(target: string, baseBranch = 'main'): PrResult {
   let diff: string
   try {
-    diff = execSync(`git diff ${baseBranch}...HEAD --stat`, { cwd: target, encoding: 'utf8' })
+    diff = execFileSync('git', ['diff', `${baseBranch}...HEAD`, '--stat'], { cwd: target, encoding: 'utf8' })
   } catch {
     try {
-      diff = execSync('git diff --stat HEAD', { cwd: target, encoding: 'utf8' })
+      diff = execFileSync('git', ['diff', '--stat', 'HEAD'], { cwd: target, encoding: 'utf8' })
     } catch {
       diff = ''
     }
@@ -52,7 +52,7 @@ export function analyzePr(target: string, baseBranch = 'main'): PrResult {
 
   let headBranch = ''
   try {
-    headBranch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: target, encoding: 'utf8' }).trim()
+    headBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: target, encoding: 'utf8' }).trim()
   } catch {
     headBranch = 'HEAD'
   }

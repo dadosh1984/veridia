@@ -1,8 +1,32 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { assess } from '../assess/assess.js'
 import { loadConfig } from '../config/config.js'
 import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
 import { runAnalysis } from './analyze.js'
+
+function currentVersion(): string {
+  try {
+    let dir = dirname(fileURLToPath(import.meta.url))
+    for (let i = 0; i < 6; i++) {
+      const pkgPath = join(dir, 'package.json')
+      if (existsSync(pkgPath)) {
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: string }
+        return pkg.version ?? 'unknown'
+      }
+      dir = dirname(dir)
+    }
+  } catch {
+    return 'unknown'
+  }
+  return 'unknown'
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
 
 export function generateReport(target: string): string {
   const analysis = runAnalysis(target)
@@ -32,7 +56,7 @@ export function generateReport(target: string): string {
 
 **Generated:** ${now}
 **Target:** \`${target}\`
-**Version:** 0.4.0
+**Version:** ${currentVersion()}
 
 ## Summary
 
@@ -96,18 +120,18 @@ th { background: #f3f4f6; }
 ${md
   .split('\n')
   .map((l) => {
-    if (l.startsWith('# ')) return `<h1>${l.slice(2)}</h1>`
-    if (l.startsWith('## ')) return `<h2>${l.slice(3)}</h2>`
+    if (l.startsWith('# ')) return `<h1>${escapeHtml(l.slice(2))}</h1>`
+    if (l.startsWith('## ')) return `<h2>${escapeHtml(l.slice(3))}</h2>`
     if (l.startsWith('|')) {
       if (l.includes('---')) return ''
       const cells = l
         .split('|')
         .filter(Boolean)
-        .map((c) => c.trim())
+        .map((c) => escapeHtml(c.trim()))
       return `<tr>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`
     }
-    if (l.startsWith('- ')) return `<li>${l.slice(2)}</li>`
-    return `<p>${l}</p>`
+    if (l.startsWith('- ')) return `<li>${escapeHtml(l.slice(2))}</li>`
+    return `<p>${escapeHtml(l)}</p>`
   })
   .join('\n')}
 </body></html>`

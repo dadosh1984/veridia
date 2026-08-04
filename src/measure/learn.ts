@@ -136,7 +136,7 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
       try {
         const raw = readFileSync(configPath, 'utf8').replace(/^\uFEFF/, '')
         const config = JSON.parse(raw)
-        if (!config.classify) config.classify = { patterns: {} }
+        if (!config.classify?.patterns) config.classify = { patterns: {} }
         for (const type of patternsToAdjust) {
           if (!config.classify.patterns[type]) {
             config.classify.patterns[type] = []
@@ -147,7 +147,14 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
           for (const entry of lowAccuracyEntries) {
             const words = entry.task.toLowerCase().split(/\s+/)
             for (const word of words) {
-              if (word.length > 3 && !currentPatterns.some((p: string) => new RegExp(p, 'i').test(word))) {
+              const alreadyCovered = currentPatterns.some((p: string) => {
+                try {
+                  return new RegExp(p, 'i').test(word)
+                } catch {
+                  return false
+                }
+              })
+              if (word.length > 3 && !alreadyCovered) {
                 commonTerms.set(word, (commonTerms.get(word) ?? 0) + 1)
               }
             }

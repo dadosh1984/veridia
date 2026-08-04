@@ -27,4 +27,5 @@ export function handle(opts: { target: string; type: string; level: string | num
   const kinds = probeOracles(resolved, realFs).map((o) => o.kind)
   const result = verify(resolved, Number(opts.level) as VerifiabilityLevel, kinds, { dryRun: opts.dryRun })
   jsonOut({ checks: result.checks, verdict: result.verdict })
+  process.exitCode = result.verdict === 'FAIL' ? 1 : 0
 }
