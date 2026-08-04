@@ -43,6 +43,16 @@ veridia --help
 
 Requires **Node ≥ 22.12**.
 
+**Update** (via npm — there is no `veridia update` subcommand):
+
+```bash
+# preferred — explicit reinstall to latest (avoids an npm global-update bug):
+npm install -g veridia@latest
+# alternative:
+npm update -g veridia
+npm view veridia version       # check the latest published version
+```
+
 ### 1.1 Set up for your AI agents
 
 `veridia init` wires veridia into one or more of the 35 supported AI agents (OpenCode, Claude Code, Cursor, Codex, ...):

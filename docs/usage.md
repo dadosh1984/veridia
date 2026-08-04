@@ -37,6 +37,16 @@ veridia init          # interactive: pick your agent(s), e.g. OpenCode, Claude C
 `veridia init` installs veridia **skills** and **slash commands** into the agent's
 config directory (e.g. `.opencode/`). **Restart your agent chat** afterwards.
 
+**Update** (via npm — there is no `veridia update` subcommand):
+
+```bash
+# preferred — explicit reinstall to latest (avoids an npm global-update bug):
+npm install -g veridia@latest
+# alternative:
+npm update -g veridia
+veridia --version              # confirm the new version
+```
+
 Then use veridia in two ways (details below).
 
 ## How to drive veridia from an AI-agent chat
