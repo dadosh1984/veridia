@@ -1,5 +1,14 @@
 # veridia
 
+## 0.9.0
+
+### Minor Changes
+
+- feat: knip/oxc oracles (dead-code, bundler) in assess and verify
+  feat: A/B model testing in orchestrate (accepts a single ModelConfig or an array)
+  feat: feedback loop in learn — auto-adds classification patterns to .veridia/config.json on low accuracy
+  fix: BOM tolerance when reading .veridia/config.json
+
 ## 0.8.0
 
 ### Minor Changes
