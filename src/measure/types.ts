@@ -8,6 +8,7 @@ export interface MeasureEntry {
   checks: { kind: string; passed: boolean }[];
   drift: string;
   timestamp: string;
+  oracleResults?: { kind: string; truePositives: number; falsePositives: number }[];
 }
 
 export interface HistorySummary {

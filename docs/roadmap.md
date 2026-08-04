@@ -52,6 +52,14 @@ we spec + verify each before moving on).
 - Wire full loop; `veridia <task>` end-to-end; docs; names/packaging.
 - Decide on skills.sh distribution (portable skills over the ecosystem).
 
+## Stage 8 — AI integration & feedback loops (in progress)
+- **Mutation sensitivity**: String-level mutation engine measures oracle meaning-capture. ✓
+- **Historical precision**: Per-oracle precision tracked over time, fed back into verify. ✓
+- **Interactive ask**: Terminal-based question prompts with answer collection. ✓
+- **AI orchestration**: Model-agnostic call interface (stdio + HTTP), context assembly, retry loop. ✓
+- **Dogfooding**: `veridia run` command with `--self`, `--ww`, `--change` flags. ✓
+- **Remaining**: Full end-to-end dogfooding of veridia through veridia; streaming output; logging.
+
 ## Cross-cutting notes
 - Status file, knowledge graph of idea decisions: `docs/` is the source of truth.
 - Each stage: spec → implement → verify → commit (our own doctrine, dogfooded).

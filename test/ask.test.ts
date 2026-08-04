@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ask } from '../src/ask/ask.js';
+import { ask, askInteractive } from '../src/ask/ask.js';
 import { QUESTION_BANK } from '../src/ask/bank.js';
 import { selectQuestions } from '../src/ask/select.js';
 import type { TaskType } from '../src/classify/types.js';
@@ -85,5 +85,24 @@ describe('ask', () => {
 
   it('is deterministic: same input yields identical result', () => {
     expect(ask('feature', 1)).toEqual(ask('feature', 1));
+  });
+});
+
+describe('askInteractive', () => {
+  it('returns no questions in auto mode', async () => {
+    const result = await askInteractive('feature', 1, true);
+    expect(result.questions).toEqual([]);
+  });
+
+  it('returns no questions at level 3', async () => {
+    const result = await askInteractive('bugfix', 3);
+    expect(result.questions).toEqual([]);
+  });
+
+  it('returns questions with answers from injected prompt', async () => {
+    const mockPrompt = async (): Promise<Record<string, string>> => ({ 'q1': 'unit tests' });
+    const result = await askInteractive('feature', 1, false, { promptQuestions: mockPrompt });
+    expect(result.questions.length).toBeGreaterThanOrEqual(2);
+    expect(result.answers).toEqual({ 'q1': 'unit tests' });
   });
 });

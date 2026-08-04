@@ -8,6 +8,25 @@ export interface LearnResult {
   successRateByLevel: Record<string, number>;
   driftPatterns: string[];
   recommendations: string[];
+  oraclePrecision: Record<string, number>;
+}
+
+export function computePrecision(entries: MeasureEntry[]): Record<string, number> {
+  const tp: Record<string, number> = {};
+  const fp: Record<string, number> = {};
+  for (const entry of entries) {
+    if (!entry.oracleResults) continue;
+    for (const r of entry.oracleResults) {
+      tp[r.kind] = (tp[r.kind] ?? 0) + r.truePositives;
+      fp[r.kind] = (fp[r.kind] ?? 0) + r.falsePositives;
+    }
+  }
+  const precision: Record<string, number> = {};
+  for (const kind of Object.keys(tp)) {
+    const total = tp[kind] + (fp[kind] ?? 0);
+    precision[kind] = total > 0 ? Math.round((tp[kind] / total) * 100) / 100 : 0;
+  }
+  return precision;
 }
 
 export function learn(deps: HistoryDeps = {}): LearnResult {
@@ -78,5 +97,6 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
     successRateByLevel,
     driftPatterns: driftEntries,
     recommendations,
+    oraclePrecision: computePrecision(entries),
   };
 }

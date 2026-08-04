@@ -6,7 +6,8 @@ import type { OracleKind } from '../src/assess/types.js';
 import { resolveCommands } from '../src/verify/resolve.js';
 import type { Check, Verdict, VerifyResult } from '../src/verify/types.js';
 import { deriveVerdict, verify } from '../src/verify/verify.js';
-import { baseWeight, isTestsWeak } from '../src/verify/weight.js';
+import { baseWeight, isTestsWeak, calibrateWeight } from '../src/verify/weight.js';
+import { mutate, computeSensitivity } from '../src/verify/mutate.js';
 
 const tmpDirs: string[] = [];
 
@@ -34,6 +35,60 @@ const exitOne = (): { exitCode: number } => ({ exitCode: 1 });
 function check(kind: OracleKind, passed: boolean, weak = false): Check {
   return { kind, command: `${kind}-cmd`, weight: baseWeight(kind), weak, passed };
 }
+
+describe('mutate', () => {
+  it('mutates boolean true to false', () => {
+    const result = mutate('const x = true;');
+    expect(result.some((m) => m.includes('false'))).toBe(true);
+  });
+
+  it('mutates === to !==', () => {
+    const result = mutate('if (a === b) {');
+    expect(result.some((m) => m.includes('!=='))).toBe(true);
+  });
+
+  it('produces at least 3 mutations', () => {
+    const result = mutate('const x = true; if (a === b) { return 1; }');
+    expect(result.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(mutate('')).toEqual([]);
+  });
+});
+
+describe('computeSensitivity', () => {
+  it('returns 1.0 when oracle catches all mutations', () => {
+    const oracle = (): number => 1;
+    const sensitivity = computeSensitivity('const x = true;', oracle);
+    expect(sensitivity).toBe(1.0);
+  });
+
+  it('returns 0.0 when oracle catches no mutations', () => {
+    const oracle = (): number => 0;
+    const sensitivity = computeSensitivity('const x = true;', oracle);
+    expect(sensitivity).toBe(0.0);
+  });
+
+  it('returns 0.5 when oracle catches half the mutations', () => {
+    let callCount = 0;
+    const oracle = (): number => {
+      callCount++;
+      return callCount % 2 === 0 ? 1 : 0;
+    };
+    const sensitivity = computeSensitivity('const x = true; if (a === b) { return 1; }', oracle);
+    expect(sensitivity).toBeCloseTo(0.5, 1);
+  });
+});
+
+describe('calibrateWeight', () => {
+  it('multiplies base weight by sensitivity and precision', () => {
+    expect(calibrateWeight(3, 1.0, 1.0)).toBe(3);
+    expect(calibrateWeight(3, 0.5, 1.0)).toBe(1.5);
+    expect(calibrateWeight(3, 1.0, 0.5)).toBe(1.5);
+    expect(calibrateWeight(3, 0.0, 1.0)).toBe(0);
+  });
+});
 
 describe('resolveCommands', () => {
   it('yields the package.json test script for a test-runner', () => {

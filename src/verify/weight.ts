@@ -69,3 +69,7 @@ export function isTestsWeak(target: string, fsLike: FsLike = realFs): boolean {
 export function baseWeight(kind: OracleKind): number {
   return KIND_WEIGHTS[kind];
 }
+
+export function calibrateWeight(base: number, sensitivity: number, precision: number): number {
+  return base * sensitivity * precision;
+}

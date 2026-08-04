@@ -11,6 +11,15 @@ export interface VeridiaConfig {
     lint: { files: string[]; scripts: string[] };
     ci: { files: string[]; dirs: string[] };
   };
+  model?: {
+    provider: 'stdio' | 'api';
+    model: string;
+    apiKey?: string;
+    temperature?: number;
+    maxTokens?: number;
+    command?: string;
+    apiUrl?: string;
+  };
 }
 
 export const DEFAULT_CONFIG: VeridiaConfig = {
@@ -57,6 +66,12 @@ export function loadConfig(target: string): VeridiaConfig {
   return DEFAULT_CONFIG;
 }
 
+export function getModelConfig(config: VeridiaConfig): { provider: 'stdio' | 'api'; model: string; apiKey?: string; temperature?: number; maxTokens?: number; command?: string; apiUrl?: string } | undefined {
+  if (!config.model) return undefined;
+  const apiKey = config.model.apiKey || process.env.VERIDIA_API_KEY;
+  return { ...config.model, apiKey };
+}
+
 function mergeConfig(base: VeridiaConfig, user: Partial<VeridiaConfig>): VeridiaConfig {
   const result = { ...base };
   if (user.classify?.patterns) {
@@ -64,6 +79,9 @@ function mergeConfig(base: VeridiaConfig, user: Partial<VeridiaConfig>): Veridia
   }
   if (user.probes) {
     result.probes = { ...base.probes, ...user.probes };
+  }
+  if (user.model) {
+    result.model = { ...user.model };
   }
   return result;
 }

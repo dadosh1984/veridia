@@ -2,11 +2,13 @@ import type { OracleKind, VerifiabilityLevel } from '../assess/types.js';
 import { resolveCommands } from './resolve.js';
 import { runCommand, type RunFn } from './run.js';
 import type { Check, Verdict, VerifyResult } from './types.js';
-import { baseWeight, isTestsWeak } from './weight.js';
+import { baseWeight, calibrateWeight, isTestsWeak } from './weight.js';
 
 export interface VerifyDeps {
   run?: RunFn;
   dryRun?: boolean;
+  sensitivity?: Record<string, number>;
+  precision?: Record<string, number>;
 }
 
 export function deriveVerdict(level: VerifiabilityLevel, checks: Check[]): Verdict {
@@ -33,7 +35,7 @@ export function verify(
   const resolved = resolveCommands(kinds, target);
   const checks: Check[] = resolved.map(({ kind, command }) => {
     if (deps.dryRun) {
-      return { kind, command, weight: baseWeight(kind), weak: false, passed: true };
+      return { kind, command, weight: calibrateWeight(baseWeight(kind), 1, 1), weak: false, passed: true };
     }
     let exitCode: number;
     try {
@@ -43,7 +45,10 @@ export function verify(
       exitCode = 1;
     }
     const weak = kind === 'test-runner' && isTestsWeak(target);
-    return { kind, command, weight: baseWeight(kind), weak, passed: exitCode === 0 };
+    const sens = deps.sensitivity?.[kind] ?? 1;
+    const prec = deps.precision?.[kind] ?? 1;
+    const weight = calibrateWeight(baseWeight(kind), sens, prec);
+    return { kind, command, weight, weak, passed: exitCode === 0 };
   });
   return { protocol: 'veridia/verification-report/v1', checks, verdict: deriveVerdict(level, checks) };
 }

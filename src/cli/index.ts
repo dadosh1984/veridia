@@ -14,6 +14,7 @@ import * as agentsCmd from './commands/agents.js';
 import * as initCmd from './commands/init.js';
 import * as generateCmd from './commands/generate.js';
 import * as learnCmd from './commands/learn.js';
+import * as runCmd from './commands/run.js';
 import * as triageCmd from './commands/triage.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
@@ -47,13 +48,15 @@ Usage:
                             Generate agent command files
   veridia learn [--target <path>]
                             Analyze history and produce recommendations
+  veridia run <task> [--target <path>] [--auto] [--self] [--ww --change <name>]
+                            Run the full triage loop with human-readable output
 
 Options:
   -h, --help     Show this help message and exit
   -v, --version  Print the version and exit
 `;
 
-const COMMANDS: Record<string, (args: string[]) => void> = {
+const COMMANDS: Record<string, (args: string[]) => void | Promise<void>> = {
   classify: classifyCmd.handle,
   assess: assessCmd.handle,
   route: routeCmd.handle,
@@ -67,21 +70,26 @@ const COMMANDS: Record<string, (args: string[]) => void> = {
   init: initCmd.handle,
   generate: generateCmd.handle,
   learn: learnCmd.handle,
+  run: runCmd.handle,
 };
 
-const args = process.argv.slice(2);
-const arg = args[0];
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const arg = args[0];
 
-if (arg === undefined || arg === '--help' || arg === '-h') {
-  process.stdout.write(USAGE);
-  process.exitCode = 0;
-} else if (arg === 'version' || arg === '-v' || arg === '--version') {
-  jsonOut({ version: VERSION });
-} else if (arg.startsWith('--')) {
-  process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
-  process.exitCode = 1;
-} else if (arg in COMMANDS) {
-  COMMANDS[arg](args);
-} else {
-  triageCmd.handle(args);
+  if (arg === undefined || arg === '--help' || arg === '-h') {
+    process.stdout.write(USAGE);
+    process.exitCode = 0;
+  } else if (arg === 'version' || arg === '-v' || arg === '--version') {
+    jsonOut({ version: VERSION });
+  } else if (arg.startsWith('--')) {
+    process.stderr.write(`veridia: unknown argument: ${arg}\n\n${USAGE}`);
+    process.exitCode = 1;
+  } else if (arg in COMMANDS) {
+    await COMMANDS[arg](args);
+  } else {
+    await triageCmd.handle(args);
+  }
 }
+
+main();

@@ -35,6 +35,18 @@ describe('appendEntry', () => {
     expect(parsed.timestamp).toBeDefined();
   });
 
+  it('accepts oracleResults field', () => {
+    const root = makeTmpDir();
+    const entry = {
+      task: 'test', type: 'feature', level: 2, verdict: 'PASS' as const,
+      checks: [{ kind: 'test-runner', passed: true }], drift: '',
+      oracleResults: [{ kind: 'test-runner', truePositives: 5, falsePositives: 1 }],
+    };
+    appendEntry(entry, { root });
+    const entries = readHistory({ root });
+    expect(entries[0].oracleResults).toEqual([{ kind: 'test-runner', truePositives: 5, falsePositives: 1 }]);
+  });
+
   it('creates .veridia directory if it does not exist', () => {
     const root = makeTmpDir();
     const entry = { task: 'fix bug', type: 'bugfix', level: 3, verdict: 'FAIL' as const, checks: [], drift: '' };

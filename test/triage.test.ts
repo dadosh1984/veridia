@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { triage } from '../src/triage/triage.js';
+import type { TaskType } from '../src/classify/types.js';
+import type { VerifiabilityLevel } from '../src/assess/types.js';
+import type { AskResult } from '../src/ask/types.js';
 
 const tmpDirs: string[] = [];
 
@@ -24,12 +27,14 @@ afterEach(() => {
   }
 });
 
+const mockAsk = async (_type: TaskType, _level: VerifiabilityLevel, _auto?: boolean): Promise<AskResult> => ({ questions: [] });
+
 describe('triage', () => {
-  it('runs the full loop and returns a result with type, level, plan, and verdict', () => {
+  it('runs the full loop and returns a result with type, level, plan, and verdict', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{"scripts":{"test":"vitest run"}}');
     writeFile(target, 'tsconfig.json', '{}');
-    const result = triage('add dark mode support', target);
+    const result = await triage('add dark mode support', target, undefined, { ask: mockAsk });
     expect(result.task).toBe('add dark mode support');
     expect(result.type).toBe('feature');
     expect(result.confidence).toBeGreaterThan(0);
@@ -38,17 +43,17 @@ describe('triage', () => {
     expect(result.verdict).toBeTruthy();
   });
 
-  it('classifies a bugfix task correctly', () => {
+  it('classifies a bugfix task correctly', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const result = triage('fix the null pointer crash', target);
+    const result = await triage('fix the null pointer crash', target, undefined, { ask: mockAsk });
     expect(result.type).toBe('bugfix');
   });
 
-  it('records outcome via measure', () => {
+  it('records outcome via measure', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    triage('add feature', target);
+    await triage('add feature', target, undefined, { ask: mockAsk });
     const historyFile = path.join(target, '.veridia', 'history.jsonl');
     expect(fs.existsSync(historyFile)).toBe(true);
     const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
@@ -58,40 +63,40 @@ describe('triage', () => {
     expect(entry.type).toBe('feature');
   });
 
-  it('is deterministic for the same task and target', () => {
+  it('is deterministic for the same task and target', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const first = triage('refactor the module', target);
-    const second = triage('refactor the module', target);
+    const first = await triage('refactor the module', target, undefined, { ask: mockAsk });
+    const second = await triage('refactor the module', target, undefined, { ask: mockAsk });
     expect(first.type).toBe(second.type);
     expect(first.level).toBe(second.level);
     expect(first.verdict).toBe(second.verdict);
   });
 
-  it('includes execution plan and result in output', () => {
+  it('includes execution plan and result in output', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const result = triage('add feature', target);
+    const result = await triage('add feature', target, undefined, { ask: mockAsk });
     expect(result.executionPlan).toBeDefined();
     expect(result.executionPlan!.task).toBe('add feature');
     expect(result.executionResult).toBeDefined();
     expect(result.executionResult!.exitCode).toBe(0);
   });
 
-  it('drift is 0 on first run (no history)', () => {
+  it('drift is 0 on first run (no history)', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const result = triage('add feature', target);
+    const result = await triage('add feature', target, undefined, { ask: mockAsk });
     const historyFile = path.join(target, '.veridia', 'history.jsonl');
     const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
     const entry = JSON.parse(lines[0]);
     expect(entry.drift).toBe('0');
   });
 
-  it('drift is non-empty string', () => {
+  it('drift is non-empty string', async () => {
     const target = makeTmpDir();
     writeFile(target, 'package.json', '{}');
-    const result = triage('add feature', target);
+    const result = await triage('add feature', target, undefined, { ask: mockAsk });
     const historyFile = path.join(target, '.veridia', 'history.jsonl');
     const lines = fs.readFileSync(historyFile, 'utf8').trim().split('\n');
     const entry = JSON.parse(lines[0]);

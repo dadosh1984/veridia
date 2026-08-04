@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { ExecutionPlan, HostAgentInfo, ExecuteResult, ExecutionStep, VerificationGate } from '../src/execute/types.js';
+import { assemblePrompt, callModelStdio } from '../src/execute/orchestrate.js';
 import { detectHostAgent } from '../src/execute/detect.js';
 import { buildExecutionPlan } from '../src/execute/plan.js';
 import { buildPlan } from '../src/route/route.js';
@@ -217,7 +218,7 @@ describe('delegate', () => {
     process.env = { ...OLD_ENV };
   });
 
-  it('selects file mode for opencode host (file > stdout)', () => {
+  it('selects file mode for opencode host (file > stdout)', async () => {
     process.env.OPENCODE = '1';
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'veridia-delegate-file-'));
     try {
@@ -227,7 +228,7 @@ describe('delegate', () => {
         plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
         metadata: { host: 'opencode', generatedAt: '' },
       };
-      const result = delegate(plan, tmpDir);
+      const result = await delegate(plan, tmpDir);
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Plan written to');
     } finally {
@@ -235,7 +236,7 @@ describe('delegate', () => {
     }
   });
 
-  it('selects shell mode in a clean temp dir', () => {
+  it('selects shell mode in a clean temp dir', async () => {
     for (const key of Object.keys(process.env)) {
       if (key in { CLAUDE_CODE: 1, OPENCODE: 1, CURSOR: 1, GITHUB_COPILOT: 1, GEMINI: 1, CLINE: 1, KILO_CODE: 1, AUGGIE: 1, DEVIN: 1, CODEBUDDY: 1, CONTINUE: 1, JUNIE: 1, QWEN: 1, TRAE: 1 }) {
         delete process.env[key];
@@ -249,10 +250,37 @@ describe('delegate', () => {
         plan: { depth: 'full-tdd', tier: 'cheapest', steps: [], gates: [] },
         metadata: { host: 'shell', generatedAt: '' },
       };
-      const result = delegate(plan, tmpDir);
+      const result = await delegate(plan, tmpDir);
       expect(result.exitCode).toBe(0);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('assemblePrompt', () => {
+  it('includes all context fields', () => {
+    const prompt = assemblePrompt('add auth', 'feature', 2, { depth: 'tdd-where-possible', tier: 'mid', steps: ['implement'], checks: ['test'] });
+    expect(prompt).toContain('add auth');
+    expect(prompt).toContain('feature');
+    expect(prompt).toContain('2');
+    expect(prompt).toContain('tdd-where-possible');
+  });
+
+  it('includes answers when provided', () => {
+    const prompt = assemblePrompt('add auth', 'feature', 2, { depth: 'tdd-where-possible', tier: 'mid', steps: [], checks: [] }, { framework: 'express' });
+    expect(prompt).toContain('express');
+  });
+
+  it('omits answers section when no answers', () => {
+    const prompt = assemblePrompt('add auth', 'feature', 2, { depth: 'tdd-where-possible', tier: 'mid', steps: [], checks: [] });
+    expect(prompt).not.toContain('Answers:');
+  });
+});
+
+describe('callModelStdio', () => {
+  it('spawns a process and returns output', () => {
+    const result = callModelStdio('node', 'process.stdout.write("hello")');
+    expect(result).toBe('hello');
   });
 });

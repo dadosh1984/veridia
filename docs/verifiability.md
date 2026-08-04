@@ -61,12 +61,12 @@ we can't trust from a weak model. Solution is two MECHANICAL signals (no judgmen
 required):
 
 ```
-oracle_weight = mutation_sensitivity   (static, cheap, run now)
+oracle_weight = mutation_sensitivity   (static, cheap, run now)  ✓ IMPLEMENTED
               combined with
-                historical_precision    (dynamic, accumulates via measure/learn)
+                historical_precision    (dynamic, accumulates via measure/learn)  ✓ IMPLEMENTED
 ```
 
-### 1. Mutation sensitivity (static)
+### 1. Mutation sensitivity (static)  ✓ IMPLEMENTED
 Don't ask an opinion — test whether the oracle can *distinguish* good from broken:
 
 ```
@@ -80,7 +80,7 @@ oracle rejected the broken one? → strong          (senses meaning)
 Mutation testing applied to the oracle itself. No judgment about "correctness" —
 only "does the check tell good from broken." Model-independent.
 
-### 2. Historical precision (dynamic, via learn)
+### 2. Historical precision (dynamic, via learn)  ✓ IMPLEMENTED
 An oracle earns trust = how often a pass predicted real correctness:
 
 ```

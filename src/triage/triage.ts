@@ -1,13 +1,15 @@
 import { classify } from '../classify/classify.js';
 import { assess } from '../assess/assess.js';
 import { buildPlan } from '../route/route.js';
-import { ask } from '../ask/ask.js';
+import { askInteractive } from '../ask/ask.js';
+import type { AskResult } from '../ask/types.js';
 import { verify } from '../verify/verify.js';
 import { measureRecord } from '../measure/measure.js';
 import { readHistory } from '../measure/history.js';
+import { computePrecision } from '../measure/learn.js';
 import { buildExecutionPlan } from '../execute/plan.js';
 import { delegate } from '../execute/delegate.js';
-import { loadConfig } from '../config/config.js';
+import { loadConfig, getModelConfig } from '../config/config.js';
 import type { TaskType } from '../classify/types.js';
 import type { VerifiabilityLevel } from '../assess/types.js';
 import type { Verdict } from '../verify/types.js';
@@ -26,6 +28,7 @@ export interface TriageResult {
     checks: string[];
   };
   questions: { id: string; prompt: string; options: string[] }[];
+  answers?: Record<string, string>;
   verdict: Verdict;
   executionPlan?: ExecutionPlan;
   executionResult?: ExecuteResult;
@@ -46,18 +49,34 @@ export interface TriageOptions {
   auto?: boolean;
 }
 
-export function triage(task: string, target: string = process.cwd(), options?: TriageOptions): TriageResult {
+export interface TriageDeps {
+  ask?: (type: TaskType, level: VerifiabilityLevel, auto?: boolean) => Promise<AskResult>;
+}
+
+export async function triage(task: string, target: string = process.cwd(), options?: TriageOptions, deps?: TriageDeps): Promise<TriageResult> {
   const config = loadConfig(target);
   const classification = classify(task, config);
   const assessment = assess(target, undefined, undefined, config);
   const plan = buildPlan(classification.type, assessment.level);
-  const askResult = ask(classification.type, assessment.level, options?.auto);
+  const askFn = deps?.ask ?? askInteractive;
+  const askResult = await askFn(classification.type, assessment.level, options?.auto);
   const kinds = assessment.oracles.map((o) => o.kind);
 
   const execPlan = buildExecutionPlan(task, classification.type, assessment.level, plan, undefined, target);
-  const execResult = delegate(execPlan, target);
+  const modelConfig = getModelConfig(config);
+  const execResult = await delegate(execPlan, target, modelConfig ? {
+    modelConfig,
+    task,
+    type: classification.type,
+    level: assessment.level,
+    kinds,
+    answers: askResult.answers,
+  } : undefined);
 
-  const verifyResult = verify(target, assessment.level, kinds);
+  const historyEntries = readHistory({ root: target });
+  const precision = computePrecision(historyEntries);
+
+  const verifyResult = verify(target, assessment.level, kinds, { precision });
   const drift = calculateDrift(verifyResult.verdict, target);
 
   measureRecord({
@@ -82,6 +101,7 @@ export function triage(task: string, target: string = process.cwd(), options?: T
       checks: plan.checks,
     },
     questions: askResult.questions,
+    answers: askResult.answers,
     verdict: verifyResult.verdict,
     executionPlan: execPlan,
     executionResult: execResult,

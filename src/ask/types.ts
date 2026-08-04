@@ -6,4 +6,5 @@ export interface ClarifyingQuestion {
 
 export interface AskResult {
   questions: ClarifyingQuestion[];
+  answers?: Record<string, string>;
 }

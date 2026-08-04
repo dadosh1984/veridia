@@ -3,7 +3,7 @@ import path from 'node:path';
 import { triage } from '../../triage/triage.js';
 import { jsonOut } from '../shared.js';
 
-export function handle(args: string[]): void {
+export async function handle(args: string[]): Promise<void> {
   let task = args[0];
   let target = process.cwd();
   let auto = false;
@@ -28,6 +28,6 @@ export function handle(args: string[]): void {
     process.exitCode = 1;
     return;
   }
-  const result = triage(task, resolved, { auto });
+  const result = await triage(task, resolved, { auto });
   jsonOut(result);
 }

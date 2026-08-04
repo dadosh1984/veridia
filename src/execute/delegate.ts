@@ -4,6 +4,11 @@ import { execFileSync } from 'node:child_process';
 import { splitCommand } from '../util/split-command.js';
 import type { ExecutionPlan, DelegationMode, ExecuteResult } from './types.js';
 import { detectHostAgent } from './detect.js';
+import type { ModelConfig } from './orchestrate.js';
+import { orchestrate } from './orchestrate.js';
+import type { TaskType } from '../classify/types.js';
+import type { VerifiabilityLevel } from '../assess/types.js';
+import type { OracleKind } from '../assess/types.js';
 
 export function delegateStdout(plan: ExecutionPlan): ExecuteResult {
   const json = JSON.stringify(plan, null, 2);
@@ -46,7 +51,25 @@ export function delegateShell(plan: ExecutionPlan, target?: string): ExecuteResu
   return { exitCode: 0, stdout: 'All gates passed', stderr: '' };
 }
 
-export function delegate(plan: ExecutionPlan, target?: string): ExecuteResult {
+export interface DelegateOptions {
+  modelConfig?: ModelConfig;
+  task?: string;
+  type?: TaskType;
+  level?: VerifiabilityLevel;
+  kinds?: OracleKind[];
+  answers?: Record<string, string>;
+}
+
+export async function delegate(plan: ExecutionPlan, target?: string, options?: DelegateOptions): Promise<ExecuteResult> {
+  if (options?.modelConfig && options.task && options.type && options.level && options.kinds) {
+    const result = await orchestrate(
+      options.task, options.type, options.level,
+      { depth: plan.plan.depth, tier: plan.plan.tier, steps: plan.plan.steps.map((s) => s.id), checks: plan.plan.gates.map((g) => g.id) },
+      target ?? process.cwd(), options.kinds, options.modelConfig, options.answers,
+    );
+    return { exitCode: result.verdict === 'PASS' ? 0 : 1, stdout: result.output, stderr: '' };
+  }
+
   const host = detectHostAgent(target);
   const modes = host.delegationModes;
   const mode: DelegationMode = modes.includes('file')
