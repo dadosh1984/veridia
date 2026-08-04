@@ -1,11 +1,11 @@
-import type { TaskType } from '../classify/types.js';
-import type { ClarifyingQuestion } from './types.js';
+import type { TaskType } from '../classify/types.js'
+import type { ClarifyingQuestion } from './types.js'
 
 const EXPECTED_OUTCOME: ClarifyingQuestion = {
   id: 'expected-outcome',
   prompt: 'What is the expected outcome?',
   options: ['A concrete deliverable', 'An answer or recommendation', 'A code change with tests', 'Undefined - explore'],
-};
+}
 
 const bank: Record<TaskType, ClarifyingQuestion[]> = {
   bugfix: [
@@ -75,8 +75,8 @@ const bank: Record<TaskType, ClarifyingQuestion[]> = {
       options: ['I have an idea', 'Help me brainstorm', 'Pick something sensible'],
     },
   ],
-};
+}
 
-export const QUESTION_BANK: Record<TaskType, ClarifyingQuestion[]> = bank;
+export const QUESTION_BANK: Record<TaskType, ClarifyingQuestion[]> = bank
 
-export const EXPECTED_OUTCOME_QUESTION: ClarifyingQuestion = EXPECTED_OUTCOME;
+export const EXPECTED_OUTCOME_QUESTION: ClarifyingQuestion = EXPECTED_OUTCOME

@@ -4,7 +4,7 @@ import { triage } from '../../triage/triage.js'
 import { jsonOut } from '../shared.js'
 
 export async function handle(task: string, opts: { target?: string; auto?: boolean }): Promise<void> {
-  let target = opts.target ? path.resolve(opts.target) : process.cwd()
+  const target = opts.target ? path.resolve(opts.target) : process.cwd()
   if (!task) {
     process.stderr.write('veridia: no task provided\n')
     process.exitCode = 1

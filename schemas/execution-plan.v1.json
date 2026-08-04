@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecutionPlan",
+  "protocol": "veridia/execution-plan/v1",
+  "type": "object",
+  "required": ["protocol", "task", "type", "level", "plan", "metadata"],
+  "properties": {
+    "protocol": { "type": "string", "const": "veridia/execution-plan/v1" },
+    "task": { "type": "string" },
+    "type": { "type": "string", "enum": ["bugfix", "refactor", "feature", "doc", "explore", "open"] },
+    "level": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "plan": {
+      "type": "object",
+      "required": ["depth", "tier", "steps", "gates"],
+      "properties": {
+        "depth": { "type": "string", "enum": ["full-tdd", "tdd-where-possible", "minimal", "just-do-it"] },
+        "tier": { "type": "string", "enum": ["cheapest", "mid", "any"] },
+        "steps": { "type": "array", "items": { "$ref": "#/definitions/Step" } },
+        "gates": { "type": "array", "items": { "$ref": "#/definitions/Gate" } }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["host", "generatedAt"],
+      "properties": {
+        "host": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "definitions": {
+    "Step": {
+      "type": "object",
+      "required": ["id", "action"],
+      "properties": {
+        "id": { "type": "string" },
+        "action": { "type": "string" },
+        "files": { "type": "array", "items": { "type": "string" } },
+        "gates": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Gate": {
+      "type": "object",
+      "required": ["id", "command", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "command": { "type": "string" },
+        "kind": { "type": "string", "enum": ["test-runner", "type-check", "lint", "ci", "test-content", "human-review"] }
+      }
+    }
+  }
+}

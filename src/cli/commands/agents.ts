@@ -1,4 +1,4 @@
-import { getAllAgents, formatInvocation } from '../../agent/agents.js'
+import { formatInvocation, getAllAgents } from '../../agent/agents.js'
 import { jsonOut } from '../shared.js'
 
 export function handle(opts: { list?: boolean }): void {

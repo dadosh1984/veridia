@@ -1,29 +1,27 @@
-import { verify } from '../../verify/verify.js'
+import type { OracleKind } from '../../assess/types.js'
 import { measureRecord } from '../../measure/measure.js'
 import { readSession, writeSession } from '../../session/session.js'
-import type { OracleKind } from '../../assess/types.js'
+import { verify } from '../../verify/verify.js'
 
 const CHECK_TO_KIND: Record<string, OracleKind> = {
   'run-tests': 'test-runner',
   'type-check': 'type-check',
   'human-review': 'human-review',
   'test-runner': 'test-runner',
-  'lint': 'lint',
-  'ci': 'ci',
+  lint: 'lint',
+  ci: 'ci',
   'test-content': 'test-content',
 }
 
 export function handle(): void {
   const session = readSession()
-  if (!session || !session.type || session.level === undefined || !session.plan) {
+  if (!session?.type || session.level === undefined || !session.plan) {
     process.stderr.write('veridia: incomplete session. Run session-classify, session-assess, session-route first.\n')
     process.exitCode = 1
     return
   }
   const target = process.cwd()
-  const kinds: OracleKind[] = session.plan.checks
-    .map((c) => CHECK_TO_KIND[c] ?? null)
-    .filter((k): k is OracleKind => k !== null)
+  const kinds: OracleKind[] = session.plan.checks.map((c) => CHECK_TO_KIND[c] ?? null).filter((k): k is OracleKind => k !== null)
   const verifyResult = verify(target, session.level, kinds)
   session.verdict = verifyResult.verdict
   session.step = 'done'

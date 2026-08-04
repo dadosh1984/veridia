@@ -1,9 +1,9 @@
-import type { Classification, TaskType } from './types.js';
-import type { VeridiaConfig } from '../config/config.js';
+import type { VeridiaConfig } from '../config/config.js'
+import type { Classification, TaskType } from './types.js'
 
 interface Rule {
-  type: TaskType;
-  patterns: RegExp[];
+  type: TaskType
+  patterns: RegExp[]
 }
 
 const RULES: Rule[] = [
@@ -27,37 +27,45 @@ const RULES: Rule[] = [
     type: 'explore',
     patterns: [/\bevaluate\b/, /\bexplore\b/, /\bresearch\b/, /\bcompare\b/, /\binvestigate\b/, /\boptions?\b/],
   },
-];
+]
 
 function buildRulesFromConfig(config: VeridiaConfig): Rule[] {
-  const rules: Rule[] = [];
+  const rules: Rule[] = []
   for (const [type, patternStrings] of Object.entries(config.classify.patterns)) {
     rules.push({
       type: type as TaskType,
       patterns: patternStrings.map((p) => new RegExp(p, 'i')),
-    });
+    })
   }
-  return rules;
+  return rules
 }
 
+/**
+ * Classify a task string into a TaskType by matching against keyword patterns.
+ * Returns the type with the highest pattern-match confidence, or 'open' with 0.2 confidence as fallback.
+ *
+ * @param task - The raw task description string to classify.
+ * @param config - Optional configuration with custom classification patterns.
+ * @returns A Classification with the best-matching type and confidence score.
+ */
 export function classify(task: string, config?: VeridiaConfig): Classification {
-  const lower = task.toLowerCase();
-  const rules = config ? buildRulesFromConfig(config) : RULES;
+  const lower = task.toLowerCase()
+  const rules = config ? buildRulesFromConfig(config) : RULES
 
-  let best: Classification | null = null;
+  let best: Classification | null = null
 
   for (const rule of rules) {
-    let hits = 0;
+    let hits = 0
     for (const pattern of rule.patterns) {
-      if (pattern.test(lower)) hits++;
+      if (pattern.test(lower)) hits++
     }
-    if (hits === 0) continue;
+    if (hits === 0) continue
 
-    const confidence = Math.min(1, hits / rule.patterns.length);
+    const confidence = Math.min(1, hits / rule.patterns.length)
     if (best === null || confidence > best.confidence) {
-      best = { type: rule.type, confidence };
+      best = { type: rule.type, confidence }
     }
   }
 
-  return best ?? { type: 'open', confidence: 0.2 };
+  return best ?? { type: 'open', confidence: 0.2 }
 }

@@ -1,11 +1,20 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { intro, outro, spinner, note, confirm, isCancel, cancel } from '@clack/prompts'
+import { cancel, confirm, intro, isCancel, log, note, outro, spinner } from '@clack/prompts'
 import { triage } from '../../triage/triage.js'
 
-export async function handle(task: string, opts: { target?: string; auto?: boolean; self?: boolean; ww?: boolean; change?: string }): Promise<void> {
+const _VERDICT_COLORS: Record<string, string> = {
+  PASS: 'PASS',
+  FAIL: 'FAIL',
+  HUMAN: 'HUMAN',
+}
+
+export async function handle(
+  task: string,
+  opts: { target?: string; auto?: boolean; self?: boolean; ww?: boolean; change?: string; json?: boolean },
+): Promise<void> {
   let target = opts.target ? path.resolve(opts.target) : process.cwd()
-  let auto = opts.auto ?? false
+  const auto = opts.auto ?? false
 
   if (opts.self) {
     target = process.cwd()
@@ -31,6 +40,12 @@ export async function handle(task: string, opts: { target?: string; auto?: boole
     return
   }
 
+  if (opts.json) {
+    const result = await triage(task, resolved, { auto })
+    process.stdout.write(`${JSON.stringify(result)}\n`)
+    return
+  }
+
   intro(`veridia run`)
 
   const spin = spinner()
@@ -46,8 +61,12 @@ export async function handle(task: string, opts: { target?: string; auto?: boole
 
   spin.stop('done')
 
-  note(JSON.stringify(stages.map((s) => `→ ${s.stage}${s.detail ? `: ${s.detail}` : ''}`).join('\n'), null, 2).replace(/^"|"$/g, ''), 'Progress')
+  log.step('Analysis complete')
+  for (const s of stages) {
+    log.message(`  → ${s.stage}${s.detail ? `: ${s.detail}` : ''}`)
+  }
 
+  const _verdictColor = result.verdict === 'PASS' ? 'green' : result.verdict === 'FAIL' ? 'red' : 'yellow'
   const lines = [
     `type       ${result.type.padEnd(12)} ${result.confidence.toFixed(2)}`,
     `level      ${result.level}`,

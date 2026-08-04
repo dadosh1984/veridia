@@ -3,7 +3,7 @@ import { readSession, writeSession } from '../../session/session.js'
 
 export async function handle(): Promise<void> {
   const session = readSession()
-  if (!session || !session.type || session.level === undefined) {
+  if (!session?.type || session.level === undefined) {
     process.stderr.write('veridia: session missing type or level. Run session-classify and session-assess first.\n')
     process.exitCode = 1
     return

@@ -1,4 +1,4 @@
-import { readSession, clearSession } from '../../session/session.js'
+import { clearSession, readSession } from '../../session/session.js'
 
 export function handle(): void {
   const session = readSession()

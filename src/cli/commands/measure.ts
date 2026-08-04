@@ -1,6 +1,6 @@
 import path from 'node:path'
+import { measureHistory, measureRecord } from '../../measure/measure.js'
 import type { Verdict } from '../../verify/types.js'
-import { measureRecord, measureHistory } from '../../measure/measure.js'
 import { jsonOut } from '../shared.js'
 
 export function handle(opts: Record<string, unknown>): void {

@@ -1,18 +1,25 @@
-import { join, relative } from 'node:path';
-import { collectFiles } from '../util/collect-files.js';
-import type { ReviewFile, ReviewInstruction } from './types.js';
-import { runAnalysis } from '../analyze/analyze.js';
-import type { AnalyzeResult } from '../analyze/types.js';
+import { join, relative } from 'node:path'
+import { runAnalysis } from '../analyze/analyze.js'
+import type { AnalyzeResult } from '../analyze/types.js'
+import { collectFiles } from '../util/collect-files.js'
+import type { ReviewFile, ReviewInstruction } from './types.js'
 
+/**
+ * Build review instructions for an AI agent to review source files in the target directory.
+ * Collects source files, runs static analysis, and returns structured review instructions.
+ *
+ * @param target - The directory path to review.
+ * @returns A ReviewInstruction with file list, patterns, output format, and analysis results.
+ */
 export function buildReviewInstructions(target: string): ReviewInstruction & { analysis: AnalyzeResult } {
-  const resolved = join(target);
-  const rawFiles: string[] = [];
-  collectFiles(resolved, resolved, rawFiles);
+  const resolved = join(target)
+  const rawFiles: string[] = []
+  collectFiles(resolved, resolved, rawFiles)
   const files: ReviewFile[] = rawFiles.map((f) => ({
     path: relative(resolved, f).replace(/\\/g, '/'),
     reason: 'source file',
-  }));
-  const analysis = runAnalysis(target);
+  }))
+  const analysis = runAnalysis(target)
 
   return {
     instruction: 'Review the following source files for bugs, security issues, code quality problems, and improvement suggestions.',
@@ -29,5 +36,5 @@ export function buildReviewInstructions(target: string): ReviewInstruction & { a
     ],
     outputFormat: 'For each file, list findings with severity (ERROR/WARNING/INFO), file path, line number, description, and suggested fix.',
     analysis,
-  };
+  }
 }

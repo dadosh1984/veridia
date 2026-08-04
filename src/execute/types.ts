@@ -1,50 +1,84 @@
-import type { TaskType } from '../classify/types.js';
-import type { VerifiabilityLevel, OracleKind } from '../assess/types.js';
-import type { OrchestrationDepth, ModelTier } from '../route/types.js';
+import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'
+import type { TaskType } from '../classify/types.js'
+import type { ModelTier, OrchestrationDepth } from '../route/types.js'
 
-export type DelegationMode = 'stdout' | 'file' | 'shell';
+/** How the execution plan is delegated to the host agent. */
+export type DelegationMode = 'stdout' | 'file' | 'shell'
 
+/** A single step in an execution plan. */
 export interface ExecutionStep {
-  id: string;
-  action: string;
-  files?: string[];
-  gates?: string[];
+  /** Unique identifier for the step. */
+  id: string
+  /** Human-readable description of the action to perform. */
+  action: string
+  /** Optional list of file paths relevant to this step. */
+  files?: string[]
+  /** Optional list of gate identifiers to run during this step. */
+  gates?: string[]
 }
 
+/** A verification gate that must pass for the plan to succeed. */
 export interface VerificationGate {
-  id: string;
-  command: string;
-  kind: OracleKind;
+  /** Unique identifier for the gate. */
+  id: string
+  /** The shell command to execute for this gate. */
+  command: string
+  /** The oracle kind this gate belongs to. */
+  kind: OracleKind
 }
 
+/** A complete execution plan for a veridia task. */
 export interface ExecutionPlan {
-  protocol: 'veridia/execution-plan/v1';
-  task: string;
-  type: TaskType;
-  level: VerifiabilityLevel;
+  /** Protocol identifier for the execution plan format. */
+  protocol: 'veridia/execution-plan/v1'
+  /** The original task description. */
+  task: string
+  /** The classified task type. */
+  type: TaskType
+  /** The assessed verifiability level. */
+  level: VerifiabilityLevel
+  /** The plan details. */
   plan: {
-    depth: OrchestrationDepth;
-    tier: ModelTier;
-    steps: ExecutionStep[];
-    gates: VerificationGate[];
-  };
+    /** The orchestration depth. */
+    depth: OrchestrationDepth
+    /** The model tier to use. */
+    tier: ModelTier
+    /** The ordered list of execution steps. */
+    steps: ExecutionStep[]
+    /** The verification gates to run. */
+    gates: VerificationGate[]
+  }
+  /** Metadata about the plan generation. */
   metadata: {
-    host: string;
-    generatedAt: string;
-  };
+    /** The detected host agent ID. */
+    host: string
+    /** ISO timestamp of when the plan was generated. */
+    generatedAt: string
+  }
 }
 
+/** Information about a detected host AI agent. */
 export interface HostAgentInfo {
-  id: string;
-  name: string;
-  delegationModes: DelegationMode[];
-  canWriteFiles: boolean;
-  canRunShell: boolean;
-  canCallModels: boolean;
+  /** Unique agent identifier. */
+  id: string
+  /** Human-readable agent name. */
+  name: string
+  /** The delegation modes this agent supports. */
+  delegationModes: DelegationMode[]
+  /** Whether the agent can write files. */
+  canWriteFiles: boolean
+  /** Whether the agent can run shell commands. */
+  canRunShell: boolean
+  /** Whether the agent can call AI models directly. */
+  canCallModels: boolean
 }
 
+/** The result of executing a plan or command. */
 export interface ExecuteResult {
-  exitCode: number;
-  stdout: string;
-  stderr: string;
+  /** The exit code (0 for success). */
+  exitCode: number
+  /** Standard output content. */
+  stdout: string
+  /** Standard error content. */
+  stderr: string
 }

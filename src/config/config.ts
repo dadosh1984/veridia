@@ -1,28 +1,46 @@
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
+/** The veridia configuration schema. */
 export interface VeridiaConfig {
+  /** Classification pattern overrides per task type. */
   classify: {
-    patterns: Record<string, string[]>;
-  };
+    /** Map of task type to array of regex pattern strings. */
+    patterns: Record<string, string[]>
+  }
+  /** Probe definitions for detecting verification oracles. */
   probes: {
-    'test-runner': { files: string[]; scripts: string[] };
-    'type-check': { files: string[]; scripts: string[] };
-    lint: { files: string[]; scripts: string[] };
-    ci: { files: string[]; dirs: string[]; dirExts: string[] };
-  };
+    /** Test runner probe configuration. */
+    'test-runner': { files: string[]; scripts: string[] }
+    /** Type checker probe configuration. */
+    'type-check': { files: string[]; scripts: string[] }
+    /** Linter probe configuration. */
+    lint: { files: string[]; scripts: string[] }
+    /** CI probe configuration. */
+    ci: { files: string[]; dirs: string[]; dirExts: string[] }
+  }
+  /** Optional AI model configuration. */
   model?: {
-    provider: 'stdio' | 'api';
-    model: string;
-    apiKey?: string;
-    temperature?: number;
-    maxTokens?: number;
-    command?: string;
-    apiUrl?: string;
-  };
-  weights?: Record<string, number>;
+    /** The provider type. */
+    provider: 'stdio' | 'api'
+    /** The model identifier. */
+    model: string
+    /** Optional API key. */
+    apiKey?: string
+    /** Optional temperature setting. */
+    temperature?: number
+    /** Optional max tokens. */
+    maxTokens?: number
+    /** The command for stdio-based providers. */
+    command?: string
+    /** The API URL for API-based providers. */
+    apiUrl?: string
+  }
+  /** Optional custom weight overrides per oracle kind. */
+  weights?: Record<string, number>
 }
 
+/** The default veridia configuration with built-in classification patterns and probe definitions. */
 export const DEFAULT_CONFIG: VeridiaConfig = {
   classify: {
     patterns: {
@@ -35,7 +53,18 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
   },
   probes: {
     'test-runner': {
-      files: ['vitest.config.ts', 'vitest.config.js', 'vitest.config.mts', 'vitest.config.mjs', 'jest.config.ts', 'jest.config.js', 'jest.config.mjs', 'playwright.config.ts', '.mocharc.json', 'karma.conf.js'],
+      files: [
+        'vitest.config.ts',
+        'vitest.config.js',
+        'vitest.config.mts',
+        'vitest.config.mjs',
+        'jest.config.ts',
+        'jest.config.js',
+        'jest.config.mjs',
+        'playwright.config.ts',
+        '.mocharc.json',
+        'karma.conf.js',
+      ],
       scripts: ['test'],
     },
     'type-check': {
@@ -52,41 +81,57 @@ export const DEFAULT_CONFIG: VeridiaConfig = {
       dirExts: ['.yml', '.yaml'],
     },
   },
-};
-
-export function loadConfig(target: string): VeridiaConfig {
-  const configPath = join(target, '.veridia', 'config.json');
-  if (existsSync(configPath)) {
-    try {
-      const raw = readFileSync(configPath, 'utf8');
-      const user = JSON.parse(raw) as Partial<VeridiaConfig>;
-      return mergeConfig(DEFAULT_CONFIG, user);
-    } catch {
-      return DEFAULT_CONFIG;
-    }
-  }
-  return DEFAULT_CONFIG;
 }
 
-export function getModelConfig(config: VeridiaConfig): { provider: 'stdio' | 'api'; model: string; apiKey?: string; temperature?: number; maxTokens?: number; command?: string; apiUrl?: string } | undefined {
-  if (!config.model) return undefined;
-  const apiKey = config.model.apiKey || process.env.VERIDIA_API_KEY;
-  return { ...config.model, apiKey };
+/**
+ * Load the veridia configuration from .veridia/config.json in the target directory.
+ * Falls back to DEFAULT_CONFIG if the file does not exist or is invalid.
+ *
+ * @param target - The project root directory.
+ * @returns The merged VeridiaConfig (user config merged over defaults).
+ */
+export function loadConfig(target: string): VeridiaConfig {
+  const configPath = join(target, '.veridia', 'config.json')
+  if (existsSync(configPath)) {
+    try {
+      const raw = readFileSync(configPath, 'utf8')
+      const user = JSON.parse(raw) as Partial<VeridiaConfig>
+      return mergeConfig(DEFAULT_CONFIG, user)
+    } catch {
+      return DEFAULT_CONFIG
+    }
+  }
+  return DEFAULT_CONFIG
+}
+
+/**
+ * Extract the model configuration from a VeridiaConfig, resolving the API key
+ * from the config or the VERIDIA_API_KEY environment variable.
+ *
+ * @param config - The veridia configuration.
+ * @returns The model config object, or undefined if no model is configured.
+ */
+export function getModelConfig(
+  config: VeridiaConfig,
+): { provider: 'stdio' | 'api'; model: string; apiKey?: string; temperature?: number; maxTokens?: number; command?: string; apiUrl?: string } | undefined {
+  if (!config.model) return undefined
+  const apiKey = config.model.apiKey || process.env.VERIDIA_API_KEY
+  return { ...config.model, apiKey }
 }
 
 function mergeConfig(base: VeridiaConfig, user: Partial<VeridiaConfig>): VeridiaConfig {
-  const result = { ...base };
+  const result = { ...base }
   if (user.classify?.patterns) {
-    result.classify = { patterns: { ...base.classify.patterns, ...user.classify.patterns } };
+    result.classify = { patterns: { ...base.classify.patterns, ...user.classify.patterns } }
   }
   if (user.probes) {
-    result.probes = { ...base.probes, ...user.probes };
+    result.probes = { ...base.probes, ...user.probes }
   }
   if (user.model) {
-    result.model = { ...user.model };
+    result.model = { ...user.model }
   }
   if (user.weights) {
-    result.weights = { ...user.weights };
+    result.weights = { ...user.weights }
   }
-  return result;
+  return result
 }
