@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { join, delimiter } from 'node:path';
 import { splitCommand } from '../util/split-command.js';
+import { execFileWithShim } from '../util/exec-shim.js';
 import type { ExecutionPlan, DelegationMode, ExecuteResult } from './types.js';
 import { detectHostAgent } from './detect.js';
 import type { ModelConfig } from './orchestrate.js';
@@ -38,7 +38,8 @@ export function delegateShell(plan: ExecutionPlan, target?: string): ExecuteResu
     const args = splitCommand(gate.command);
     if (args.length === 0) continue;
     try {
-      execFileSync(args[0], args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8' });
+      const env = { ...process.env, PATH: `${join(cwd, 'node_modules', '.bin')}${delimiter}${process.env.PATH ?? ''}` };
+      execFileWithShim(args[0], args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8', env });
     } catch (err) {
       const e = err as { status?: number | null; stdout?: string; stderr?: string };
       return {

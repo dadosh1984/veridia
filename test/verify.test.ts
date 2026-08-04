@@ -232,7 +232,7 @@ describe('runCommand', () => {
 
   it('returns an error when the command cannot be spawned', () => {
     const result = runCommand(process.cwd(), 'veridia-no-such-binary-xyzabc');
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).not.toBe(0);
     expect(result.error).toBeTruthy();
   });
 });

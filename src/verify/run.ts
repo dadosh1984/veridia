@@ -1,5 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { splitCommand } from '../util/split-command.js';
+import { execFileWithShim } from '../util/exec-shim.js';
+import path from 'node:path';
 
 export interface RunResult {
   exitCode: number;
@@ -15,8 +16,9 @@ export function runCommand(cwd: string, command: string): RunResult {
   if (args.length === 0) return { exitCode: 1 };
   const cmd = args[0];
   const cmdArgs = args.slice(1);
+  const env = { ...process.env, PATH: `${path.join(cwd, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH ?? ''}` };
   try {
-    execFileSync(cmd, cmdArgs, { cwd, timeout: TIMEOUT_MS, encoding: 'utf8' });
+    execFileWithShim(cmd, cmdArgs, { cwd, timeout: TIMEOUT_MS, encoding: 'utf8', env });
     return { exitCode: 0 };
   } catch (err) {
     const e = err as { status?: number | null; signal?: string; stderr?: string; code?: string; message?: string };
