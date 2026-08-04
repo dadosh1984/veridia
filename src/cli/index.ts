@@ -13,6 +13,7 @@ import * as initCmd from './commands/init.js'
 import * as learnCmd from './commands/learn.js'
 import * as measureCmd from './commands/measure.js'
 import * as planCmd from './commands/plan.js'
+import * as prCmd from './commands/pr.js'
 import * as reportCmd from './commands/report.js'
 import * as reviewCmd from './commands/review.js'
 import * as routeCmd from './commands/route.js'
@@ -116,6 +117,13 @@ cli
   .option('--target <path>', 'Target directory')
   .option('--json', 'Output as JSON')
   .action((opts: { target?: string; json?: boolean }) => fixCmd.handle(opts))
+
+cli
+  .command('pr', 'Analyze a pull request and run triage')
+  .option('--target <path>', 'Target directory')
+  .option('--base <branch>', 'Base branch for comparison')
+  .option('--json', 'Output as JSON')
+  .action((opts: { target?: string; base?: string; json?: boolean }) => prCmd.handle(opts))
 
 cli
   .command('init', 'Initialize veridia config and agent command files')
