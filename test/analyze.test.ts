@@ -71,6 +71,7 @@ describe('checkMissingTryCatch', () => {
 
 describe('checkConsoleLog', () => {
   it('detects console.log', () => {
+    const findings = checkConsoleLog('test.ts', 'console.log("hello")')
     expect(findings.length).toBeGreaterThan(0)
     expect(findings[0].severity).toBe('INFO')
   })

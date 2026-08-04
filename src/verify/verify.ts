@@ -3,6 +3,23 @@ import { resolveCommands } from './resolve.js'
 import { type RunFn, runCommand } from './run.js'
 import type { Check, Verdict, VerifyResult } from './types.js'
 import { baseWeight, calibrateWeight, isTestsWeak } from './weight.js'
+import { computeSensitivity } from './mutate.js'
+
+/** Dependencies for the verify function, allowing injection of custom run logic and calibration data. */
+export interface VerifyDeps {
+  /** Custom run function (defaults to runCommand). */
+  run?: RunFn
+  /** If true, simulate verification without actually running commands. */
+  dryRun?: boolean
+  /** Sensitivity values per oracle kind for weight calibration. */
+  sensitivity?: Record<string, number>
+  /** Precision values per oracle kind for weight calibration. */
+  precision?: Record<string, number>
+  /** Custom weight overrides per oracle kind. */
+  weights?: Record<string, number>
+  /** If true, run mutation sensitivity analysis on test files. */
+  mutationTest?: boolean
+}
 
 /** Dependencies for the verify function, allowing injection of custom run logic and calibration data. */
 export interface VerifyDeps {
@@ -69,8 +86,22 @@ export function verify(target: string, level: VerifiabilityLevel, kinds: OracleK
     }
     const weak = kind === 'test-runner' && isTestsWeak(target)
     const bw = baseWeight(kind, deps.weights)
-    const sens = deps.sensitivity?.[kind]
-    const prec = deps.precision?.[kind]
+    let sens = deps.sensitivity?.[kind]
+    let prec = deps.precision?.[kind]
+
+    if (deps.mutationTest && kind === 'test-runner' && command) {
+      try {
+        const result = run(target, command)
+        const output = `${result.exitCode}`
+        sens = computeSensitivity(output, (mutated: string) => {
+          const r = run(target, mutated)
+          return r.exitCode
+        })
+      } catch {
+        // mutation test failed silently
+      }
+    }
+
     const weight = sens !== undefined && prec !== undefined ? calibrateWeight(bw, sens, prec) : bw
     return { kind, command, weight, weak, passed: exitCode === 0, error }
   })
