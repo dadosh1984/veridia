@@ -36,6 +36,8 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -56,8 +58,11 @@ jobs:
           echo "local=$LOCAL published=$PUBLISHED"
           if [ "$LOCAL" != "$PUBLISHED" ]; then
             npm publish --access public
+            git tag "v$LOCAL"
+            git push origin "v$LOCAL"
+            gh release create "v$LOCAL" --title "v$LOCAL" --generate-notes
           else
-            echo "Version $LOCAL already published on npm; skipping publish."
+            echo "Version $LOCAL already published on npm; skipping publish, tag, and release."
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
