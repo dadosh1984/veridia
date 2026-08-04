@@ -1,5 +1,17 @@
 # veridia
 
+## 0.7.0
+
+### Minor Changes
+
+- 37a89dd: feat: veridia ci � generate CI config (GitHub Actions, GitLab CI, CircleCI)
+  feat: veridia benchmark � performance benchmarking
+  feat: veridia pr � analyze pull requests with triage
+  feat: veridia report � Markdown/HTML quality report
+  feat: self-dogfooding in CI
+  feat: mutation testing in verify pipeline
+  feat: veridia fix � auto-fix console.log and TODO
+
 ## 0.6.0
 
 ### Minor Changes
