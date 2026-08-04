@@ -98,11 +98,13 @@ export function learn(deps: HistoryDeps = {}): LearnResult {
   }
 
   const recommendations: string[] = []
+  const patternsToAdjust: string[] = []
   for (const [type, accuracy] of Object.entries(classificationAccuracy)) {
     if (accuracy < 0.7) {
       recommendations.push(
         `Classification accuracy for '${type}' is low (${(accuracy * 100).toFixed(0)}%). Consider adjusting patterns in .veridia/config.json.`,
       )
+      patternsToAdjust.push(type)
     }
   }
   for (const [level, rate] of Object.entries(successRateByLevel)) {

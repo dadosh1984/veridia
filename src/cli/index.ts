@@ -3,7 +3,9 @@ import { cac } from 'cac'
 import * as agentsCmd from './commands/agents.js'
 import * as askCmd from './commands/ask.js'
 import * as assessCmd from './commands/assess.js'
+import * as benchmarkCmd from './commands/benchmark.js'
 import * as classifyCmd from './commands/classify.js'
+import * as ciCmd from './commands/ci.js'
 import * as completionCmd from './commands/completion.js'
 import * as dashboardCmd from './commands/dashboard.js'
 import * as executeCmd from './commands/execute.js'
@@ -117,6 +119,20 @@ cli
   .option('--target <path>', 'Target directory')
   .option('--json', 'Output as JSON')
   .action((opts: { target?: string; json?: boolean }) => fixCmd.handle(opts))
+
+cli
+  .command('ci', 'Generate CI configuration')
+  .option('--provider <provider>', 'CI provider: github-actions, gitlab-ci, circleci')
+  .option('--output <path>', 'Output file path')
+  .option('--json', 'Output as JSON')
+  .action((opts: { provider?: string; output?: string; json?: boolean }) => ciCmd.handle(opts))
+
+cli
+  .command('benchmark', 'Run performance benchmarks')
+  .option('--target <path>', 'Target directory')
+  .option('--runs <n>', 'Number of runs per test')
+  .option('--json', 'Output as JSON')
+  .action((opts: { target?: string; runs?: string; json?: boolean }) => benchmarkCmd.handle(opts))
 
 cli
   .command('pr', 'Analyze a pull request and run triage')
