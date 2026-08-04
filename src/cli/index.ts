@@ -16,6 +16,13 @@ import * as generateCmd from './commands/generate.js';
 import * as learnCmd from './commands/learn.js';
 import * as runCmd from './commands/run.js';
 import * as triageCmd from './commands/triage.js';
+import * as sessionClassifyCmd from './commands/session-classify.js';
+import * as sessionAssessCmd from './commands/session-assess.js';
+import * as sessionRouteCmd from './commands/session-route.js';
+import * as sessionAskCmd from './commands/session-ask.js';
+import * as sessionDoCmd from './commands/session-do.js';
+import * as sessionStatusCmd from './commands/session-status.js';
+import * as sessionArchiveCmd from './commands/session-archive.js';
 
 const USAGE = `veridia - model-agnostic quality through mechanics
 
@@ -50,6 +57,15 @@ Usage:
                             Analyze history and produce recommendations
   veridia run <task> [--target <path>] [--auto] [--self] [--ww --change <name>]
                             Run the full triage loop with human-readable output
+  veridia session-classify <task>
+                            Classify task and write to session
+  veridia session-assess [--target <path>]
+                            Assess target and write to session
+  veridia session-route     Build plan from session
+  veridia session-ask       Ask questions from session
+  veridia session-do        Execute plan from session
+  veridia session-status    Show current session state
+  veridia session-archive   Archive session to history
 
 Options:
   -h, --help     Show this help message and exit
@@ -71,6 +87,13 @@ const COMMANDS: Record<string, (args: string[]) => void | Promise<void>> = {
   generate: generateCmd.handle,
   learn: learnCmd.handle,
   run: runCmd.handle,
+  'session-classify': sessionClassifyCmd.handle,
+  'session-assess': sessionAssessCmd.handle,
+  'session-route': sessionRouteCmd.handle,
+  'session-ask': sessionAskCmd.handle,
+  'session-do': sessionDoCmd.handle,
+  'session-status': sessionStatusCmd.handle,
+  'session-archive': sessionArchiveCmd.handle,
 };
 
 async function main(): Promise<void> {

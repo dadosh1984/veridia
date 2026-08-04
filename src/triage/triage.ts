@@ -11,6 +11,8 @@ import { computePrecision } from '../measure/learn.js';
 import { buildExecutionPlan } from '../execute/plan.js';
 import { delegate } from '../execute/delegate.js';
 import { loadConfig, getModelConfig } from '../config/config.js';
+import { readSession, writeSession, clearSession } from '../session/session.js';
+import type { Session } from '../session/types.js';
 import type { TaskType } from '../classify/types.js';
 import type { VerifiabilityLevel } from '../assess/types.js';
 import type { Verdict } from '../verify/types.js';
@@ -56,12 +58,38 @@ export interface TriageDeps {
 
 export async function triage(task: string, target: string = process.cwd(), options?: TriageOptions, deps?: TriageDeps): Promise<TriageResult> {
   const config = loadConfig(target);
-  const classification = classify(task, config);
-  const assessment = assess(target, undefined, undefined, config);
-  const plan = buildPlan(classification.type, assessment.level);
+  const existing = readSession(target);
+
+  let classification: ReturnType<typeof classify>;
+  let assessment: ReturnType<typeof assess>;
+  let plan: ReturnType<typeof buildPlan>;
+  let askResult: AskResult;
+  let kinds: string[];
+
+  if (existing && existing.step !== 'done' && existing.task === task) {
+    classification = { type: existing.type ?? 'open', confidence: existing.confidence ?? 0 };
+    assessment = { level: existing.level ?? 1, oracles: [] };
+    plan = { depth: existing.plan?.depth ?? 'minimal', tier: existing.plan?.tier ?? 'cheapest', trust: 'human', steps: existing.plan?.steps ?? [], checks: existing.plan?.checks ?? [] };
+    kinds = [];
+    askResult = { questions: [], answers: existing.answers };
+  } else {
+    clearSession(target);
+    classification = classify(task, config);
+    assessment = assess(target, undefined, undefined, config);
+    plan = buildPlan(classification.type, assessment.level);
+    kinds = assessment.oracles.map((o) => o.kind);
+    askResult = { questions: [] };
+
+    writeSession({ task, type: classification.type, confidence: classification.confidence, step: 'assess' }, target);
+    writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, step: 'route' }, target);
+    writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks }, step: 'ask' }, target);
+  }
+
   const askFn = deps?.ask ?? askInteractive;
-  const askResult = await askFn(classification.type, assessment.level, options?.auto);
-  const kinds = assessment.oracles.map((o) => o.kind);
+  if (!existing || existing.step === 'ask' || existing.step === 'classify' || existing.step === 'assess' || existing.step === 'route') {
+    askResult = await askFn(classification.type, assessment.level, options?.auto);
+    writeSession({ task, type: classification.type, confidence: classification.confidence, level: assessment.level, plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks }, answers: askResult.answers, step: 'do' }, target);
+  }
 
   const execPlan = buildExecutionPlan(task, classification.type, assessment.level, plan, undefined, target);
   const modelConfig = getModelConfig(config);
