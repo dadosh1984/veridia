@@ -66,7 +66,7 @@ jobs:
           PUBLISHED="$(npm view veridia version 2>/dev/null || echo '')"
           echo "local=$LOCAL published=$PUBLISHED"
           if [ "$LOCAL" != "$PUBLISHED" ]; then
-            npm publish --access public
+            npm publish --provenance --access public
             git tag "v$LOCAL"
             git push origin "v$LOCAL"
             gh release create "v$LOCAL" --title "v$LOCAL" --generate-notes

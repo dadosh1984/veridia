@@ -1,5 +1,9 @@
 # veridia
 
+[![CI](https://github.com/dadosh1984/veridia/actions/workflows/ci.yml/badge.svg)](https://github.com/dadosh1984/veridia/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/veridia.svg)](https://www.npmjs.com/package/veridia)
+[![npm downloads](https://img.shields.io/npm/dm/veridia.svg)](https://www.npmjs.com/package/veridia)
+
 **Model-agnostic quality through mechanics, not through the model.**
 
 veridia is a personal "know-how" project. It is **not** a fork of warpweave/OpenSpec
