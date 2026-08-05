@@ -11,6 +11,8 @@ export interface VerifyDeps {
   run?: RunFn
   /** If true, simulate verification without actually running commands. */
   dryRun?: boolean
+  /** If true, stream gate stderr in real-time. */
+  streamOutput?: boolean
   /** Sensitivity values per oracle kind for weight calibration. */
   sensitivity?: Record<string, number>
   /** Precision values per oracle kind for weight calibration. */
@@ -62,7 +64,7 @@ export function verify(target: string, level: VerifiabilityLevel, kinds: OracleK
     let error: string | undefined
     let capturedStdout: string | undefined
     try {
-      const result = run(target, command)
+      const result = run(target, command, { streamOutput: deps.streamOutput })
       exitCode = result.exitCode
       error = result.error
       capturedStdout = result.stdout

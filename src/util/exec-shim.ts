@@ -2,6 +2,12 @@ import { type SpawnSyncOptions, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { delimiter, join, sep } from 'node:path'
 
+/** Extended spawn options with streaming support. */
+export interface ExecShimOptions extends SpawnSyncOptions {
+  /** If true, inherit stderr from the parent process for real-time output. */
+  streamOutput?: boolean
+}
+
 /**
  * Escape a single argument for cmd.exe: wrap in double quotes and escape
  * embedded double quotes by doubling them.
@@ -58,21 +64,23 @@ function resolveShim(cmd: string, cwd?: string): string | undefined {
  * @returns The captured stdout of the child process.
  * @throws If the command fails or exits with a non-zero code.
  */
-export function execFileWithShim(cmd: string, args: string[], options: SpawnSyncOptions = {}): string {
+export function execFileWithShim(cmd: string, args: string[], options: ExecShimOptions = {}): string {
+  const { streamOutput, ...spawnOptions } = options
+  const stdio: ['ignore', 'pipe', 'pipe'] | ['ignore', 'inherit', 'pipe'] = streamOutput ? ['ignore', 'inherit', 'pipe'] : ['ignore', 'pipe', 'pipe']
   let result: ReturnType<typeof spawnSync>
   try {
-    result = spawnSync(cmd, args, { ...options, stdio: ['ignore', 'pipe', 'pipe'] })
+    result = spawnSync(cmd, args, { ...spawnOptions, stdio })
   } catch (err) {
     if (process.platform === 'win32') {
-      const resolved = resolveShim(cmd, options.cwd as string | undefined)
+      const resolved = resolveShim(cmd, spawnOptions.cwd as string | undefined)
       if (resolved) {
         const needsShell = /\.(cmd|bat)$/i.test(resolved)
         let shimResult: ReturnType<typeof spawnSync>
         if (needsShell) {
           const cmdLine = `"${resolved}" ${args.map(escapeWinArg).join(' ')}`
-          shimResult = spawnSync(cmdLine, [], { ...options, shell: true, stdio: ['ignore', 'pipe', 'pipe'] })
+          shimResult = spawnSync(cmdLine, [], { ...spawnOptions, shell: true, stdio })
         } else {
-          shimResult = spawnSync(resolved, args, { ...options, shell: false, stdio: ['ignore', 'pipe', 'pipe'] })
+          shimResult = spawnSync(resolved, args, { ...spawnOptions, shell: false, stdio })
         }
         if (shimResult.error) throw shimResult.error
         const code = shimResult.status ?? 1
@@ -89,15 +97,15 @@ export function execFileWithShim(cmd: string, args: string[], options: SpawnSync
     throw err
   }
   if (result.error && process.platform === 'win32' && ['ENOENT', 'EINVAL', 'EFTYPE'].includes((result.error as NodeJS.ErrnoException).code ?? '')) {
-    const resolved = resolveShim(cmd, options.cwd as string | undefined)
+    const resolved = resolveShim(cmd, spawnOptions.cwd as string | undefined)
     if (!resolved) throw result.error
     const needsShell = /\.(cmd|bat)$/i.test(resolved)
     let shimResult: ReturnType<typeof spawnSync>
     if (needsShell) {
       const cmdLine = `"${resolved}" ${args.map(escapeWinArg).join(' ')}`
-      shimResult = spawnSync(cmdLine, [], { ...options, shell: true, stdio: ['ignore', 'pipe', 'pipe'] })
+      shimResult = spawnSync(cmdLine, [], { ...spawnOptions, shell: true, stdio })
     } else {
-      shimResult = spawnSync(resolved, args, { ...options, shell: false, stdio: ['ignore', 'pipe', 'pipe'] })
+      shimResult = spawnSync(resolved, args, { ...spawnOptions, shell: false, stdio })
     }
     if (shimResult.error) throw shimResult.error
     const code = shimResult.status ?? 1

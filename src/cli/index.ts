@@ -84,7 +84,8 @@ cli
   .option('--target <path>', 'Target directory')
   .option('--type <type>', 'Task type')
   .option('--level <level>', 'Verifiability level')
-  .action((opts: { target: string; type: string; level: string }) => verifyCmd.handle(opts))
+  .option('--verbose', 'Stream gate output in real-time')
+  .action((opts: { target: string; type: string; level: string; verbose?: boolean }) => verifyCmd.handle(opts))
 
 cli
   .command('measure', 'Record a run outcome or print history')
@@ -202,7 +203,8 @@ cli
   .option('--change <name>', 'Change name to develop')
   .option('--self', 'Target self (develop veridia itself)')
   .option('--target <path>', 'Target directory')
-  .action((opts: { change?: string; self?: boolean; target?: string }) => developCmd.handle(opts.change ?? '', opts))
+  .option('--verbose', 'Stream gate output in real-time')
+  .action((opts: { change?: string; self?: boolean; target?: string; verbose?: boolean }) => developCmd.handle(opts.change ?? '', opts))
 
 cli
   .command('[task]', 'Run the full triage loop on a task string (shorthand)')

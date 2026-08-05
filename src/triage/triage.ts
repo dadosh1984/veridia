@@ -70,6 +70,8 @@ function calculateDrift(verdict: Verdict, target: string): string {
 export interface TriageOptions {
   /** If true, skip interactive prompts. */
   auto?: boolean
+  /** If true, stream gate stderr in real-time. */
+  streamOutput?: boolean
   /** Optional progress callback for reporting stage updates. */
   progress?: (stage: string, detail?: string) => void
 }
@@ -180,7 +182,7 @@ export async function triage(task: string, target: string = process.cwd(), optio
   const historyEntries = readHistory({ root: target })
   const precision = computePrecision(historyEntries)
 
-  const verifyResult = verify(target, assessment.level, kinds, { precision, weights: config.weights })
+  const verifyResult = verify(target, assessment.level, kinds, { precision, weights: config.weights, streamOutput: options?.streamOutput })
   progress?.('verify', verifyResult.verdict)
   const drift = calculateDrift(verifyResult.verdict, target)
 

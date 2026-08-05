@@ -11,7 +11,7 @@ const _VERDICT_COLORS: Record<string, string> = {
 
 export async function handle(
   task: string,
-  opts: { target?: string; auto?: boolean; self?: boolean; ww?: boolean; change?: string; json?: boolean },
+  opts: { target?: string; auto?: boolean; self?: boolean; ww?: boolean; change?: string; json?: boolean; verbose?: boolean },
 ): Promise<void> {
   let target = opts.target ? path.resolve(opts.target) : process.cwd()
   const auto = opts.auto ?? false
@@ -41,7 +41,7 @@ export async function handle(
   }
 
   if (opts.json) {
-    const result = await triage(task, resolved, { auto })
+    const result = await triage(task, resolved, { auto, streamOutput: opts.verbose })
     process.stdout.write(`${JSON.stringify(result)}\n`)
     process.exitCode = result.verdict === 'FAIL' ? 1 : 0
     return
@@ -54,6 +54,7 @@ export async function handle(
 
   const result = await triage(task, resolved, {
     auto,
+    streamOutput: opts.verbose,
     progress: (stage, detail) => {
       stages.push({ stage, detail })
       spin.message(`${stage}${detail ? `: ${detail}` : ''}`)

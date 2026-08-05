@@ -3,7 +3,7 @@ import path from 'node:path'
 import { triage } from '../../triage/triage.js'
 import { jsonOut } from '../shared.js'
 
-export async function handle(changeName: string, opts: { target?: string; self?: boolean }): Promise<void> {
+export async function handle(changeName: string, opts: { target?: string; self?: boolean; verbose?: boolean }): Promise<void> {
   if (!changeName && !opts.self) {
     process.stderr.write('veridia: develop requires --change <name> or --self\n')
     process.exitCode = 1
@@ -33,7 +33,7 @@ export async function handle(changeName: string, opts: { target?: string; self?:
         return lines[0] || changeName
       })()
 
-  const result = await triage(task, targetDir, { auto: true })
+  const result = await triage(task, targetDir, { auto: true, streamOutput: opts.verbose })
 
   jsonOut({
     verdict: result.verdict,

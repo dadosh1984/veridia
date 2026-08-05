@@ -5,7 +5,7 @@ import type { VerifiabilityLevel } from '../../assess/types.js'
 import { verify } from '../../verify/verify.js'
 import { jsonOut, validateLevel, validateType } from '../shared.js'
 
-export function handle(opts: { target: string; type: string; level: string | number; dryRun?: boolean }): void {
+export function handle(opts: { target: string; type: string; level: string | number; dryRun?: boolean; verbose?: boolean }): void {
   const typeErr = validateType(opts.type)
   if (typeErr) {
     process.stderr.write(`veridia: verify: ${typeErr}\n`)
@@ -25,7 +25,7 @@ export function handle(opts: { target: string; type: string; level: string | num
     return
   }
   const kinds = probeOracles(resolved, realFs).map((o) => o.kind)
-  const result = verify(resolved, Number(opts.level) as VerifiabilityLevel, kinds, { dryRun: opts.dryRun })
+  const result = verify(resolved, Number(opts.level) as VerifiabilityLevel, kinds, { dryRun: opts.dryRun, streamOutput: opts.verbose })
   jsonOut({ checks: result.checks, verdict: result.verdict })
   process.exitCode = result.verdict === 'FAIL' ? 1 : 0
 }
