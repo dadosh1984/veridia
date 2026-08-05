@@ -67,4 +67,4 @@ jobs:
             echo "Version $LOCAL already published on npm; skipping publish, tag, and release."
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NMP_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
