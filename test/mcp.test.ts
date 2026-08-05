@@ -62,4 +62,45 @@ describe('MCP stdio transport', () => {
     const response = JSON.parse(lines[lines.length - 1]) as { result?: { content?: { text: string }[] } }
     expect(response.result?.content?.[0]?.text).toBeDefined()
   })
+
+  it('tool list contains all expected veridia_* tools', () => {
+    const input = `${[
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '1.0' } },
+      }),
+      JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
+      JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }),
+    ].join('\n')}\n`
+
+    const proc = spawnSync(process.execPath, [mcpEntry], {
+      encoding: 'utf8',
+      input,
+      env: { ...process.env, VERIDIA_MCP: '1' },
+    })
+
+    expect(proc.status).toBe(0)
+    const lines = (proc.stdout ?? '').trim().split('\n')
+    const listResponse = JSON.parse(lines[lines.length - 1]) as { result?: { tools?: { name: string }[] } }
+    const toolNames = listResponse.result?.tools?.map((t) => t.name) ?? []
+    expect(toolNames).toContain('veridia_classify')
+    expect(toolNames).toContain('veridia_assess')
+    expect(toolNames).toContain('veridia_plan')
+    expect(toolNames).toContain('veridia_verify')
+    expect(toolNames).toContain('veridia_learn')
+    expect(toolNames).toContain('veridia_route')
+    expect(toolNames).toContain('veridia_ask')
+    expect(toolNames).toContain('veridia_measure')
+    expect(toolNames).toContain('veridia_report')
+    expect(toolNames).toContain('veridia_review')
+    expect(toolNames).toContain('veridia_session_classify')
+    expect(toolNames).toContain('veridia_session_assess')
+    expect(toolNames).toContain('veridia_session_route')
+    expect(toolNames).toContain('veridia_session_ask')
+    expect(toolNames).toContain('veridia_session_do')
+    expect(toolNames).toContain('veridia_session_status')
+    expect(toolNames).toContain('veridia_session_archive')
+  })
 })
