@@ -1,8 +1,8 @@
 # veridia
 
 [![CI](https://github.com/dadosh1984/veridia/actions/workflows/ci.yml/badge.svg)](https://github.com/dadosh1984/veridia/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/veridia.svg)](https://www.npmjs.com/package/veridia)
-[![npm downloads](https://img.shields.io/npm/dm/veridia.svg)](https://www.npmjs.com/package/veridia)
+[![npm version](https://img.shields.io/npm/v/veridia.svg?cacheSeconds=3600)](https://www.npmjs.com/package/veridia)
+[![npm downloads](https://img.shields.io/npm/dm/veridia.svg?cacheSeconds=3600)](https://www.npmjs.com/package/veridia)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Model-agnostic quality through mechanics, not through the model.**
