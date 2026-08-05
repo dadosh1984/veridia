@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { cancel, intro, isCancel, multiselect, note, outro, select, spinner, text } from '@clack/prompts'
 import { getAgent, getAllAgents } from '../../agent/agents.js'
@@ -8,6 +7,7 @@ import { DEFAULT_CONFIG } from '../../config/config.js'
 import { generateCommands } from '../../generate/generate.js'
 import { installSkills } from '../../generate/skills.js'
 import { shouldPrompt } from '../../util/interactive.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 const STACK_OPTIONS = [

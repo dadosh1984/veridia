@@ -1,8 +1,8 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { probeOracles, realFs } from '../../assess/probe.js'
 import type { VerifiabilityLevel } from '../../assess/types.js'
+import { log as vlog } from '../../util/log.js'
 import { verify } from '../../verify/verify.js'
 import { jsonOut, validateLevel, validateType } from '../shared.js'
 

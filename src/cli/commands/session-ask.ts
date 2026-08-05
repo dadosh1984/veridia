@@ -1,6 +1,6 @@
 import { askInteractive } from '../../ask/ask.js'
-import { log as vlog } from '../../util/log.js'
 import { readSession, writeSession } from '../../session/session.js'
+import { log as vlog } from '../../util/log.js'
 
 export async function handle(): Promise<void> {
   const session = readSession()

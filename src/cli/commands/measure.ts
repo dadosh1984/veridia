@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { log as vlog } from '../../util/log.js'
 import { measureHistory, measureRecord } from '../../measure/measure.js'
+import { log as vlog } from '../../util/log.js'
 import type { Verdict } from '../../verify/types.js'
 import { jsonOut } from '../shared.js'
 

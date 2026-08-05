@@ -84,11 +84,16 @@ describe('readHistory', () => {
 describe('readHistory — corrupt line reporting', () => {
   it('9 valid + 1 corrupt line → reports 9 runs and writes skip warning to stderr', () => {
     const root = makeTmpDir()
-    const valid = Array.from({ length: 9 }, (_, i) => JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }))
+    const valid = Array.from({ length: 9 }, (_, i) =>
+      JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }),
+    )
     writeHistory(root, [...valid, 'not-json'])
     const stderr: string[] = []
     const origWrite = process.stderr.write.bind(process.stderr)
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     const entries = readHistory({ root })
     process.stderr.write = origWrite
     expect(entries).toHaveLength(9)
@@ -97,11 +102,16 @@ describe('readHistory — corrupt line reporting', () => {
 
   it('all-valid history → no warning on stderr', () => {
     const root = makeTmpDir()
-    const valid = Array.from({ length: 3 }, (_, i) => JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }))
+    const valid = Array.from({ length: 3 }, (_, i) =>
+      JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }),
+    )
     writeHistory(root, valid)
     const stderr: string[] = []
     const origWrite = process.stderr.write.bind(process.stderr)
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     const entries = readHistory({ root })
     process.stderr.write = origWrite
     expect(entries).toHaveLength(3)
@@ -110,11 +120,16 @@ describe('readHistory — corrupt line reporting', () => {
 
   it('trailing blank lines → no warning, full count', () => {
     const root = makeTmpDir()
-    const valid = Array.from({ length: 2 }, (_, i) => JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }))
+    const valid = Array.from({ length: 2 }, (_, i) =>
+      JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }),
+    )
     writeHistory(root, [...valid, '', ''])
     const stderr: string[] = []
     const origWrite = process.stderr.write.bind(process.stderr)
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     const entries = readHistory({ root })
     process.stderr.write = origWrite
     expect(entries).toHaveLength(2)

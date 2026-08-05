@@ -1,7 +1,7 @@
 import type { OracleKind } from '../../assess/types.js'
-import { log as vlog } from '../../util/log.js'
 import { measureRecord } from '../../measure/measure.js'
 import { readSession, writeSession } from '../../session/session.js'
+import { log as vlog } from '../../util/log.js'
 import { verify } from '../../verify/verify.js'
 
 const CHECK_TO_KIND: Record<string, OracleKind> = {

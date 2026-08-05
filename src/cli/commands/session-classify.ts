@@ -1,7 +1,7 @@
 import { classify } from '../../classify/classify.js'
-import { log as vlog } from '../../util/log.js'
 import { readSession, writeSession } from '../../session/session.js'
 import type { Session } from '../../session/types.js'
+import { log as vlog } from '../../util/log.js'
 
 export function handle(task: string): void {
   const existing = readSession()

@@ -1,8 +1,8 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { note, outro } from '@clack/prompts'
 import { runBenchmark } from '../../measure/benchmark.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 export async function handle(opts: { target?: string; runs?: string; json?: boolean }): Promise<void> {

@@ -7,7 +7,10 @@ describe('log', () => {
     const origWrite = process.stderr.write.bind(process.stderr)
     const origIsTTY = (process.stderr as any).isTTY
     ;(process.stderr as any).isTTY = true
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     log.info('hello')
     process.stderr.write = origWrite
     ;(process.stderr as any).isTTY = origIsTTY
@@ -19,7 +22,10 @@ describe('log', () => {
     const origWrite = process.stderr.write.bind(process.stderr)
     const origIsTTY = (process.stderr as any).isTTY
     ;(process.stderr as any).isTTY = false
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     log.info('hello')
     process.stderr.write = origWrite
     ;(process.stderr as any).isTTY = origIsTTY
@@ -35,7 +41,10 @@ describe('log', () => {
     const origWrite = process.stderr.write.bind(process.stderr)
     const origDebug = process.env.VERIDIA_DEBUG
     delete process.env.VERIDIA_DEBUG
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     log.debug('secret')
     process.stderr.write = origWrite
     process.env.VERIDIA_DEBUG = origDebug
@@ -47,7 +56,10 @@ describe('log', () => {
     const origWrite = process.stderr.write.bind(process.stderr)
     const origDebug = process.env.VERIDIA_DEBUG
     process.env.VERIDIA_DEBUG = '1'
-    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    process.stderr.write = ((chunk: any) => {
+      stderr.push(String(chunk))
+      return true
+    }) as any
     log.debug('secret')
     process.stderr.write = origWrite
     process.env.VERIDIA_DEBUG = origDebug

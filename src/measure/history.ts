@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
-import { log as vlog } from '../util/log.js'
 import { join } from 'node:path'
+import { log as vlog } from '../util/log.js'
 import type { HistorySummary, MeasureEntry } from './types.js'
 
 /** Dependencies for history operations, allowing a custom project root. */

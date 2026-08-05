@@ -1,8 +1,8 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { assess } from '../../assess/assess.js'
 import { readSession, writeSession } from '../../session/session.js'
+import { log as vlog } from '../../util/log.js'
 
 export function handle(opts: { target?: string }): void {
   const session = readSession()

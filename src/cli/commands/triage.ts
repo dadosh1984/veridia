@@ -1,7 +1,7 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { triage } from '../../triage/triage.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 export async function handle(task: string, opts: { target?: string; auto?: boolean }): Promise<void> {

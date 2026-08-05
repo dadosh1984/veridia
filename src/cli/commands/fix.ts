@@ -1,8 +1,8 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { note, outro } from '@clack/prompts'
 import { type AutoFixOptions, autoFix } from '../../analyze/fix.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 export async function handle(opts: { target?: string; json?: boolean; dryRun?: boolean; force?: boolean }): Promise<void> {

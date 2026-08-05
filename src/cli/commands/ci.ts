@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import { join } from 'node:path'
 import { cancel, intro, isCancel, note, outro, select } from '@clack/prompts'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 const CI_TEMPLATES: Record<string, (config: CiConfig) => string> = {

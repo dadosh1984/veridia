@@ -1,5 +1,4 @@
 import fs, { watch } from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { assess } from '../../assess/assess.js'
 import { probeOracles, realFs } from '../../assess/probe.js'
@@ -8,6 +7,7 @@ import { loadConfig } from '../../config/config.js'
 import { readHistory } from '../../measure/history.js'
 import { computePrecision } from '../../measure/learn.js'
 import { buildPlan } from '../../route/route.js'
+import { log as vlog } from '../../util/log.js'
 import { verify } from '../../verify/verify.js'
 
 const DEBOUNCE_MS = 500

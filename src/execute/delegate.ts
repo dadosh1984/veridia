@@ -1,5 +1,4 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { log as vlog } from '../util/log.js'
 import { delimiter, join } from 'node:path'
 import { createInterface } from 'node:readline'
 import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'

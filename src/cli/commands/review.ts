@@ -1,7 +1,7 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { buildReviewInstructions } from '../../review/review.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 export function handle(opts: { target?: string }): void {

@@ -1,8 +1,8 @@
 import fs from 'node:fs'
-import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { cancel, confirm, intro, isCancel, log, note, outro, spinner } from '@clack/prompts'
 import { triage } from '../../triage/triage.js'
+import { log as vlog } from '../../util/log.js'
 
 const _VERDICT_COLORS: Record<string, string> = {
   PASS: 'PASS',

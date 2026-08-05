@@ -1,6 +1,6 @@
 import { getAgent } from '../../agent/agents.js'
-import { log as vlog } from '../../util/log.js'
 import { generateCommands } from '../../generate/generate.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 export function handle(opts: { agent: string }): void {

@@ -1,10 +1,10 @@
 import path from 'node:path'
-import { log as vlog } from '../../util/log.js'
 import type { VerifiabilityLevel } from '../../assess/types.js'
 import type { TaskType } from '../../classify/types.js'
 import { delegate } from '../../execute/delegate.js'
 import { buildExecutionPlan } from '../../execute/plan.js'
 import { buildPlan } from '../../route/route.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut, validateLevel, validateType } from '../shared.js'
 
 export async function handle(opts: { type: string; level: string | number; files?: string; target?: string }): Promise<void> {

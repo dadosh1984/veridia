@@ -1,6 +1,6 @@
 import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'
-import { log as vlog } from '../util/log.js'
 import { isMachineMode } from '../cli/shared.js'
+import { log as vlog } from '../util/log.js'
 import { resolveCommands } from './resolve.js'
 import { type RunFn, runCommand } from './run.js'
 import type { Check, Verdict, VerifyResult } from './types.js'

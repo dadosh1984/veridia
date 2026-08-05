@@ -1,7 +1,7 @@
 import type { VerifiabilityLevel } from '../../assess/types.js'
-import { log as vlog } from '../../util/log.js'
 import type { TaskType } from '../../classify/types.js'
 import { buildPlan } from '../../route/route.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut, validateLevel, validateType } from '../shared.js'
 
 export function handle(opts: { type: string; level: string | number }): void {

@@ -1,6 +1,6 @@
 import { buildPlan } from '../../route/route.js'
-import { log as vlog } from '../../util/log.js'
 import { readSession, writeSession } from '../../session/session.js'
+import { log as vlog } from '../../util/log.js'
 
 export function handle(): void {
   const session = readSession()
