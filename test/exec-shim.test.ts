@@ -33,7 +33,7 @@ describe('execFileWithShim', () => {
   })
 })
 
-describe('execFileWithShim — PATHEXT resolution (Windows shim fallback)', () => {
+describe.runIf(process.platform === 'win32')('execFileWithShim — PATHEXT resolution (Windows shim fallback)', () => {
   it('resolves a .cmd shim in node_modules/.bin and runs with shell: false', () => {
     const dir = makeTmpDir()
     const binDir = path.join(dir, 'node_modules', '.bin')
