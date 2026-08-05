@@ -8,6 +8,7 @@ import * as ciCmd from './commands/ci.js'
 import * as classifyCmd from './commands/classify.js'
 import * as completionCmd from './commands/completion.js'
 import * as dashboardCmd from './commands/dashboard.js'
+import * as developCmd from './commands/develop.js'
 import * as executeCmd from './commands/execute.js'
 import * as fixCmd from './commands/fix.js'
 import * as generateCmd from './commands/generate.js'
@@ -195,6 +196,13 @@ cli.command('session-do', 'Execute plan from session').action(() => sessionDoCmd
 cli.command('session-status', 'Show current session state').action(() => sessionStatusCmd.handle())
 
 cli.command('session-archive', 'Archive session to history').action(() => sessionArchiveCmd.handle())
+
+cli
+  .command('develop', 'Run the full dogfooding triage loop against a warpweave change')
+  .option('--change <name>', 'Change name to develop')
+  .option('--self', 'Target self (develop veridia itself)')
+  .option('--target <path>', 'Target directory')
+  .action((opts: { change?: string; self?: boolean; target?: string }) => developCmd.handle(opts.change ?? '', opts))
 
 cli
   .command('[task]', 'Run the full triage loop on a task string (shorthand)')

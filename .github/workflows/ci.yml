@@ -30,16 +30,8 @@ jobs:
       - run: pnpm build
       - run: pnpm test
       - run: pnpm coverage
-      - name: Self-dogfooding — full triage loop
-        run: node dist/cli/index.js run "verify project quality after changes" --self --auto
-      - name: Self-dogfooding — static analysis
-        run: node dist/cli/index.js run "check for hardcoded secrets and dangerous patterns" --self --auto
-      - name: Self-dogfooding — verify gates
-        run: node dist/cli/index.js verify --target . --type refactor --level 3
-      - name: Self-dogfooding — learn from history
-        run: node dist/cli/index.js learn
-      - name: Self-dogfooding — measure history
-        run: node dist/cli/index.js measure --history
+      - name: Self-dogfooding — develop loop
+        run: node dist/cli/index.js develop --self
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
