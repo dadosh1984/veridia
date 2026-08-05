@@ -11,8 +11,9 @@ import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
 import { buildPlan } from '../route/route.js'
 import { verify } from '../verify/verify.js'
+import { VERSION } from '../cli/version.js'
 
-const server = new Server({ name: 'veridia', version: '0.1.8' }, { capabilities: { tools: {} } })
+const server = new Server({ name: 'veridia', version: VERSION }, { capabilities: { tools: {} } })
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
