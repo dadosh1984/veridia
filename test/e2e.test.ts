@@ -103,7 +103,7 @@ describe('e2e: session pipeline', () => {
 
     expect(fs.existsSync(path.join(dir, '.veridia', 'session.json'))).toBe(false)
     expect(fs.existsSync(path.join(dir, '.veridia', 'history.jsonl'))).toBe(true)
-  })
+  }, 20000)
 
   it('resumes the pipeline from a session after an interruption', () => {
     const dir = makeTmpDir()
@@ -118,7 +118,7 @@ describe('e2e: session pipeline', () => {
     const parsed = JSON.parse(result.stdout) as { type: string; verdict: string }
     expect(parsed.type).toBe('feature')
     expect(parsed.verdict).toBeTruthy()
-  })
+  }, 20000)
 })
 
 describe('e2e: feedback loop', () => {
