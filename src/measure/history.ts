@@ -17,6 +17,25 @@ function historyFile(root: string): string {
 }
 
 /**
+ * Parse an array of JSONL lines into entries, counting skipped lines.
+ * Blank lines are ignored silently.
+ */
+export function parseHistoryLines(lines: string[]): { entries: MeasureEntry[]; skipped: number } {
+  const entries: MeasureEntry[] = []
+  let skipped = 0
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed === '') continue
+    try {
+      entries.push(JSON.parse(trimmed) as MeasureEntry)
+    } catch {
+      skipped++
+    }
+  }
+  return { entries, skipped }
+}
+
+/**
  * Append a measurement entry to the history file, adding a timestamp automatically.
  * Creates the .veridia directory if it does not exist.
  *
@@ -35,6 +54,7 @@ export function appendEntry(entry: Omit<MeasureEntry, 'timestamp'>, deps: Histor
 
 /**
  * Read all measurement entries from the history file.
+ * Reports corrupt lines to stderr.
  *
  * @param deps - Optional dependencies (e.g. custom root directory).
  * @returns An array of MeasureEntry objects, or an empty array if no history exists.
@@ -43,15 +63,11 @@ export function readHistory(deps: HistoryDeps = {}): MeasureEntry[] {
   const root = deps.root ?? process.cwd()
   const file = historyFile(root)
   if (!existsSync(file)) return []
-  const content = readFileSync(file, 'utf8').trim()
-  if (content === '') return []
-  const entries: MeasureEntry[] = []
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim()
-    if (trimmed === '') continue
-    try {
-      entries.push(JSON.parse(trimmed) as MeasureEntry)
-    } catch {}
+  const content = readFileSync(file, 'utf8')
+  const lines = content.split(/\r?\n/)
+  const { entries, skipped } = parseHistoryLines(lines)
+  if (skipped > 0) {
+    process.stderr.write(`veridia: warning: skipped ${skipped} corrupt line(s) in .veridia/history.jsonl\n`)
   }
   return entries
 }

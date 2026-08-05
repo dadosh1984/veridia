@@ -14,6 +14,12 @@ function makeTmpDir(): string {
   return dir
 }
 
+function writeHistory(root: string, lines: string[]): void {
+  const dir = path.join(root, '.veridia')
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, 'history.jsonl'), lines.join('\n'), 'utf8')
+}
+
 afterEach(() => {
   for (const dir of tmpDirs.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true })
@@ -75,6 +81,57 @@ describe('readHistory', () => {
   })
 })
 
+describe('readHistory — corrupt line reporting', () => {
+  it('9 valid + 1 corrupt line → reports 9 runs and writes skip warning to stderr', () => {
+    const root = makeTmpDir()
+    const valid = Array.from({ length: 9 }, (_, i) => JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }))
+    writeHistory(root, [...valid, 'not-json'])
+    const stderr: string[] = []
+    const origWrite = process.stderr.write.bind(process.stderr)
+    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    const entries = readHistory({ root })
+    process.stderr.write = origWrite
+    expect(entries).toHaveLength(9)
+    expect(stderr.some((s) => s.includes('skipped 1 corrupt line'))).toBe(true)
+  })
+
+  it('all-valid history → no warning on stderr', () => {
+    const root = makeTmpDir()
+    const valid = Array.from({ length: 3 }, (_, i) => JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }))
+    writeHistory(root, valid)
+    const stderr: string[] = []
+    const origWrite = process.stderr.write.bind(process.stderr)
+    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    const entries = readHistory({ root })
+    process.stderr.write = origWrite
+    expect(entries).toHaveLength(3)
+    expect(stderr.some((s) => s.includes('skipped'))).toBe(false)
+  })
+
+  it('trailing blank lines → no warning, full count', () => {
+    const root = makeTmpDir()
+    const valid = Array.from({ length: 2 }, (_, i) => JSON.stringify({ task: `t${i}`, type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' }))
+    writeHistory(root, [...valid, '', ''])
+    const stderr: string[] = []
+    const origWrite = process.stderr.write.bind(process.stderr)
+    process.stderr.write = ((chunk: any) => { stderr.push(String(chunk)); return true }) as any
+    const entries = readHistory({ root })
+    process.stderr.write = origWrite
+    expect(entries).toHaveLength(2)
+    expect(stderr.some((s) => s.includes('skipped'))).toBe(false)
+  })
+
+  it('CRLF line endings parse correctly', () => {
+    const root = makeTmpDir()
+    const dir = path.join(root, '.veridia')
+    fs.mkdirSync(dir, { recursive: true })
+    const line = JSON.stringify({ task: 't1', type: 'feature', level: 2, verdict: 'PASS', checks: [], drift: '', timestamp: '2026-01-01T00:00:00.000Z' })
+    fs.writeFileSync(path.join(dir, 'history.jsonl'), `${line}\r\n${line}\r\n`, 'utf8')
+    const entries = readHistory({ root })
+    expect(entries).toHaveLength(2)
+  })
+})
+
 describe('buildSummary', () => {
   it('builds a summary from entries', () => {
     const entries: MeasureEntry[] = [
@@ -99,17 +156,17 @@ describe('buildSummary', () => {
 })
 
 describe('measureRecord', () => {
-  it('records an entry and returns no error', () => {
+  it('records an entry and returns no error', async () => {
     const root = makeTmpDir()
     const entry = { task: 'test', type: 'feature', level: 2, verdict: 'PASS' as const, checks: [], drift: '' }
     measureRecord(entry, { root })
-    const entries = readHistory({ root })
+    const entries = await readHistory({ root })
     expect(entries).toHaveLength(1)
   })
 })
 
 describe('measureHistory', () => {
-  it('returns a summary from recorded entries', () => {
+  it('returns a summary from recorded entries', async () => {
     const root = makeTmpDir()
     measureRecord({ task: 'a', type: 'feature', level: 2, verdict: 'PASS' as const, checks: [], drift: '' }, { root })
     measureRecord({ task: 'b', type: 'bugfix', level: 3, verdict: 'FAIL' as const, checks: [], drift: '' }, { root })
