@@ -1,5 +1,21 @@
 # veridia
 
+## 0.11.0
+
+### Minor Changes
+
+- feat: e2e dogfooding loop — `veridia develop --change/--self` runs full triage pipeline against a change
+- feat: streaming gate output with `--verbose` flag on `run`, `verify`, `develop`
+- feat: structured logging with levels (info/warn/error/debug), JSON in non-TTY, human-readable in TTY
+- feat: MCP surface parity — 12 new tools (route, ask, measure, report, review, session_*)
+- fix: AST-based auto-fix with dry-run, force, and git-dirty guard
+- fix: capture child stdout in exec-shim, route to stderr in machine mode
+- fix: replace shell:true Windows fallback with PATHEXT-based shim resolution
+- fix: report corrupt history lines to stderr instead of silent catch
+- fix: sync MCP server version with package.json
+- chore: OSS hygiene — badges, provenance, Renovate
+- chore: remove foreign files from tracking (.claude, .changeset, schemas, skills, warpweave)
+
 ## 0.10.0
 
 ### Minor Changes
