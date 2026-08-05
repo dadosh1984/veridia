@@ -15,4 +15,5 @@ export default defineConfig({
   bundle: true,
   platform: 'node',
   shims: true,
+  external: ['typescript'],
 })

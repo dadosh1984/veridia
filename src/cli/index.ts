@@ -117,8 +117,10 @@ cli
 cli
   .command('fix', 'Auto-fix found problems (console.log, TODO comments)')
   .option('--target <path>', 'Target directory')
+  .option('--dry-run', 'Preview changes without writing to disk')
+  .option('--force', 'Write even when the git working tree is dirty')
   .option('--json', 'Output as JSON')
-  .action((opts: { target?: string; json?: boolean }) => fixCmd.handle(opts))
+  .action((opts: { target?: string; dryRun?: boolean; force?: boolean; json?: boolean }) => fixCmd.handle(opts))
 
 cli
   .command('ci', 'Generate CI configuration')

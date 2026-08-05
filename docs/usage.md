@@ -91,6 +91,7 @@ Check the current step at any time: `veridia session-status`.
 | `veridia verify --target <p> --type <t> --level <l>` | Run oracles, print verdict |
 | `veridia measure --history` | History / learning summary |
 | `veridia review --target <path>` | Output code-review instructions |
+| `veridia fix --target <path> [--dry-run] [--force]` | Auto-fix console.log/TODO as code nodes; `--dry-run` previews without writing, `--force` bypasses the git-dirty guard |
 | `veridia learn` | Analyze history, produce recommendations |
 | `veridia init` | Wire veridia into one or more AI agents |
 | `veridia agents --list` | List the 35 supported agents |

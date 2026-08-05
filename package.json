@@ -50,7 +50,8 @@
   ],
   "dependencies": {
     "@clack/prompts": "^1.7.0",
-    "cac": "^7.0.0"
+    "cac": "^7.0.0",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",
@@ -59,7 +60,6 @@
     "@types/node": "^26.1.2",
     "@vitest/coverage-v8": "^4.1.10",
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3",
     "vitepress": "^1.6.4",
     "vitest": "^4.1.10"
   }
