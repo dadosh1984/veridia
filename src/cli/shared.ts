@@ -2,6 +2,19 @@ export const VALID_TYPES = ['bugfix', 'refactor', 'feature', 'doc', 'explore', '
 export const VALID_LEVELS = ['0', '1', '2', '3'] as const
 
 /**
+ * Determine whether veridia is running in machine-consumer mode.
+ * Machine mode means stdout must carry only the machine-readable result
+ * (JSON), while all diagnostics and child-process output go to stderr.
+ *
+ * @param opts - Optional CLI options that may contain --json or --auto.
+ * @returns true when in machine mode.
+ */
+export function isMachineMode(opts?: { json?: boolean; auto?: boolean }): boolean {
+  if (process.env.VERIDIA_MCP === '1') return true
+  return opts?.json === true || opts?.auto === true
+}
+
+/**
  * Validate that a string is a valid TaskType.
  *
  * @param v - The value to validate.

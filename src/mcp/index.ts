@@ -130,6 +130,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 })
 
 async function main(): Promise<void> {
+  process.env.VERIDIA_MCP = '1'
   const transport = new StdioServerTransport()
   await server.connect(transport)
 }

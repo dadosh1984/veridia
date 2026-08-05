@@ -3,6 +3,7 @@ import { delimiter, join } from 'node:path'
 import { createInterface } from 'node:readline'
 import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'
 import type { TaskType } from '../classify/types.js'
+import { isMachineMode } from '../cli/shared.js'
 import { execFileWithShim } from '../util/exec-shim.js'
 import { splitCommand } from '../util/split-command.js'
 import { detectHostAgent } from './detect.js'
@@ -69,10 +70,14 @@ function runGates(cwd: string, gates: VerificationGate[]): ExecuteResult {
       if (!cmd) continue
       execFileWithShim(cmd, args.slice(1), { cwd, timeout: 120_000, encoding: 'utf8', env })
     } catch (err) {
-      const nodeErr = err as NodeJS.ErrnoException
+      const nodeErr = err as NodeJS.ErrnoException & { stdout?: string }
+      const capturedStdout = nodeErr.stdout ?? ''
+      if (isMachineMode() && capturedStdout) {
+        process.stderr.write(capturedStdout)
+      }
       return {
         exitCode: (err as { status?: number }).status ?? 1,
-        stdout: '',
+        stdout: capturedStdout,
         stderr: nodeErr.message ?? `Gate "${gate.id}" failed`,
       }
     }

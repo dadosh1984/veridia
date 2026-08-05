@@ -8,6 +8,8 @@ export interface RunResult {
   exitCode: number
   /** Optional error message if the command failed. */
   error?: string
+  /** Captured stdout of the child process. */
+  stdout?: string
 }
 
 /** A function type for running a shell command in a given working directory. */
@@ -31,13 +33,13 @@ export function runCommand(cwd: string, command: string): RunResult {
   const env = { ...process.env, PATH: `${path.join(cwd, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH ?? ''}` }
   if (!cmd) return { exitCode: 1 }
   try {
-    execFileWithShim(cmd, cmdArgs, { cwd, timeout: TIMEOUT_MS, encoding: 'utf8', env })
-    return { exitCode: 0 }
+    const stdout = execFileWithShim(cmd, cmdArgs, { cwd, timeout: TIMEOUT_MS, encoding: 'utf8', env })
+    return { exitCode: 0, stdout }
   } catch (err) {
-    const e = err as { status?: number | null; signal?: string; stderr?: string; code?: string; message?: string }
+    const e = err as { status?: number | null; signal?: string; stderr?: string; stdout?: string; code?: string; message?: string }
     const code = e.status
     if (code !== undefined && code !== null) {
-      return { exitCode: code, error: e.stderr?.trim() || undefined }
+      return { exitCode: code, error: e.stderr?.trim() || undefined, stdout: e.stdout }
     }
     const message = e.message || (e.code ? `command failed (${e.code})` : undefined)
     return { exitCode: 1, error: message?.trim() || undefined }

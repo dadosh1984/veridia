@@ -9,4 +9,9 @@ describe('execFileWithShim', () => {
   it('throws when the command cannot be run', () => {
     expect(() => execFileWithShim('veridia-no-such-cmd-xyz', [], { encoding: 'utf8' })).toThrow()
   })
+
+  it('captures child stdout instead of inheriting it', () => {
+    const stdout = execFileWithShim(process.execPath, ['-e', 'process.stdout.write("CAPTURED-OUT")'], { encoding: 'utf8' })
+    expect(stdout).toBe('CAPTURED-OUT')
+  })
 })

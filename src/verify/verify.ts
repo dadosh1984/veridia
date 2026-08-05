@@ -1,4 +1,5 @@
 import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'
+import { isMachineMode } from '../cli/shared.js'
 import { resolveCommands } from './resolve.js'
 import { type RunFn, runCommand } from './run.js'
 import type { Check, Verdict, VerifyResult } from './types.js'
@@ -59,13 +60,19 @@ export function verify(target: string, level: VerifiabilityLevel, kinds: OracleK
     }
     let exitCode: number
     let error: string | undefined
+    let capturedStdout: string | undefined
     try {
       const result = run(target, command)
       exitCode = result.exitCode
       error = result.error
+      capturedStdout = result.stdout
     } catch {
       exitCode = 1
       error = 'command failed'
+    }
+    if (exitCode !== 0 && isMachineMode()) {
+      const detail = [capturedStdout, error].filter(Boolean).join('\n')
+      if (detail) process.stderr.write(`veridia: gate "${kind}" failed:\n${detail}\n`)
     }
     const weak = kind === 'test-runner' && isTestsWeak(target)
     const bw = baseWeight(kind, deps.weights)

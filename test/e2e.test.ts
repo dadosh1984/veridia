@@ -138,6 +138,25 @@ describe('e2e: feedback loop', () => {
   })
 })
 
+describe('e2e: stdout purity (canary)', () => {
+  it('stdout is single parseable JSON with no ANSI when gates produce output', () => {
+    const dir = makeTmpDir()
+    writeFile(dir, 'package.json', JSON.stringify({ scripts: { test: 'node -e "process.exit(0)"' } }))
+    const result = runCliIn(dir, 'add feature', '--auto')
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).not.toMatch(new RegExp(String.fromCharCode(27)))
+    expect(() => JSON.parse(result.stdout)).not.toThrow()
+  })
+
+  it('analyze stdout has no child-process banner or ANSI codes', () => {
+    const dir = makeTmpDir()
+    writeFile(dir, 'package.json', '{}')
+    const result = runCli('analyze', '--target', dir)
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).not.toMatch(new RegExp(String.fromCharCode(27)))
+  })
+})
+
 describe('e2e: plan adherence', () => {
   it('run command outputs the execution plan steps before delegating', () => {
     const dir = makeTmpDir()
