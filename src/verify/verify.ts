@@ -1,4 +1,5 @@
 import type { OracleKind, VerifiabilityLevel } from '../assess/types.js'
+import { log as vlog } from '../util/log.js'
 import { isMachineMode } from '../cli/shared.js'
 import { resolveCommands } from './resolve.js'
 import { type RunFn, runCommand } from './run.js'
@@ -74,7 +75,7 @@ export function verify(target: string, level: VerifiabilityLevel, kinds: OracleK
     }
     if (exitCode !== 0 && isMachineMode()) {
       const detail = [capturedStdout, error].filter(Boolean).join('\n')
-      if (detail) process.stderr.write(`veridia: gate "${kind}" failed:\n${detail}\n`)
+      if (detail) vlog.error(`gate "${kind}" failed:\n${detail}`)
     }
     const weak = kind === 'test-runner' && isTestsWeak(target)
     const bw = baseWeight(kind, deps.weights)

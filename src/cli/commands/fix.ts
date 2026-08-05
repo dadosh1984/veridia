@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { note, outro } from '@clack/prompts'
 import { type AutoFixOptions, autoFix } from '../../analyze/fix.js'
@@ -8,7 +9,7 @@ export async function handle(opts: { target?: string; json?: boolean; dryRun?: b
   const target = opts.target ? path.resolve(opts.target) : process.cwd()
 
   if (!fs.existsSync(target)) {
-    process.stderr.write(`veridia: fix: target path does not exist: ${target}\n`)
+    vlog.error(`fix: target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }
@@ -17,7 +18,7 @@ export async function handle(opts: { target?: string; json?: boolean; dryRun?: b
   const result = autoFix(target, fixOpts)
 
   if (result.blocked) {
-    process.stderr.write('veridia: fix: refusing to modify uncommitted changes. Commit or stash first, or pass --force.\n')
+    vlog.error('fix: refusing to modify uncommitted changes. Commit or stash first, or pass --force.')
     process.exitCode = 1
     return
   }

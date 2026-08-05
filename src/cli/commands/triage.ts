@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { triage } from '../../triage/triage.js'
 import { jsonOut } from '../shared.js'
@@ -6,12 +7,12 @@ import { jsonOut } from '../shared.js'
 export async function handle(task: string, opts: { target?: string; auto?: boolean }): Promise<void> {
   const target = opts.target ? path.resolve(opts.target) : process.cwd()
   if (!task) {
-    process.stderr.write('veridia: no task provided\n')
+    vlog.error('no task provided')
     process.exitCode = 1
     return
   }
   if (!fs.existsSync(target)) {
-    process.stderr.write(`veridia: target path does not exist: ${target}\n`)
+    vlog.error(`target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }

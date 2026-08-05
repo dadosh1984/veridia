@@ -1,11 +1,12 @@
 import { getAgent } from '../../agent/agents.js'
+import { log as vlog } from '../../util/log.js'
 import { generateCommands } from '../../generate/generate.js'
 import { jsonOut } from '../shared.js'
 
 export function handle(opts: { agent: string }): void {
   const agent = getAgent(opts.agent)
   if (!agent) {
-    process.stderr.write(`veridia: generate: unknown agent: ${opts.agent}\n`)
+    vlog.error(`generate: unknown agent: ${opts.agent}`)
     process.exitCode = 1
     return
   }

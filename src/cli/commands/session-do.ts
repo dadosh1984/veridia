@@ -1,4 +1,5 @@
 import type { OracleKind } from '../../assess/types.js'
+import { log as vlog } from '../../util/log.js'
 import { measureRecord } from '../../measure/measure.js'
 import { readSession, writeSession } from '../../session/session.js'
 import { verify } from '../../verify/verify.js'
@@ -16,7 +17,7 @@ const CHECK_TO_KIND: Record<string, OracleKind> = {
 export function handle(): void {
   const session = readSession()
   if (!session?.type || session.level === undefined || !session.plan) {
-    process.stderr.write('veridia: incomplete session. Run session-classify, session-assess, session-route first.\n')
+    vlog.error('incomplete session. Run session-classify, session-assess, session-route first.')
     process.exitCode = 1
     return
   }

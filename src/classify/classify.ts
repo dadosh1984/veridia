@@ -1,4 +1,5 @@
 import type { VeridiaConfig } from '../config/config.js'
+import { log as vlog } from '../util/log.js'
 import type { Classification, TaskType } from './types.js'
 
 interface Rule {
@@ -37,7 +38,7 @@ function buildRulesFromConfig(config: VeridiaConfig): Rule[] {
       try {
         patterns.push(new RegExp(p, 'i'))
       } catch {
-        process.stderr.write(`veridia: classify: skipping invalid pattern '${p}' for type '${type}'\n`)
+        vlog.error(`classify: skipping invalid pattern '${p}' for type '${type}'`)
       }
     }
     if (patterns.length === 0) continue

@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { assess } from '../../assess/assess.js'
 import { readSession, writeSession } from '../../session/session.js'
@@ -6,13 +7,13 @@ import { readSession, writeSession } from '../../session/session.js'
 export function handle(opts: { target?: string }): void {
   const session = readSession()
   if (!session) {
-    process.stderr.write('veridia: no active session. Run session-classify first.\n')
+    vlog.error('no active session. Run session-classify first.')
     process.exitCode = 1
     return
   }
   const target = opts.target ? path.resolve(opts.target) : process.cwd()
   if (!fs.existsSync(target)) {
-    process.stderr.write(`veridia: target path does not exist: ${target}\n`)
+    vlog.error(`target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }

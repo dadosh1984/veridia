@@ -1,4 +1,5 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { log as vlog } from '../util/log.js'
 import { join } from 'node:path'
 import type { HistorySummary, MeasureEntry } from './types.js'
 
@@ -67,7 +68,7 @@ export function readHistory(deps: HistoryDeps = {}): MeasureEntry[] {
   const lines = content.split(/\r?\n/)
   const { entries, skipped } = parseHistoryLines(lines)
   if (skipped > 0) {
-    process.stderr.write(`veridia: warning: skipped ${skipped} corrupt line(s) in .veridia/history.jsonl\n`)
+    vlog.error(`warning: skipped ${skipped} corrupt line(s) in .veridia/history.jsonl`)
   }
   return entries
 }

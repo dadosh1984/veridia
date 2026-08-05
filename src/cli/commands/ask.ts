@@ -1,4 +1,5 @@
 import { ask } from '../../ask/ask.js'
+import { log as vlog } from '../../util/log.js'
 import type { VerifiabilityLevel } from '../../assess/types.js'
 import type { TaskType } from '../../classify/types.js'
 import { jsonOut, validateLevel, validateType } from '../shared.js'
@@ -6,13 +7,13 @@ import { jsonOut, validateLevel, validateType } from '../shared.js'
 export function handle(opts: { type: string; level: string | number }): void {
   const typeErr = validateType(opts.type)
   if (typeErr) {
-    process.stderr.write(`veridia: ask: ${typeErr}\n`)
+    vlog.error(`ask: ${typeErr}`)
     process.exitCode = 1
     return
   }
   const levelErr = validateLevel(opts.level)
   if (levelErr) {
-    process.stderr.write(`veridia: ask: ${levelErr}\n`)
+    vlog.error(`ask: ${levelErr}`)
     process.exitCode = 1
     return
   }

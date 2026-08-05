@@ -1,10 +1,11 @@
 import { askInteractive } from '../../ask/ask.js'
+import { log as vlog } from '../../util/log.js'
 import { readSession, writeSession } from '../../session/session.js'
 
 export async function handle(): Promise<void> {
   const session = readSession()
   if (!session?.type || session.level === undefined) {
-    process.stderr.write('veridia: session missing type or level. Run session-classify and session-assess first.\n')
+    vlog.error('session missing type or level. Run session-classify and session-assess first.')
     process.exitCode = 1
     return
   }

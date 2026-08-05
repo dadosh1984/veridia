@@ -1,4 +1,5 @@
 import fs, { watch } from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { assess } from '../../assess/assess.js'
 import { probeOracles, realFs } from '../../assess/probe.js'
@@ -39,7 +40,7 @@ export async function handle(opts: { target?: string; debounce?: string }): Prom
   const debounce = opts.debounce ? Number(opts.debounce) : DEBOUNCE_MS
 
   if (!fs.existsSync(target)) {
-    process.stderr.write(`veridia: watch: target path does not exist: ${target}\n`)
+    vlog.error(`watch: target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }

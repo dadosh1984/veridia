@@ -1,20 +1,20 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'
+import { ask } from '../ask/ask.js'
 import { assess } from '../assess/assess.js'
 import { probeOracles, realFs } from '../assess/probe.js'
 import type { VerifiabilityLevel } from '../assess/types.js'
 import { classify } from '../classify/classify.js'
 import type { TaskType } from '../classify/types.js'
+import { VERSION } from '../cli/version.js'
 import { loadConfig } from '../config/config.js'
 import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
-import { buildPlan } from '../route/route.js'
-import { verify } from '../verify/verify.js'
-import { VERSION } from '../cli/version.js'
-import { ask } from '../ask/ask.js'
 import { measureHistory, measureRecord } from '../measure/measure.js'
-import { readSession, writeSession, clearSession } from '../session/session.js'
+import { buildPlan } from '../route/route.js'
+import { clearSession, readSession, writeSession } from '../session/session.js'
+import { verify } from '../verify/verify.js'
 
 const server = new Server({ name: 'veridia', version: VERSION }, { capabilities: { tools: {} } })
 
@@ -335,7 +335,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case 'veridia_session_route': {
       const target = (args?.target as string) || process.cwd()
       const session = readSession(target)
-      if (!session || !session.type || session.level === undefined) throw new Error('session requires type and level')
+      if (!session?.type || session.level === undefined) throw new Error('session requires type and level')
       const plan = buildPlan(session.type as TaskType, session.level as VerifiabilityLevel)
       writeSession({ ...session, plan: { depth: plan.depth, tier: plan.tier, steps: plan.steps, checks: plan.checks }, step: 'route' }, target)
       return { content: [{ type: 'text', text: JSON.stringify(plan) }] }
@@ -344,7 +344,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case 'veridia_session_ask': {
       const target = (args?.target as string) || process.cwd()
       const session = readSession(target)
-      if (!session || !session.type || session.level === undefined) throw new Error('session requires type and level')
+      if (!session?.type || session.level === undefined) throw new Error('session requires type and level')
       const result = ask(session.type as TaskType, session.level as VerifiabilityLevel)
       writeSession({ ...session, step: 'ask' }, target)
       return { content: [{ type: 'text', text: JSON.stringify(result) }] }
@@ -353,7 +353,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case 'veridia_session_do': {
       const target = (args?.target as string) || process.cwd()
       const session = readSession(target)
-      if (!session || !session.type || session.level === undefined) throw new Error('session requires type and level')
+      if (!session?.type || session.level === undefined) throw new Error('session requires type and level')
       const kinds = probeOracles(target, realFs).map((o) => o.kind)
       const config = loadConfig(target)
       const historyEntries = readHistory({ root: target })

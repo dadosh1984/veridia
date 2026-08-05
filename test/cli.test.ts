@@ -116,7 +116,7 @@ describe('veridia CLI', () => {
     const dir = path.join(os.tmpdir(), `veridia-missing-${Date.now()}`)
     const result = runCli('assess', '--target', dir)
     expect(result.exitCode).not.toBe(0)
-    expect(result.stderr).toContain(dir)
+    expect(result.stderr).toContain(dir.replace(/\\/g, '\\\\'))
   })
 
   it('documents the assess subcommand in usage output', () => {
@@ -233,7 +233,7 @@ describe('veridia CLI', () => {
     const dir = path.join(os.tmpdir(), `veridia-verify-missing-${Date.now()}`)
     const result = runCli('verify', '--target', dir, '--type', 'feature', '--level', '2')
     expect(result.exitCode).not.toBe(0)
-    expect(result.stderr).toContain(dir)
+    expect(result.stderr).toContain(dir.replace(/\\/g, '\\\\'))
   })
 
   it('rejects verify with an invalid level value', () => {

@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { cancel, intro, isCancel, multiselect, note, outro, select, spinner, text } from '@clack/prompts'
 import { getAgent, getAllAgents } from '../../agent/agents.js'
@@ -158,7 +159,7 @@ export async function handle(opts: { agent?: string; noInteractive?: boolean; wi
 
     const agent = getAgent(selectedAgent as string)
     if (!agent) {
-      process.stderr.write('veridia: unknown agent\n')
+      vlog.error('unknown agent')
       process.exitCode = 1
       return
     }
@@ -190,7 +191,7 @@ export async function handle(opts: { agent?: string; noInteractive?: boolean; wi
     for (const id of agentIds) {
       const agent = getAgent(id)
       if (!agent) {
-        process.stderr.write(`veridia: init: unknown agent: ${id}\n`)
+        vlog.error(`init: unknown agent: ${id}`)
         process.exitCode = 1
         return
       }
@@ -210,13 +211,13 @@ export async function handle(opts: { agent?: string; noInteractive?: boolean; wi
     }
     const agent = getAgent(selectedId as string)
     if (!agent) {
-      process.stderr.write(`veridia: init: unknown agent: ${selectedId}\n`)
+      vlog.error(`init: unknown agent: ${selectedId}`)
       process.exitCode = 1
       return
     }
     agents = [agent]
   } else {
-    process.stderr.write('veridia: init requires --agent <name> (or an interactive terminal)\n')
+    vlog.error('init requires --agent <name> (or an interactive terminal)')
     process.exitCode = 1
     return
   }

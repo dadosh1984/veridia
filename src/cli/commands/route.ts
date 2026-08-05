@@ -1,4 +1,5 @@
 import type { VerifiabilityLevel } from '../../assess/types.js'
+import { log as vlog } from '../../util/log.js'
 import type { TaskType } from '../../classify/types.js'
 import { buildPlan } from '../../route/route.js'
 import { jsonOut, validateLevel, validateType } from '../shared.js'
@@ -6,13 +7,13 @@ import { jsonOut, validateLevel, validateType } from '../shared.js'
 export function handle(opts: { type: string; level: string | number }): void {
   const typeErr = validateType(opts.type)
   if (typeErr) {
-    process.stderr.write(`veridia: route: ${typeErr}\n`)
+    vlog.error(`route: ${typeErr}`)
     process.exitCode = 1
     return
   }
   const levelErr = validateLevel(opts.level)
   if (levelErr) {
-    process.stderr.write(`veridia: route: ${levelErr}\n`)
+    vlog.error(`route: ${levelErr}`)
     process.exitCode = 1
     return
   }

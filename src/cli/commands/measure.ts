@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { log as vlog } from '../../util/log.js'
 import { measureHistory, measureRecord } from '../../measure/measure.js'
 import type { Verdict } from '../../verify/types.js'
 import { jsonOut } from '../shared.js'
@@ -21,7 +22,7 @@ export function handle(opts: Record<string, unknown>): void {
     try {
       parsed = JSON.parse(record)
     } catch {
-      process.stderr.write('veridia: measure --record requires valid JSON\n')
+      vlog.error('measure --record requires valid JSON')
       process.exitCode = 1
       return
     }
@@ -34,14 +35,14 @@ export function handle(opts: Record<string, unknown>): void {
       drift: (parsed.drift as string) || '',
     }
     if (!entry.task || !entry.type || !entry.verdict) {
-      process.stderr.write('veridia: measure --record requires task, type, and verdict\n')
+      vlog.error('measure --record requires task, type, and verdict')
       process.exitCode = 1
       return
     }
     measureRecord(entry, deps)
     jsonOut({ recorded: true })
   } else {
-    process.stderr.write('veridia: measure requires --record or --history\n')
+    vlog.error('measure requires --record or --history')
     process.exitCode = 1
   }
 }

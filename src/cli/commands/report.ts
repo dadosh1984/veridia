@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { note, outro } from '@clack/prompts'
 import { generateHtmlReport, generateReport } from '../../analyze/report.js'
@@ -8,7 +9,7 @@ export async function handle(opts: { target?: string; format?: string; output?: 
   const target = opts.target ? path.resolve(opts.target) : process.cwd()
 
   if (!fs.existsSync(target)) {
-    process.stderr.write(`veridia: report: target path does not exist: ${target}\n`)
+    vlog.error(`report: target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }

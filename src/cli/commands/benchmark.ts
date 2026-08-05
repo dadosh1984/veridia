@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { note, outro } from '@clack/prompts'
 import { runBenchmark } from '../../measure/benchmark.js'
@@ -9,7 +10,7 @@ export async function handle(opts: { target?: string; runs?: string; json?: bool
   const runs = opts.runs ? Number(opts.runs) : 10
 
   if (!fs.existsSync(target)) {
-    process.stderr.write(`veridia: benchmark: target path does not exist: ${target}\n`)
+    vlog.error(`benchmark: target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }

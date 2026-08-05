@@ -1,10 +1,11 @@
 import { buildPlan } from '../../route/route.js'
+import { log as vlog } from '../../util/log.js'
 import { readSession, writeSession } from '../../session/session.js'
 
 export function handle(): void {
   const session = readSession()
   if (!session?.type || session.level === undefined) {
-    process.stderr.write('veridia: session missing type or level. Run session-classify and session-assess first.\n')
+    vlog.error('session missing type or level. Run session-classify and session-assess first.')
     process.exitCode = 1
     return
   }

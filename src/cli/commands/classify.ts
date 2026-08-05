@@ -1,9 +1,10 @@
 import { classify } from '../../classify/classify.js'
+import { log as vlog } from '../../util/log.js'
 import { jsonOut } from '../shared.js'
 
 export function handle(task: string): void {
   if (task === '') {
-    process.stderr.write('veridia: classify requires a task string\n')
+    vlog.error('classify requires a task string')
     process.exitCode = 1
     return
   }

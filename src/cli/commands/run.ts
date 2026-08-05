@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { cancel, confirm, intro, isCancel, log, note, outro, spinner } from '@clack/prompts'
 import { triage } from '../../triage/triage.js'
@@ -28,14 +29,14 @@ export async function handle(
   }
 
   if (!task) {
-    process.stderr.write('veridia: run requires a task description\n')
+    vlog.error('run requires a task description')
     process.exitCode = 1
     return
   }
 
   const resolved = path.resolve(target)
   if (!fs.existsSync(resolved)) {
-    process.stderr.write(`veridia: target path does not exist: ${target}\n`)
+    vlog.error(`target path does not exist: ${target}`)
     process.exitCode = 1
     return
   }

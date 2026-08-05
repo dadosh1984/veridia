@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { log as vlog } from '../../util/log.js'
 import type { VerifiabilityLevel } from '../../assess/types.js'
 import type { TaskType } from '../../classify/types.js'
 import { delegate } from '../../execute/delegate.js'
@@ -9,13 +10,13 @@ import { jsonOut, validateLevel, validateType } from '../shared.js'
 export async function handle(opts: { type: string; level: string | number; files?: string; target?: string }): Promise<void> {
   const typeErr = validateType(opts.type)
   if (typeErr) {
-    process.stderr.write(`veridia: execute: ${typeErr}\n`)
+    vlog.error(`execute: ${typeErr}`)
     process.exitCode = 1
     return
   }
   const levelErr = validateLevel(opts.level)
   if (levelErr) {
-    process.stderr.write(`veridia: execute: ${levelErr}\n`)
+    vlog.error(`execute: ${levelErr}`)
     process.exitCode = 1
     return
   }

@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import { join } from 'node:path'
 import { cancel, intro, isCancel, note, outro, select } from '@clack/prompts'
 import { jsonOut } from '../shared.js'
@@ -91,7 +92,7 @@ export async function handle(opts: { provider?: string; output?: string; json?: 
     }
     const template = CI_TEMPLATES[config.provider]
     if (!template) {
-      process.stderr.write(`veridia: ci: unknown provider: ${config.provider}. Supported: ${Object.keys(CI_TEMPLATES).join(', ')}\n`)
+      vlog.error(`ci: unknown provider: ${config.provider}. Supported: ${Object.keys(CI_TEMPLATES).join(', ')}`)
       process.exitCode = 1
       return
     }
@@ -138,7 +139,7 @@ export async function handle(opts: { provider?: string; output?: string; json?: 
 
   const template = CI_TEMPLATES[config.provider]
   if (!template) {
-    process.stderr.write(`veridia: ci: unknown provider: ${config.provider}\n`)
+    vlog.error(`ci: unknown provider: ${config.provider}`)
     process.exitCode = 1
     return
   }

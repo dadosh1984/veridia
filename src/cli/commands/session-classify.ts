@@ -1,4 +1,5 @@
 import { classify } from '../../classify/classify.js'
+import { log as vlog } from '../../util/log.js'
 import { readSession, writeSession } from '../../session/session.js'
 import type { Session } from '../../session/types.js'
 
@@ -6,7 +7,7 @@ export function handle(task: string): void {
   const existing = readSession()
   const taskStr = task || existing?.task || ''
   if (!taskStr) {
-    process.stderr.write('veridia: session-classify requires a task string or an active session\n')
+    vlog.error('session-classify requires a task string or an active session')
     process.exitCode = 1
     return
   }

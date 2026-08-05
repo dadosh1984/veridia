@@ -1,4 +1,5 @@
 import { getAllAgents } from '../../agent/agents.js'
+import { log as vlog } from '../../util/log.js'
 import { VALID_LEVELS, VALID_TYPES } from '../shared.js'
 
 function generateBash(): string {
@@ -156,7 +157,7 @@ export function handle(shell: string): void {
       process.stdout.write(generateFish())
       break
     default:
-      process.stderr.write(`veridia: completion: unknown shell: ${shell}. Supported: bash, zsh, fish\n`)
+      vlog.error(`completion: unknown shell: ${shell}. Supported: bash, zsh, fish`)
       process.exitCode = 1
   }
 }

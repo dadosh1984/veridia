@@ -1,11 +1,12 @@
 import fs from 'node:fs'
+import { log as vlog } from '../../util/log.js'
 import path from 'node:path'
 import { triage } from '../../triage/triage.js'
 import { jsonOut } from '../shared.js'
 
 export async function handle(changeName: string, opts: { target?: string; self?: boolean; verbose?: boolean }): Promise<void> {
   if (!changeName && !opts.self) {
-    process.stderr.write('veridia: develop requires --change <name> or --self\n')
+    vlog.error('develop requires --change <name> or --self')
     process.exitCode = 1
     return
   }
@@ -16,7 +17,7 @@ export async function handle(changeName: string, opts: { target?: string; self?:
   if (!opts.self) {
     const proposalPath = path.join(targetDir, 'proposal.md')
     if (!fs.existsSync(proposalPath)) {
-      process.stderr.write(`veridia: change "${changeName}" not found at ${targetDir}\n`)
+      vlog.error(`change "${changeName}" not found at ${targetDir}`)
       process.exitCode = 1
       return
     }
