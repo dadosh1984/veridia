@@ -35,6 +35,8 @@ import { jsonOut } from './shared.js'
 import { VERSION } from './version.js'
 
 const cli = cac('veridia')
+// ponytail: disable unknown options to provide clearer errors
+// Removed invalid call – error handling is performed in the try/catch below
 
 cli.command('version', 'Print the veridia version').action(() => jsonOut({ version: VERSION }))
 
@@ -135,8 +137,10 @@ cli
   .command('benchmark', 'Run performance benchmarks')
   .option('--target <path>', 'Target directory')
   .option('--runs <n>', 'Number of runs per test')
+  .option('--field', 'Run the field-validation benchmark against a corpus')
+  .option('--output <path>', 'Write field benchmark report to a file')
   .option('--json', 'Output as JSON')
-  .action((opts: { target?: string; runs?: string; json?: boolean }) => benchmarkCmd.handle(opts))
+  .action((opts: { target?: string; runs?: string; json?: boolean; field?: boolean; output?: string }) => benchmarkCmd.handle(opts))
 
 cli
   .command('pr', 'Analyze a pull request and run triage')
@@ -221,4 +225,14 @@ cli
     triageCmd.handle(task, opts)
   })
 
-cli.parse()
+try {
+  cli.parse()
+} catch (err) {
+  // Provide a clean error message without stack trace for user‑facing errors
+  if (err instanceof Error) {
+    console.error(err.message)
+  } else {
+    console.error('CLI error')
+  }
+  process.exit(1)
+}

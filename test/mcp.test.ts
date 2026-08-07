@@ -104,3 +104,73 @@ describe('MCP stdio transport', () => {
     expect(toolNames).toContain('veridia_session_archive')
   })
 })
+
+/** Run several MCP tools/call frames in one stdio session and return the parsed text results. */
+function callTools(dir: string, calls: { name: string; arguments: Record<string, unknown> }[]): string[] {
+  const frames = [
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '1.0' } },
+    }),
+    JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
+    ...calls.map((c, i) => JSON.stringify({ jsonrpc: '2.0', id: i + 2, method: 'tools/call', params: { name: c.name, arguments: c.arguments } })),
+  ]
+  const proc = spawnSync(process.execPath, [mcpEntry], {
+    cwd: dir,
+    encoding: 'utf8',
+    input: `${frames.join('\n')}\n`,
+    env: { ...process.env, VERIDIA_MCP: '1' },
+  })
+  expect(proc.status).toBe(0)
+  const lines = (proc.stdout ?? '').trim().split('\n')
+  return lines
+    .map((line) => JSON.parse(line) as { result?: { content?: { text: string }[] } })
+    .filter((f) => f.result && f.result.content)
+    .map((f) => f.result!.content![0]!.text)
+}
+
+describe('MCP feedback loop (stage 6 measure)', () => {
+  it('session-do records the outcome into .veridia/history.jsonl', () => {
+    const dir = makeTmpDir()
+    writeFile(dir, 'package.json', JSON.stringify({ scripts: { test: 'node -e "process.exit(0)"' } }))
+
+    callTools(dir, [
+      { name: 'veridia_session_classify', arguments: { task: 'fix a failing unit test', target: dir } },
+      { name: 'veridia_session_assess', arguments: { target: dir } },
+      { name: 'veridia_session_route', arguments: { target: dir } },
+      { name: 'veridia_session_do', arguments: { target: dir } },
+    ])
+
+    const historyFile = path.join(dir, '.veridia', 'history.jsonl')
+    expect(fs.existsSync(historyFile)).toBe(true)
+    const entries = fs
+      .readFileSync(historyFile, 'utf8')
+      .split(/\r?\n/)
+      .filter((l) => l.trim() !== '')
+      .map((l) => JSON.parse(l) as { task: string; type: string; level: number; verdict: string })
+    expect(entries.length).toBe(1)
+    expect(entries[0]!.task).toBe('fix a failing unit test')
+    expect(entries[0]!.type).toBe('bugfix')
+    expect(entries[0]!.verdict).toBeDefined()
+  })
+
+  it('session-archive clears the session and does not duplicate an already-recorded outcome', () => {
+    const dir = makeTmpDir()
+    writeFile(dir, 'package.json', JSON.stringify({ scripts: { test: 'node -e "process.exit(0)"' } }))
+
+    callTools(dir, [
+      { name: 'veridia_session_classify', arguments: { task: 'fix bug', target: dir } },
+      { name: 'veridia_session_assess', arguments: { target: dir } },
+      { name: 'veridia_session_route', arguments: { target: dir } },
+      { name: 'veridia_session_do', arguments: { target: dir } },
+      { name: 'veridia_session_archive', arguments: { target: dir } },
+    ])
+
+    expect(fs.existsSync(path.join(dir, '.veridia', 'session.json'))).toBe(false)
+    const history = fs.readFileSync(path.join(dir, '.veridia', 'history.jsonl'), 'utf8')
+    const recorded = history.split(/\r?\n/).filter((l) => l.trim() !== '')
+    expect(recorded.length).toBe(1)
+  })
+})

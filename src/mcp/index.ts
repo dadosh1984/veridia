@@ -14,6 +14,7 @@ import { computePrecision } from '../measure/learn.js'
 import { measureHistory, measureRecord } from '../measure/measure.js'
 import { buildPlan } from '../route/route.js'
 import { clearSession, readSession, writeSession } from '../session/session.js'
+import type { Verdict } from '../verify/types.js'
 import { verify } from '../verify/verify.js'
 
 const server = new Server({ name: 'veridia', version: VERSION }, { capabilities: { tools: {} } })
@@ -287,12 +288,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: 'text', text: JSON.stringify(summary) }] }
       }
       if (mode === 'record') {
-        const task = args?.task as string
-        const type = args?.type as string
-        const level = args?.level as number
-        const verdict = args?.verdict as string
+        const { task, type, level, verdict } = args as { task: string; type: string; level: number; verdict: string }
         if (!task || !type || !verdict) throw new Error('record mode requires task, type, and verdict')
-        measureRecord({ task, type, level, verdict: verdict as any, checks: [], drift: '' }, deps)
+        measureRecord({ task, type, level, verdict: verdict as Verdict, checks: [], drift: '' }, deps)
         return { content: [{ type: 'text', text: JSON.stringify({ recorded: true }) }] }
       }
       throw new Error('mode must be "history" or "record"')
@@ -359,6 +357,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const historyEntries = readHistory({ root: target })
       const precision = computePrecision(historyEntries)
       const verifyResult = verify(target, session.level as VerifiabilityLevel, kinds, { precision, weights: config.weights })
+      // Stage 6 (measure): persist the outcome so the feedback loop is not lost.
+      measureRecord(
+        { task: session.task, type: session.type, level: session.level, verdict: verifyResult.verdict, checks: verifyResult.checks, drift: '' },
+        { root: target },
+      )
       writeSession({ ...session, verdict: verifyResult.verdict, step: 'done' }, target)
       return { content: [{ type: 'text', text: JSON.stringify({ checks: verifyResult.checks, verdict: verifyResult.verdict }) }] }
     }
@@ -373,6 +376,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const target = (args?.target as string) || process.cwd()
       const session = readSession(target)
       if (!session) throw new Error('no active session')
+      // Persist any outcome not already recorded by session-do (which marks step 'done').
+      if (session.step !== 'done' && session.type && session.level !== undefined && session.verdict) {
+        measureRecord({ task: session.task, type: session.type, level: session.level, verdict: session.verdict, checks: [], drift: '' }, { root: target })
+      }
       clearSession(target)
       return { content: [{ type: 'text', text: JSON.stringify({ archived: true }) }] }
     }

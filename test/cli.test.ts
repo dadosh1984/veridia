@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { runCli } from './helpers/run-cli.js'
+import { runCli, runCliIn } from './helpers/run-cli.js'
 
 const tmpDirs: string[] = []
 
@@ -320,5 +320,34 @@ describe('veridia CLI', () => {
   it('documents the generate subcommand in usage output', () => {
     const result = runCli('--help')
     expect(result.stdout).toContain('generate')
+  })
+
+  it('runs the field benchmark with --field --output and writes a report file', () => {
+    const dir = makeTmpDir()
+    const tasksDir = path.join(dir, 'benchmark', 'tasks')
+    fs.mkdirSync(tasksDir, { recursive: true })
+    const corpus = Array.from({ length: 20 }, (_, i) => ({
+      id: `t${i}`,
+      level: i % 4,
+      type: 'feature',
+      repo: dir,
+      task: 'fix',
+      golden: 'golden output',
+    }))
+    writeFile(dir, 'benchmark/tasks/corpus.json', JSON.stringify({ tasks: corpus }))
+    const out = path.join(dir, 'result.json')
+    const result = runCliIn(dir, 'benchmark', '--field', '--output', out)
+    expect(result.exitCode).toBe(0)
+    expect(fs.existsSync(out)).toBe(true)
+    const parsed = JSON.parse(fs.readFileSync(out, 'utf8')) as { protocol: string; perPipeline: unknown }
+    expect(parsed.protocol).toBe('veridia/field-benchmark/v1')
+    expect(parsed.perPipeline).toBeDefined()
+  })
+
+  it('fails the field benchmark with non-zero exit when the corpus is missing', () => {
+    const dir = makeTmpDir()
+    const result = runCliIn(dir, 'benchmark', '--field')
+    expect(result.exitCode).not.toBe(0)
+    expect(result.stderr).toContain('tasks dir does not exist')
   })
 })

@@ -20,6 +20,8 @@ export interface MeasureEntry {
   oracleResults?: { kind: string; truePositives: number; falsePositives: number }[]
   /** Time in ms from task start to verdict (time-to-fix). */
   durationMs?: number
+  /** Optional cost of the run (e.g. tokens or currency), surfaced by benchmarks. */
+  cost?: number
 }
 
 /** A summary of historical measurement data. */

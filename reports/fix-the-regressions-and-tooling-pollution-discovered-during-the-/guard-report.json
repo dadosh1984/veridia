@@ -1,0 +1,43 @@
+{
+  "changeId": "fix-the-regressions-and-tooling-pollution-discovered-during-the-",
+  "checks": [
+    {
+      "step": "lint",
+      "status": "PASS",
+      "detail": "The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.\nDiagnostics not shown: 1.\nChecked 127 files in 67ms. No fixes applied.\nFound 21 warnings.\n$ biome check src/ "
+    },
+    {
+      "step": "type",
+      "status": "PASS",
+      "detail": "$ tsc --noEmit\n"
+    },
+    {
+      "step": "test",
+      "status": "PASS",
+      "detail": "[orion] no failures detected — summary:\n Test Files  32 passed (32)\n      Tests  340 passed (340)\n   Duration  17.79s (transform 2.49s, setup 509ms, import 4.18s, tests 45.53s, environment 7ms)\n\n[orion: −1967 B (−91.0%) ≈ 492 tok — ≈ tokens: bytes/4 estimate (no tokenizer)]"
+    },
+    {
+      "step": "drift",
+      "status": "PASS",
+      "detail": "no capabilities in specs"
+    },
+    {
+      "step": "yagni",
+      "status": "PASS",
+      "detail": "no snippets to check (repo median: 39 LOC, 1 imports)"
+    },
+    {
+      "step": "economy",
+      "status": "PASS",
+      "detail": "cache 4.8 KB of 100.0 MB (18 entries) — within budget; ≈ 333445 tok saved across 232 compress op(s)"
+    },
+    {
+      "step": "security",
+      "status": "PASS",
+      "detail": "no obvious issues"
+    }
+  ],
+  "allPass": true,
+  "generatedAt": "2026-08-07T05:23:04.758Z",
+  "contextHash": "229a80dbc367"
+}

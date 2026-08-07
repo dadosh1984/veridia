@@ -11,6 +11,12 @@ coverage/
 .unified/
 .veridia/
 .claude/
+# Orion scale-tooling artifacts (scratch copies) — never commit
+*.scaled.ts
+*.scaled.scaled.ts
+# Orion scaffold scratch dirs from failed forge rounds
+src/tasks/
+/tests/
 .changeset/
 schemas/
 skills/
