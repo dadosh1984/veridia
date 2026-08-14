@@ -24,8 +24,7 @@
     "size": "node scripts/check-size.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish",
-    "prepublishOnly": "pnpm build"
+    "release": "pnpm build && changeset publish"
   },
   "license": "MIT",
   "repository": {
