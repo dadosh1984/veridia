@@ -1,5 +1,50 @@
 # veridia
 
+## 0.13.0
+
+### Minor Changes
+
+- test(coverage): raise coverage thresholds and add 63 tests
+
+  - **Statements**: 68.06% → 72.82% (+4.76)
+  - **Branches**: 60.42% → 65.00% (+4.58)
+  - **Functions**: 64.98% → 71.11% (+6.13)
+  - **Lines**: 69.9% → 74.11% (+4.21)
+
+  Thresholds in `vitest.config.ts` raised from `65/58/62/65` to `72/65/71/74`.
+  Test count: 340 → 403 (+63 new).
+
+  **New test files:**
+
+  - `test/cli/registry.test.ts` (5 tests) — covers `src/cli/registry.ts` (was 0%)
+  - `test/cli/shared.test.ts` (26 tests) — covers `src/cli/shared.ts` (44% → 100%)
+  - `test/execute/orchestrate.test.ts` (23 tests) — covers `src/execute/orchestrate.ts` (19% → 57%)
+  - `test/measure/benchmark.test.ts` (4 tests) — covers `src/measure/benchmark.ts` (0% → 90%)
+
+  **Extended:**
+
+  - `test/exec-shim.test.ts` (6 → 11 tests) — broader exec-shim coverage; Windows-only PATHEXT branches remain runIf-gated.
+
+  No production code (`src/**`) was modified. No new dependencies. No public API change. Bundle sizes unchanged (no src/\*\* changes).
+
+### Patch Changes
+
+- chore: address post-v0.12.0 deprecation warnings and CI gaps
+
+  - **tsdown config**: replace deprecated `bundle: true` with `unbundle: false`, and `external: ['typescript']` with `deps.neverBundle: ['typescript']`. Removes `WARN` lines from `pnpm build` output.
+  - **CI coverage gate**: scope `pnpm coverage` to `matrix.os == 'ubuntu-latest'`. macOS and Windows have environment-specific test skips (PATHEXT, `.bat`, ...) that drag coverage below thresholds; running on all six matrix cells is either flaky or redundant. The gate itself (vitest exiting 1 on threshold miss) is unchanged.
+  - **release script**: drop `changeset publish` from the local `release` script. Publishing is now driven entirely by the tag-based CI workflow (`.github/workflows/publish.yml`); local release just bumps the version and rebuilds.
+
+- fix(lint): address pre-existing lint errors and biome auto-fixes
+
+  - **src/cli/registry.ts**: add `biome-ignore` directive on `AnyFunction` (TS compatibility requires `any` for cac handler delegation).
+  - **test/log.test.ts**: replace 8× `as any` with typed `vi.spyOn` + `Object.defineProperty` for `isTTY` mocking.
+  - **test/cli/registry.test.ts**, **test/cli/shared.test.ts**, **test/execute/orchestrate.test.ts**, **test/mcp.test.ts**, **test/exec-shim.test.ts**, **test/measure/benchmark.test.ts**: biome `--write` auto-fixes (`organizeImports`, `useLiteralKeys`, `useOptionalChain`, etc.) and one manual `noUnusedVariables` + `noUnsafeOptionalChaining` fix.
+
+  `pnpm lint` now reports 0 errors (was 6 errors, 8 warnings). The remaining 6 warnings are non-blocking `as any` in `test/measure.test.ts` (deferred — requires refactoring the test fixture).
+
+  No public API change. Bundle sizes unchanged. Test count unchanged (403/403).
+
 ## 0.12.0
 
 ### Minor Changes
