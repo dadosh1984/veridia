@@ -44,9 +44,7 @@ describe('runBenchmark', () => {
     expect(Number.isFinite(a.classify.mean)).toBe(true)
     expect(Number.isFinite(b.classify.mean)).toBe(true)
     // Total should be sum of the phase means (rounded)
-    const expectedTotal = Math.round(
-      (a.classify.mean + a.assess.mean + a.route.mean + a.verify.mean + a.analysis.mean) * 100,
-    ) / 100
+    const expectedTotal = Math.round((a.classify.mean + a.assess.mean + a.route.mean + a.verify.mean + a.analysis.mean) * 100) / 100
     expect(a.total.mean).toBe(expectedTotal)
   })
 })

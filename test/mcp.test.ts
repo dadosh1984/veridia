@@ -127,7 +127,7 @@ function callTools(dir: string, calls: { name: string; arguments: Record<string,
   const lines = (proc.stdout ?? '').trim().split('\n')
   return lines
     .map((line) => JSON.parse(line) as { result?: { content?: { text: string }[] } })
-    .filter((f) => f.result && f.result.content)
+    .filter((f) => f.result?.content)
     .map((f) => f.result!.content![0]!.text)
 }
 

@@ -2,13 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  assemblePrompt,
-  callModelApi,
-  callModelAsync,
-  callModelStdio,
-  type ModelConfig,
-} from '../../src/execute/orchestrate.js'
+import { assemblePrompt, callModelApi, callModelAsync, callModelStdio, type ModelConfig } from '../../src/execute/orchestrate.js'
 
 const tmpFiles: string[] = []
 
@@ -31,12 +25,7 @@ afterEach(() => {
 
 describe('assemblePrompt', () => {
   it('produces a prompt with task, type, level, plan depth, and model tier', () => {
-    const prompt = assemblePrompt(
-      'Refactor auth module',
-      'refactor',
-      '2',
-      { depth: 'standard', tier: 'mid', steps: [], checks: [] },
-    )
+    const prompt = assemblePrompt('Refactor auth module', 'refactor', '2', { depth: 'standard', tier: 'mid', steps: [], checks: [] })
     expect(prompt).toContain('Task: Refactor auth module')
     expect(prompt).toContain('Type: refactor')
     expect(prompt).toContain('Verifiability level: 2')
@@ -45,64 +34,37 @@ describe('assemblePrompt', () => {
   })
 
   it('appends plan steps when present', () => {
-    const prompt = assemblePrompt(
-      'do X',
-      'feature',
-      '3',
-      {
-        depth: 'deep',
-        tier: 'high',
-        steps: ['plan', 'execute', 'verify'],
-        checks: [],
-      },
-    )
+    const prompt = assemblePrompt('do X', 'feature', '3', {
+      depth: 'deep',
+      tier: 'high',
+      steps: ['plan', 'execute', 'verify'],
+      checks: [],
+    })
     expect(prompt).toContain('Plan steps: plan -> execute -> verify')
   })
 
   it('appends verification gates when checks are present', () => {
-    const prompt = assemblePrompt(
-      'do Y',
-      'feature',
-      '3',
-      {
-        depth: 'deep',
-        tier: 'high',
-        steps: [],
-        checks: ['lint', 'tsc', 'test'],
-      },
-    )
+    const prompt = assemblePrompt('do Y', 'feature', '3', {
+      depth: 'deep',
+      tier: 'high',
+      steps: [],
+      checks: ['lint', 'tsc', 'test'],
+    })
     expect(prompt).toContain('Verification gates: lint, tsc, test')
   })
 
   it('serializes answers when provided', () => {
-    const prompt = assemblePrompt(
-      'fix bug',
-      'bugfix',
-      '1',
-      { depth: 'shallow', tier: 'low', steps: [], checks: [] },
-      { framework: 'vitest', node: '22.13' },
-    )
+    const prompt = assemblePrompt('fix bug', 'bugfix', '1', { depth: 'shallow', tier: 'low', steps: [], checks: [] }, { framework: 'vitest', node: '22.13' })
     expect(prompt).toContain('Answers: {"framework":"vitest","node":"22.13"}')
   })
 
   it('omits the answers section when answers is empty', () => {
-    const prompt = assemblePrompt(
-      'fix bug',
-      'bugfix',
-      '1',
-      { depth: 'shallow', tier: 'low', steps: [], checks: [] },
-      {},
-    )
+    const prompt = assemblePrompt('fix bug', 'bugfix', '1', { depth: 'shallow', tier: 'low', steps: [], checks: [] }, {})
     expect(prompt).not.toContain('Answers:')
   })
 
   it('omits the answers section when answers is undefined', () => {
-    const prompt = assemblePrompt(
-      'fix bug',
-      'bugfix',
-      '1',
-      { depth: 'shallow', tier: 'low', steps: [], checks: [] },
-    )
+    const prompt = assemblePrompt('fix bug', 'bugfix', '1', { depth: 'shallow', tier: 'low', steps: [], checks: [] })
     expect(prompt).not.toContain('Answers:')
   })
 })
@@ -124,9 +86,7 @@ describe('callModelStdio', () => {
   })
 
   it('passes the prompt as stdin to the command', () => {
-    const script = makeScript(
-      "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(d))",
-    )
+    const script = makeScript("let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(d))")
     const out = callModelStdio(`node ${script}`, 'PROMPT-ECHO', 5_000)
     expect(out).toBe('PROMPT-ECHO')
   })
@@ -134,24 +94,15 @@ describe('callModelStdio', () => {
 
 describe('callModelApi', () => {
   function mockFetchOnce(body: unknown, init: { status?: number; ok?: boolean } = {}) {
-    const ok = init.ok ?? (init.status === undefined || (init.status >= 200 && init.status < 300))
     const status = init.status ?? 200
-    return vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }),
-    )
+    return vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }))
   }
 
   it('sends POST with the expected JSON body and returns choices[0].message.content', async () => {
     const spy = mockFetchOnce({
       choices: [{ message: { content: '  ANSWER FROM API  ' } }],
     })
-    const out = await callModelApi(
-      'https://example.com/v1/chat/completions',
-      'gpt-test',
-      'hello',
-      'token-abc',
-      5_000,
-    )
+    const out = await callModelApi('https://example.com/v1/chat/completions', 'gpt-test', 'hello', 'token-abc', 5_000)
     expect(out).toBe('ANSWER FROM API')
     expect(spy).toHaveBeenCalledTimes(1)
     const [url, init] = spy.mock.calls[0] as [string, RequestInit]
@@ -193,8 +144,10 @@ describe('callModelApi', () => {
   it('omits Authorization header when no apiKey is given', async () => {
     const spy = mockFetchOnce({ choices: [{ message: { content: 'OK' } }] })
     await callModelApi('https://example.com/v1', 'm', 'hi', undefined, 5_000)
-    const headers = (spy.mock.calls[0]?.[1] as RequestInit).headers as Record<string, string>
-    expect(headers['Authorization']).toBeUndefined()
+    const call = spy.mock.calls[0]
+    expect(call).toBeDefined()
+    const headers = (call![1] as RequestInit).headers as Record<string, string>
+    expect(headers.Authorization).toBeUndefined()
     expect(headers['Content-Type']).toBe('application/json')
   })
 })
