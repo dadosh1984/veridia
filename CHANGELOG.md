@@ -1,5 +1,41 @@
 # veridia
 
+## 0.12.0
+
+### Minor Changes
+
+- bae7019: build: migrate from `tsup` to `tsdown` (Rolldown-based)
+
+  - Replace `tsup` (esbuild) with `tsdown` (Rolldown). Build is roughly 2–3× faster in dev and noticeably faster on CI cold builds.
+  - ESM output is now `*.mjs` instead of `*.js` (correct Node ESM convention).
+  - `bin` entries updated to `dist/cli/index.mjs` and `dist/mcp/index.mjs`.
+  - Test helpers (`test/helpers/run-cli.ts`, `test/mcp.test.ts`) and `vitest.setup.ts` updated for the new extension.
+  - Bundle sizes stay within budget:
+    - CLI: 92.6 KB → 103.3 KB raw / 21.7 KB → 25.7 KB gzip
+    - MCP: 559.8 KB → 499.2 KB raw / 105.5 KB → 103.2 KB gzip
+
+### Patch Changes
+
+- bae7019: ci: harden GitHub Actions workflow
+
+  - Expand Node matrix from `22.13` to `22.13` + `24.x` (current LTS).
+  - Split the single `test` job into `install`, `lint`, `typecheck`, `test` for parallel execution.
+  - Add `actions/cache@v4` for the pnpm store (Linux, macOS, Windows paths).
+  - Bump `actions/checkout` from `v4` to `v6` (consistent with `opencode.yml`).
+  - Add non-blocking `pnpm audit --prod` step (`continue-on-error: true`).
+  - Add zero-dependency bundle-size guard at `scripts/check-size.mjs` (CLI 25.7 KB / MCP 103.2 KB gzip, limit 250 KB).
+  - Tighten `vitest` coverage thresholds from `50/40/60/55` to `65/58/62/65` (actual coverage 68.06 / 60.42 / 64.98 / 69.9).
+  - Add `pnpm size` script.
+
+- bae7019: refactor(cli): declarative command registry
+
+  - Extract cac command registration into `src/cli/registry.ts` with a typed `CommandDef` data shape and `registerAll` helper.
+  - Rewrite `src/cli/index.ts` as a flat list of `CommandDef` literals (29 commands) plus three inline special cases (`version`, `completion`, default `[task]`).
+  - The `cli.parse()` call is preserved in a `try/catch` (carries over the existing clean-error behaviour from `e7c0137`).
+  - Adding a new CLI command is now: append one literal to the `commands` array.
+  - No public-API or behaviour change: all 32 commands register identically (verified by `veridia --help`, `veridia version`, and 340/340 tests).
+  - Internal `AnyFunction` type in `registry.ts` documents that cac signatures are erased at the boundary — handlers are still fully type-checked at the call site.
+
 ## 0.11.0
 
 ### Minor Changes
@@ -7,7 +43,7 @@
 - feat: e2e dogfooding loop — `veridia develop --change/--self` runs full triage pipeline against a change
 - feat: streaming gate output with `--verbose` flag on `run`, `verify`, `develop`
 - feat: structured logging with levels (info/warn/error/debug), JSON in non-TTY, human-readable in TTY
-- feat: MCP surface parity — 12 new tools (route, ask, measure, report, review, session_*)
+- feat: MCP surface parity — 12 new tools (route, ask, measure, report, review, session\_\*)
 - fix: AST-based auto-fix with dry-run, force, and git-dirty guard
 - fix: capture child stdout in exec-shim, route to stderr in machine mode
 - fix: replace shell:true Windows fallback with PATHEXT-based shim resolution
