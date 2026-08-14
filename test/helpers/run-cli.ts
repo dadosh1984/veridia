@@ -11,7 +11,7 @@ export interface CliResult {
 }
 
 export function runCli(...args: string[]): CliResult {
-  const entry = path.join(projectRoot, 'dist', 'cli', 'index.js')
+  const entry = path.join(projectRoot, 'dist', 'cli', 'index.mjs')
   try {
     const stdout = execFileSync(process.execPath, [entry, ...args], {
       encoding: 'utf8',
@@ -28,7 +28,7 @@ export function runCli(...args: string[]): CliResult {
 }
 
 export function runCliIn(cwd: string, ...args: string[]): CliResult {
-  const entry = path.join(projectRoot, 'dist', 'cli', 'index.js')
+  const entry = path.join(projectRoot, 'dist', 'cli', 'index.mjs')
   try {
     const stdout = execFileSync(process.execPath, [entry, ...args], {
       cwd,

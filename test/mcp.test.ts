@@ -26,7 +26,7 @@ afterEach(() => {
 })
 
 const projectRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)))
-const mcpEntry = path.join(projectRoot, 'dist', 'mcp', 'index.js')
+const mcpEntry = path.join(projectRoot, 'dist', 'mcp', 'index.mjs')
 
 describe('MCP stdio transport', () => {
   it('veridia_verify over stdio transport produces well-formed JSON-RPC frames', () => {
