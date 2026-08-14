@@ -12,8 +12,10 @@ export default defineConfig({
   dts: false,
   sourcemap: true,
   minify: false,
-  bundle: true,
+  unbundle: false,
   platform: 'node',
   shims: true,
-  external: ['typescript'],
+  deps: {
+    neverBundle: ['typescript'],
+  },
 })

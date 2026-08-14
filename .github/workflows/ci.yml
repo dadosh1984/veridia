@@ -99,7 +99,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build --config-loader native 
       - run: pnpm test
-      - run: pnpm coverage
+      - name: Coverage + threshold enforcement
+        # Coverage gate only runs on ubuntu: macOS/Windows have environment-
+        # specific skips (PATHEXT, .bat, ...) that drag coverage below the
+        # configured thresholds. Running on all six matrix cells would either
+        # be flaky or redundant.
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm coverage
       - name: Size-limit snapshot
         continue-on-error: true
         run: pnpm size
