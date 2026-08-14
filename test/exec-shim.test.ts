@@ -43,15 +43,13 @@ describe('execFileWithShim', () => {
   })
 
   it('throws a useful error when the child exits non-zero with stderr', () => {
-    expect(() =>
-      execFileWithShim(process.execPath, ['-e', 'process.stderr.write("BAD-EXIT"); process.exit(2)'], { encoding: 'utf8' }),
-    ).toThrow(/BAD-EXIT|exit code 2/)
+    expect(() => execFileWithShim(process.execPath, ['-e', 'process.stderr.write("BAD-EXIT"); process.exit(2)'], { encoding: 'utf8' })).toThrow(
+      /BAD-EXIT|exit code 2/,
+    )
   })
 
   it('uses "exit code N" when the child has empty stderr', () => {
-    expect(() =>
-      execFileWithShim(process.execPath, ['-e', 'process.exit(3)'], { encoding: 'utf8' }),
-    ).toThrow(/exit code 3/)
+    expect(() => execFileWithShim(process.execPath, ['-e', 'process.exit(3)'], { encoding: 'utf8' })).toThrow(/exit code 3/)
   })
 
   it('passes cwd through to the child process', () => {
@@ -65,11 +63,10 @@ describe('execFileWithShim', () => {
   })
 
   it('passes env through to the child process', () => {
-    const stdout = execFileWithShim(
-      process.execPath,
-      ['-e', 'process.stdout.write(process.env.VERIDIA_TEST_SHIM_ENV ?? "")'],
-      { encoding: 'utf8', env: { ...process.env, VERIDIA_TEST_SHIM_ENV: 'ENV-OK' } },
-    )
+    const stdout = execFileWithShim(process.execPath, ['-e', 'process.stdout.write(process.env.VERIDIA_TEST_SHIM_ENV ?? "")'], {
+      encoding: 'utf8',
+      env: { ...process.env, VERIDIA_TEST_SHIM_ENV: 'ENV-OK' },
+    })
     expect(stdout).toBe('ENV-OK')
   })
 })

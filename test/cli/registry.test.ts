@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
 import { cac } from 'cac'
+import { describe, expect, it, vi } from 'vitest'
 import { type CommandDef, registerAll, registerCommand } from '../../src/cli/registry.js'
 
 function makeCli() {

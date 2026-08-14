@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  isMachineMode,
-  jsonOut,
-  validateLevel,
-  validateType,
-} from '../../src/cli/shared.js'
+import { isMachineMode, jsonOut, validateLevel, validateType } from '../../src/cli/shared.js'
 
 afterEach(() => {
   // Clean up MCP env var after each test so cases don't bleed into each other
@@ -46,12 +41,9 @@ describe('isMachineMode', () => {
 })
 
 describe('validateType', () => {
-  it.each(['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'])(
-    'returns undefined for valid type %s',
-    (t) => {
-      expect(validateType(t)).toBeUndefined()
-    },
-  )
+  it.each(['bugfix', 'refactor', 'feature', 'doc', 'explore', 'open'])('returns undefined for valid type %s', (t) => {
+    expect(validateType(t)).toBeUndefined()
+  })
 
   it('returns an error message for an invalid type', () => {
     expect(validateType('bogus')).toMatch(/invalid task type: bogus/)

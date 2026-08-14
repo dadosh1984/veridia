@@ -8,6 +8,7 @@
  */
 import type { CAC, Command } from 'cac'
 
+// biome-ignore lint/suspicious/noExplicitAny: registry's AnyFunction is intentionally permissive so that cac's variadic `(...args: unknown[]) => void` action can delegate to typed handlers declared at the call site (see src/cli/index.ts and src/cli/commands/*.ts).
 export type AnyFunction = (...args: any[]) => any
 
 export type OptionDef = readonly [flag: string, description: string]
