@@ -31,6 +31,47 @@ describe('execFileWithShim', () => {
     const stdout = execFileWithShim(process.execPath, ['-e', 'process.stdout.write("CAPTURED-OUT")'], { encoding: 'utf8' })
     expect(stdout).toBe('CAPTURED-OUT')
   })
+
+  it('uses the streamOutput stdio mode without throwing', () => {
+    // With streamOutput=true, stdout is 'inherit' (not captured) — we only assert no throw
+    expect(() =>
+      execFileWithShim(process.execPath, ['-e', 'process.exit(0)'], {
+        encoding: 'utf8',
+        streamOutput: true,
+      }),
+    ).not.toThrow()
+  })
+
+  it('throws a useful error when the child exits non-zero with stderr', () => {
+    expect(() =>
+      execFileWithShim(process.execPath, ['-e', 'process.stderr.write("BAD-EXIT"); process.exit(2)'], { encoding: 'utf8' }),
+    ).toThrow(/BAD-EXIT|exit code 2/)
+  })
+
+  it('uses "exit code N" when the child has empty stderr', () => {
+    expect(() =>
+      execFileWithShim(process.execPath, ['-e', 'process.exit(3)'], { encoding: 'utf8' }),
+    ).toThrow(/exit code 3/)
+  })
+
+  it('passes cwd through to the child process', () => {
+    const dir = makeTmpDir()
+    const stdout = execFileWithShim(process.execPath, ['-e', 'process.stdout.write(process.cwd())'], {
+      cwd: dir,
+      encoding: 'utf8',
+    })
+    // Realpath normalization: on Windows the dir may use a different case
+    expect(fs.realpathSync(stdout)).toBe(fs.realpathSync(dir))
+  })
+
+  it('passes env through to the child process', () => {
+    const stdout = execFileWithShim(
+      process.execPath,
+      ['-e', 'process.stdout.write(process.env.VERIDIA_TEST_SHIM_ENV ?? "")'],
+      { encoding: 'utf8', env: { ...process.env, VERIDIA_TEST_SHIM_ENV: 'ENV-OK' } },
+    )
+    expect(stdout).toBe('ENV-OK')
+  })
 })
 
 describe.runIf(process.platform === 'win32')('execFileWithShim — PATHEXT resolution (Windows shim fallback)', () => {
