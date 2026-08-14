@@ -1,0 +1,60 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ubuntu-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ubuntu-pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Verify version vs tag
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            LOCAL="$(node -p "require('./package.json').version")"
+            TAG="${GITHUB_REF_NAME#v}"
+            if [[ "$LOCAL" != "$TAG" ]]; then
+              echo "✗ Version mismatch: package.json=$LOCAL tag=$TAG"
+              exit 1
+            fi
+            echo "✓ Version $LOCAL matches tag $TAG"
+          fi
+
+      - name: Publish to npm
+        run: pnpm publish --provenance --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
