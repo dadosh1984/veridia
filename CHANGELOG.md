@@ -1,5 +1,38 @@
 # veridia
 
+## 0.14.0
+
+### Minor Changes
+
+- - **test(coverage)**: push exec-shim and verify/run coverage
+
+    - `exec-shim.ts`: export `resolveShim(cmd, cwd?, env?)` for unit-testability; new `test/util/exec-shim-resolve.test.ts` (8 tests) covering `hasSep`, `hasExt`, `cwd` and default-env branches on any OS.
+    - `verify/run.ts`: new `test/verify/run.test.ts` (10 tests) — full surface of `runCommand`: success, non-zero exit, empty/whitespace cmd, missing binary, cwd propagation, error branches via `vi.spyOn` (`e.status` undefined, `e.code`-only fallback).
+    - `test/measure/benchmark.test.ts`: bump per-test timeout (Win 30 s / POSIX 15 s; large runs ×2) — Windows CI timed out at 5 s default for the 20-run case.
+
+    Coverage deltas:
+
+    | File            | Before (s/b/f/l)            | After (s/b/f/l)             |
+    | --------------- | --------------------------- | --------------------------- |
+    | `exec-shim.ts`  | 68.42 / 58.53 / 100 / 69.11 | 71.05 / 66.26 / 100 / 72.05 |
+    | `verify/run.ts` | 89.47 / 61.11 / 100 / 100   | 94.73 / 77.77 / 100 / 100   |
+
+    Tests: 403 → 421 (+18). No public-API change. No new deps.
+
+  - **chore(deadcode)**: enable TS `noUnusedLocals` / `noUnusedParameters`; drop 3 dead bindings
+
+    - `tsconfig.json`: enable `noUnusedLocals` + `noUnusedParameters` — native (no Knip dependency) dead-code detector.
+    - `src/analyze/report.ts`: drop unused `loadConfig` import + `_config` local.
+    - `src/cli/commands/run.ts`: drop unused `_VERDICT_COLORS` const + `_verdictColor` local (left over from earlier colorization attempt).
+
+  - **chore**: archive 12 already-merged changes
+
+    Move 12 directories from `warpweave/changes/` to `warpweave/changes/archive/2026-08-14-merged-<slug>/` with `applied_commit` / `applied_in_release` annotations. The contents are already in `main` (v0.11.0 / v0.12.0 commits). Affected changes: `structured-logging`, `streaming-output`, `e2e-dogfooding-loop`, `mcp-surface-parity`, `fix-history-data-loss`, `fix-exec-shim-stdout`, `oss-hygiene`, `fix-mcp-version-sync`, `fix-shell-fallback-injection`, `fix-veridia-fix-safety`, `мигрировать-build-tool-veridia`, `модернизировать-ci-проекта-veridia`.
+
+  - **chore**: drop 9 stale artifacts
+
+    Remove dangling index entries for `changes/fix-the-regressions-and-tooling-pollution-discovered-during-the-/*` and `reports/...` — content already in `ce9a8e4` / `fc4e8a1` / `426cb14`.
+
 ## 0.13.0
 
 ### Minor Changes
