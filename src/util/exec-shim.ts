@@ -20,19 +20,22 @@ function escapeWinArg(a: string): string {
  * Resolve a command name to its full path using PATHEXT on Windows.
  * Probes each extension in PATHEXT against PATH dirs and node_modules/.bin.
  *
+ * Exported for unit testing — internal callers should use {@link execFileWithShim}.
+ *
  * @param cmd - The command name (may include extension).
  * @param cwd - Working directory for node_modules/.bin resolution.
+ * @param env - Environment to read PATH/PATHEXT from (defaults to process.env).
  * @returns The resolved full path, or undefined if not found.
  */
-function resolveShim(cmd: string, cwd?: string): string | undefined {
-  const pathext = (process.env.PATHEXT ?? ';.COM;.EXE;.BAT;.CMD').toLowerCase().split(';').filter(Boolean)
+export function resolveShim(cmd: string, cwd?: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const pathext = (env.PATHEXT ?? ';.COM;.EXE;.BAT;.CMD').toLowerCase().split(';').filter(Boolean)
   const hasSep = cmd.includes(sep) || cmd.includes('/')
   const dirs: string[] = []
   if (hasSep) {
     const dir = cmd.includes(sep) ? cmd.slice(0, cmd.lastIndexOf(sep)) : cmd.slice(0, cmd.lastIndexOf('/'))
     dirs.push(dir)
   } else {
-    dirs.push(...(process.env.PATH ?? '').split(delimiter).filter(Boolean))
+    dirs.push(...(env.PATH ?? '').split(delimiter).filter(Boolean))
     if (cwd) dirs.push(join(cwd, 'node_modules', '.bin'))
   }
   const base = hasSep ? cmd.slice(Math.max(cmd.lastIndexOf(sep), cmd.lastIndexOf('/')) + 1) : cmd
