@@ -4,12 +4,6 @@ import { cancel, confirm, intro, isCancel, log, note, outro, spinner } from '@cl
 import { triage } from '../../triage/triage.js'
 import { log as vlog } from '../../util/log.js'
 
-const _VERDICT_COLORS: Record<string, string> = {
-  PASS: 'PASS',
-  FAIL: 'FAIL',
-  HUMAN: 'HUMAN',
-}
-
 export async function handle(
   task: string,
   opts: { target?: string; auto?: boolean; self?: boolean; ww?: boolean; change?: string; json?: boolean; verbose?: boolean },
@@ -69,7 +63,6 @@ export async function handle(
     log.message(`  → ${s.stage}${s.detail ? `: ${s.detail}` : ''}`)
   }
 
-  const _verdictColor = result.verdict === 'PASS' ? 'green' : result.verdict === 'FAIL' ? 'red' : 'yellow'
   const lines = [
     `type       ${result.type.padEnd(12)} ${result.confidence.toFixed(2)}`,
     `level      ${result.level}`,

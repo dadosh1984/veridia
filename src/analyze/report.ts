@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assess } from '../assess/assess.js'
-import { loadConfig } from '../config/config.js'
 import { readHistory } from '../measure/history.js'
 import { computePrecision } from '../measure/learn.js'
 import { runAnalysis } from './analyze.js'
@@ -32,7 +31,6 @@ export function generateReport(target: string): string {
   const analysis = runAnalysis(target)
   const history = readHistory({ root: target })
   const precision = computePrecision(history)
-  const _config = loadConfig(target)
   const assessment = assess(target)
   const now = new Date().toISOString()
 
