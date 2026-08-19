@@ -72,4 +72,30 @@ describe('log', () => {
       else process.env.VERIDIA_DEBUG = origDebug
     }
   })
+
+  // ponytail: rung 6 (one-liner) — explicit TTY coverage for every level.
+  it.each(['info', 'warn', 'error'] as const)(
+    '%s in TTY mode emits veridia: <level>: <msg>',
+    (level) => {
+      const restoreIsTTY = setIsTTY(true)
+      try {
+        const stderr = captureStderr(() => log[level](`${level}-msg`))
+        expect(stderr.some((s) => s.includes(`veridia: ${level}: ${level}-msg`))).toBe(true)
+      } finally {
+        restoreIsTTY()
+      }
+    },
+  )
+
+  it('debug with VERIDIA_DEBUG=true also passes the gate', () => {
+    const origDebug = process.env.VERIDIA_DEBUG
+    process.env.VERIDIA_DEBUG = 'true'
+    try {
+      const stderr = captureStderr(() => log.debug('secret'))
+      expect(stderr.length).toBeGreaterThan(0)
+    } finally {
+      if (origDebug === undefined) delete process.env.VERIDIA_DEBUG
+      else process.env.VERIDIA_DEBUG = origDebug
+    }
+  })
 })

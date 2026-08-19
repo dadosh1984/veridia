@@ -23,4 +23,13 @@ describe('shouldPrompt', () => {
   it('is false when noInteractive is explicitly requested', () => {
     expect(shouldPrompt({ noInteractive: true, isTTY: true, env: {} })).toBe(false)
   })
+
+  // ponytail: rung 6 — cover the false side of the === '1' and 'CI' in env branches
+  it('is true when VERIDIA_NO_INTERACTIVE is a non-1 value and CI absent', () => {
+    expect(shouldPrompt({ noInteractive: false, isTTY: true, env: { VERIDIA_NO_INTERACTIVE: '0' } })).toBe(true)
+  })
+
+  it('is true when env has unrelated keys but no CI', () => {
+    expect(shouldPrompt({ noInteractive: false, isTTY: true, env: { FOO: 'bar' } })).toBe(true)
+  })
 })

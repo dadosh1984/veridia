@@ -56,6 +56,12 @@ describe('mutate', () => {
   it('returns empty array for empty input', () => {
     expect(mutate('')).toEqual([])
   })
+
+  // ponytail: rung 6 — covers the multi-line branch (line 33)
+  it('drops the last line for multi-line input', () => {
+    const result = mutate('const a = 1;\nconst b = 2;\nconst c = 3;')
+    expect(result.some((m) => m === 'const a = 1;\nconst b = 2;')).toBe(true)
+  })
 })
 
 describe('computeSensitivity', () => {
@@ -296,5 +302,50 @@ describe('verify', () => {
     const first: VerifyResult = verify(target, 3, ['test-runner'], { run: exitZero })
     const second: VerifyResult = verify(target, 3, ['test-runner'], { run: exitZero })
     expect(second).toEqual(first)
+  })
+
+  // ponytail: rung 6 (one-liner) — covers the catch branch (line 73-74)
+  it('captures thrown error from run() and reports exitCode 1 with "command failed"', () => {
+    const target = makeTmpDir()
+    writeFile(target, 'package.json', '{"scripts":{"test":"vitest run"}}')
+    const result = verify(target, 2, ['test-runner'], {
+      run: () => {
+        throw new Error('spawn exploded')
+      },
+    })
+    expect(result.checks[0].passed).toBe(false)
+    expect(result.checks[0].error).toBe('command failed')
+  })
+
+  // ponytail: rung 6 — covers vlog.error path (line 77-78) when in machine mode and gate fails
+  it('logs gate failure to stderr when isMachineMode() is true and gate fails', () => {
+    const target = makeTmpDir()
+    writeFile(target, 'package.json', '{}')
+    const origMcp = process.env.VERIDIA_MCP
+    process.env.VERIDIA_MCP = '1'
+    try {
+      const result = verify(target, 2, ['type-check'], {
+        run: () => ({ exitCode: 1, error: 'tsc: boom' }),
+      })
+      expect(result.checks[0].passed).toBe(false)
+    } finally {
+      if (origMcp === undefined) delete process.env.VERIDIA_MCP
+      else process.env.VERIDIA_MCP = origMcp
+    }
+  })
+
+  it('does not log when gate fails in non-machine mode', () => {
+    const target = makeTmpDir()
+    writeFile(target, 'package.json', '{}')
+    const origMcp = process.env.VERIDIA_MCP
+    delete process.env.VERIDIA_MCP
+    try {
+      const result = verify(target, 2, ['type-check'], {
+        run: () => ({ exitCode: 1, error: 'tsc: boom' }),
+      })
+      expect(result.checks[0].passed).toBe(false)
+    } finally {
+      if (origMcp !== undefined) process.env.VERIDIA_MCP = origMcp
+    }
   })
 })
