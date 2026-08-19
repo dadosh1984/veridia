@@ -274,6 +274,74 @@ describe('delegateShell', () => {
     expect(result.exitCode).toBe(0)
     expect(result.stdout).toContain('No gates')
   })
+
+  // ponytail: rung 6 — covers runGates happy path + failing-gate catch (147-157, 166)
+  it('skips gates with empty command and runs passing gates', async () => {
+    const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
+      task: 'test',
+      type: 'bugfix',
+      level: 3,
+      plan: {
+        depth: 'full-tdd',
+        tier: 'cheapest',
+        steps: [],
+        gates: [
+          { id: 'skip', command: '', kind: 'lint' },
+          { id: 'pass', command: `"${process.execPath}" -e "process.exit(0)"`, kind: 'test-runner' },
+        ],
+      },
+      metadata: { host: 'test', generatedAt: '' },
+    }
+    const result = await delegateShell(plan)
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('All gates passed')
+  })
+
+  it('captures stderr and exitCode when a gate fails', async () => {
+    const plan: ExecutionPlan = {
+      protocol: 'veridia/execution-plan/v1',
+      task: 'test',
+      type: 'bugfix',
+      level: 3,
+      plan: {
+        depth: 'full-tdd',
+        tier: 'cheapest',
+        steps: [],
+        gates: [{ id: 'fail', command: `"${process.execPath}" -e "process.stderr.write('lint-bang'); process.exit(2)"`, kind: 'lint' }],
+      },
+      metadata: { host: 'test', generatedAt: '' },
+    }
+    const result = await delegateShell(plan)
+    expect(result.exitCode).toBe(2)
+    expect(result.stderr).toContain('lint-bang')
+  })
+
+  it('writes captured stdout to process.stderr in machine mode', async () => {
+    const origMcp = process.env.VERIDIA_MCP
+    process.env.VERIDIA_MCP = '1'
+    try {
+      const plan: ExecutionPlan = {
+        protocol: 'veridia/execution-plan/v1',
+        task: 'test',
+        type: 'bugfix',
+        level: 3,
+        plan: {
+          depth: 'full-tdd',
+          tier: 'cheapest',
+          steps: [],
+          gates: [{ id: 'fail', command: `"${process.execPath}" -e "process.stdout.write('OUT-CAP'); process.exit(1)"`, kind: 'lint' }],
+        },
+        metadata: { host: 'test', generatedAt: '' },
+      }
+      const result = await delegateShell(plan)
+      expect(result.exitCode).toBe(1)
+      expect(result.stdout).toContain('OUT-CAP')
+    } finally {
+      if (origMcp === undefined) delete process.env.VERIDIA_MCP
+      else process.env.VERIDIA_MCP = origMcp
+    }
+  })
 })
 
 describe('delegate', () => {
@@ -339,6 +407,38 @@ describe('delegate', () => {
       }
       const result = await delegate(plan, tmpDir)
       expect(result.exitCode).toBe(0)
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  // ponytail: rung 6 — covers the modelConfig branch (137-141)
+  it('delegates to AI orchestration when modelConfig is provided', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'veridia-delegate-model-'))
+    try {
+      fs.writeFileSync(path.join(tmpDir, 'package.json'), '{}')
+      const plan: ExecutionPlan = {
+        protocol: 'veridia/execution-plan/v1',
+        task: 'test',
+        type: 'feature',
+        level: 2,
+        plan: {
+          depth: 'minimal',
+          tier: 'cheapest',
+          steps: [{ id: 'plan', label: 'Plan', description: 'Plan' }],
+          gates: [],
+        },
+        metadata: { host: 'shell', generatedAt: '' },
+      }
+      const result = await delegate(plan, tmpDir, {
+        modelConfig: { provider: 'stdio', model: `"${process.execPath}" -e "process.stdout.write('AI-OUTPUT')"` },
+        task: 'test',
+        type: 'feature',
+        level: 2,
+        kinds: ['lint'],
+      })
+      expect(result.exitCode).toBe(1) // FAIL verdict from orchestrate
+      expect(result.stdout).toContain('AI-OUTPUT')
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true })
     }

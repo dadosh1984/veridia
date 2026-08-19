@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AskResult } from '../src/ask/types.js'
 import type { VerifiabilityLevel } from '../src/assess/types.js'
 import type { TaskType } from '../src/classify/types.js'
@@ -113,5 +113,37 @@ describe('triage', () => {
       expect(stages).toContain(expected)
     }
     expect(stages[0]).toBe('classify')
+  })
+
+  // ponytail: rung 6 — covers deps?.ask ?? askInteractive branch (line 145)
+  it('falls back to askInteractive when deps.ask is undefined', async () => {
+    const target = makeTmpDir()
+    writeFile(target, 'package.json', '{}')
+    // No deps passed -> deps?.ask ?? askInteractive resolves to askInteractive.
+    // auto=true short-circuits askInteractive before any prompt (no TTY hang).
+    const result = await triage('add feature', target, { auto: true })
+    expect(result.task).toBe('add feature')
+    expect(result.verdict).toBeTruthy()
+  })
+
+  // ponytail: rung 6 — covers modelConfig truthy branch in delegate call (169-192)
+  it('routes through orchestrate when config has a model section', async () => {
+    const target = makeTmpDir()
+    writeFile(target, 'package.json', '{}')
+    // model config triggers the truthy branch; stdio provider runs a noop node command
+    writeFile(
+      target,
+      '.veridia/config.json',
+      JSON.stringify({
+        model: {
+          provider: 'stdio',
+          model: 'noop',
+          command: `"${process.execPath}" -e "process.stdout.write('AI-MODEL-OUTPUT')"`,
+        },
+      }),
+    )
+    const result = await triage('add feature', target, { auto: true })
+    expect(result.task).toBe('add feature')
+    expect(result.executionResult).toBeDefined()
   })
 })
